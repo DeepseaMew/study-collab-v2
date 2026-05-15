@@ -114,7 +114,10 @@ A human must set Status to Accepted in the decision record before implementation
 - Visibility: session members only
 - Notes persist after session ends
 - Notes extend the session context, not a standalone feature
-- 
+
+### Calendar
+- A monthly/weekly calendar view to visualize hitory sessions and upcoming sessions. 
+
 ## Agents
 Role-scoped agents live in .claude/agents/. Specify which agent is active at the start of every session.
 
