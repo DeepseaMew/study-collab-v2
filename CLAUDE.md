@@ -103,6 +103,17 @@ A human must set Status to Accepted in the decision record before implementation
 - Profile score calculated as percentage of thumbs-up across all sessions.
 - Rating is only available after the host ends the session.
 - Rating is online-only; requires server-side timestamp validation.
+
+### Note-Sharing
+- Notes live inside sessions only, visible in session detail screen
+- Supported file types: images, documents, compressed archives
+- File size limit: 10MB per file
+- Storage: Firebase Storage (free tier, 5GB total)
+- Notes cap: 50 per session
+- Delete permission: host or file owner only, no edit allowed
+- Visibility: session members only
+- Notes persist after session ends
+- Notes extend the session context, not a standalone feature
 - 
 ## Agents
 Role-scoped agents live in .claude/agents/. Specify which agent is active at the start of every session.
