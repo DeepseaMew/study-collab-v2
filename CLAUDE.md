@@ -1,170 +1,181 @@
-# Study Collab V2 — Project Memory
+# Study Collab — house rules
 
-## What this app is
-Study Collab is a mobile + web app for KMUTT students to find peers for
-study sessions. Built as a capstone mobile dev project following
-enterprise-grade multi-agent orchestration patterns.
+## Project overview
+Study Collab is a cross-platform mobile app (iOS, Android, Web) for KMUTT
+students to find peers for study sessions.
 
-Single Flutter app in a monorepo. Target platforms: Android and Web.
+## Repo structure
+```
+.
+├── CLAUDE.md
+├── .claude/
+│   ├── settings.json
+│   ├── agents/          ← architect, flutter-engineer, qa-engineer, security-reviewer, release-engineer
+│   └── commands/        ← /new-feature, /pr-review, /qa-sweep, /release
+├── apps/
+│   └── mobile/          ← Flutter app (run all flutter commands from here)
+│       ├── lib/
+│       ├── test/
+│       ├── integration_test/
+│       ├── android/
+│       └── ios/
+├── packages/            ← shared Dart packages (design system, auth, networking)
+├── tools/               ← repo scripts (codegen, release)
+└── docs/
+    ├── decisions/        ← Architecture Decision Records (ADRs)
+    ├── audit/            ← structured reviewer audit reports
+    │   └── evidence/     ← screenshots, Crashlytics dashboard, golden images
+    └── runbooks/         ← release.md and operational guides
+```
+
 
 ## Stack
-- **Flutter** (stable channel) + **Dart 3.x**
-- **State management:** Riverpod 2.x with **code generation**
-  (`@riverpod` annotations, `riverpod_generator`, `build_runner`).
-  Always use `@riverpod` — never hand-write providers manually.
-- **Routing:** GoRouter with authentication guards. Routes in
-  `apps/mobile/lib/core/router/`.
-- **Backend:** Firebase
-  - Auth (university email only — `kmutt.ac.th`, `mail.kmutt.ac.th`)
-  - Cloud Firestore (main database)
-  - Firebase Storage (profile photos, session files)
-  - Firebase Cloud Messaging (push notifications)
-  - Firebase Crashlytics (error tracking)
-  - Firebase Remote Config (feature flags)
+| Concern | Package |
+|---|---|
+| State | flutter_riverpod + riverpod_generator |
+| Navigation | go_router |
+| Images | cached_network_image |
+| Secrets | flutter_secure_storage |
+| Models | freezed + json_serializable |
+| Auth | Firebase Authentication |
+| Database | Cloud Firestore |
+| Observability | Firebase Crashlytics + lib/core/logger.dart |
 
-## Architecture — Clean Architecture (strict)
+## Architecture
+Feature-first Clean Architecture. Each feature folder contains domain/, data/, presentation/.
 
 ```
 apps/mobile/lib/
-├── core/              # Shared utilities, constants, errors, theme, router
-├── domain/            # Pure Dart — ZERO Flutter/Firebase imports
-│   ├── entities/      # Plain Dart classes (immutable, no fromFirestore)
-│   ├── repositories/  # Abstract interfaces only
-│   └── usecases/      # Single-responsibility business logic
-├── data/              # Firebase implementation
-│   ├── models/        # DTOs with fromFirestore/toFirestore
-│   ├── repositories/  # Concrete implementations of domain interfaces
-│   └── datasources/   # Raw Firestore/Storage calls
-└── presentation/      # UI + Riverpod providers
-    ├── features/      # Feature-first: auth, sessions, friends, chat, etc.
-    └── shared/        # Reusable widgets
+  features/<name>/
+    data/
+      datasources/     ← Firestore calls, DTOs
+      models/          ← Freezed models with JSON serialization
+      repositories/    ← implements domain interfaces
+    domain/
+      entities/        ← pure Dart classes, zero Flutter or Firebase imports
+      repositories/    ← abstract interfaces
+      usecases/        ← single-responsibility use case classes
+    presentation/
+      providers/       ← Riverpod providers (@riverpod code gen)
+      screens/         ← GoRouter screen widgets
+      widgets/         ← feature-scoped reusable widgets
+  shared/
+    widgets/           ← app-wide reusable components
+    theme/             ← ThemeData, typography, color tokens
+  core/
+    errors/            ← sealed error classes
+    logger.dart        ← structured logging, only call site in codebase
+    analytics_events.dart ← all analytics events declared here
 ```
 
-### Layer rules (enforced — never violate)
-- **Domain layer:** zero imports from `flutter`, `firebase_core`,
-  `cloud_firestore`, or any package. Pure Dart only.
-- **Data layer:** knows about Firebase. Implements domain repository
-  interfaces. Never imported by presentation directly.
-- **Presentation layer:** knows about domain entities and Riverpod
-  providers. Never imports data layer directly.
-- **Dependency flow:** Presentation → Domain ← Data
-- UI never calls Firestore. Path is always:
-  widget → provider → use case → repository interface → data repository → Firestore.
+Every architecture decision is recorded in docs/decisions/.
+Flutter Engineer must read the relevant decision record before implementing any feature.
+A human must set Status to Accepted in the decision record before implementation starts.
 
-## Monorepo layout
+## Features
+### Auth
+- KMUTT email domain gate: @mail.kmutt.ac.th and @kmutt.ac.th only.
+- Email verification required before accessing any feature.
+- Session persistence via flutter_secure_storage.
 
-```
-study_collab_v2/
-├── CLAUDE.md
-├── .claude/
-│   ├── agents/        # Agent definitions
-│   ├── skills/        # Reusable playbooks
-│   └── commands/      # Slash commands
-├── apps/
-│   └── mobile/        # Flutter app
-├── packages/          # Shared Dart packages (empty for now)
-├── tools/             # Repo scripts
-└── .github/
-    └── workflows/     # CI/CD
-```
+### Sessions
+- Host creates, edits, deletes, and ends sessions.
+- Two visibility types: public (anyone can request to join, host approves)
+  and private (PIN or invite code required, host still approves).
+- A session belongs to exactly one host; host role is scoped to that session only.
 
-All Flutter commands run from `apps/mobile/`:
-- `flutter run`
-- `flutter test`
-- `dart run build_runner build --delete-conflicting-outputs`
-- `flutter analyze`
+### Friends
+- Users can send, accept, decline friend requests, and unfriend.
+- Friendship is bidirectional; both users must agree.
 
-## Riverpod codegen rules
-- Every provider uses `@riverpod` annotation.
-- Run `dart run build_runner build --delete-conflicting-outputs` after
-  any provider change to regenerate `*.g.dart` files.
-- Never edit `*.g.dart` files manually.
-- Provider files always have `part 'filename.g.dart';` at the top.
-- `AsyncNotifier` for async state with mutations.
-- `@riverpod` for simple computed/stream providers.
+### Chat
+- DM: one-on-one, available between friends only.
+- Group chat: session members only, created from a session, not standalone.
+- Message history persists; users see previous messages on reopen.
 
-## Auth flow
-- University email only. Allowed domains: `kmutt.ac.th`,
-  `mail.kmutt.ac.th`.
-- Domain check lives in `apps/mobile/lib/core/constants/auth_constants.dart`.
-- After signup, Firebase sends an email verification link.
-- Unverified users redirected to `/verify-email` by GoRouter guard.
-- All other routes require both signed-in AND email-verified.
-- `gmail.com` is allowed as a dev-only exception — remove before launch.
+### Search and filtering
+- Search sessions by session name, hashtag, academic level, and student year.
+- Hashtags are free-text typed by the host, stored as List<String>, lowercase.
+- Search is online-only; no offline support.
 
-## Core features
-1. **Auth** — KMUTT email + Firebase email verification gate.
-2. **Sessions** — host creates/edits/deletes/ends; public (host
-   approval required) or private (password-join).
-3. **Friends** — bidirectional. Both Friend docs written atomically via
-   `WriteBatch`. Live status via `watchFriendshipStatus`.
-4. **Chat** — DM (friends only, 1-on-1) + Group (session members).
-5. **Calendar** — view your sessions in week/month view.
-6. **Filters** — search sessions by subject, student year, academic level.
-7. **Ratings** — thumbs-up rating between session members after session ends.
-   Immutable. Doc ID: `{sessionId}_{raterId}_{ratedUserId}`.
+### Rating
+- Thumbs-up rating between session members after a session ends.
+- Profile score calculated as percentage of thumbs-up across all sessions.
+- Rating is only available after the host ends the session.
+- Rating is online-only; requires server-side timestamp validation.
+- 
+## Agents
+Role-scoped agents live in .claude/agents/. Specify which agent is active at the start of every session.
 
-## Data layer rules
-- All Firestore reads/writes go through `apps/mobile/lib/data/`.
-- Domain entities are plain Dart classes — no Firestore types.
-- Data models (`lib/data/models/`) have `fromFirestore` / `toFirestore`.
-- Enums always have a safe `fromString` with fallback default (never throw).
-- Denormalized fields must be updated together via batch writes.
-- Friend / friendship operations always write both sides atomically.
+- architect — system design, schema, ADRs, review only. Cannot write feature code.
+- flutter-engineer — implements all three layers (domain, data, presentation). Does not approve own work.
+- qa-engineer — owns test matrix, accessibility sweeps, performance checks. Does not write feature code.
+- security-reviewer — audits auth flows, Firestore rules, secrets. Read-only.
+- release-engineer — owns CI/CD pipeline, changelog, tag cutting.
 
-## Conventions
-- **Naming:** snake_case files, PascalCase classes, camelCase vars.
-- **Errors:** custom exceptions in `lib/core/errors/`. Never throw raw strings.
-- **Constants:** Firestore collection names in `lib/core/constants/`.
-- **No `print()`** — use `debugPrint` for dev logs.
-- **No PII in logs** — never log emails, passwords, session passwords.
-- **Crashlytics:** all uncaught errors flow through Crashlytics.
-  Use `FirebaseCrashlytics.instance.recordError()` for caught errors.
-- **Feature flags:** Firebase Remote Config. Gate new features behind
-  a flag with a documented rollback plan in `docs/feature-flags.md`.
+The agent that writes code must not be the agent that approves it.
 
-## Security
-- Never commit Firebase service account JSON or `.env` files.
-- Session passwords hashed with SHA-256 + per-session salt.
-- Storage rules: size + content-type limits, owner-only write.
-- Firestore rules: granular RBAC using `diff().affectedKeys()`,
-  role-based access, server-side timestamp validation.
+## Planning workflow
+Every non-trivial feature follows this pipeline before any code is written:
 
-## Testing
-- Unit tests: `test/unit/` — domain entities, use cases, pure logic.
-- Repository tests: `test/repositories/` — using `fake_cloud_firestore`.
-- Widget tests: `test/widgets/` — all screens have at least one.
-- Integration tests: `integration_test/` — Android and Web.
-- Run: `cd apps/mobile && flutter test`
+1. **Architect** writes a decision record to docs/decisions/NNNN-slug.md using docs/decisions/_template.md.
+2. A human reads the record, fills the Human Approval section, and sets Status to Accepted.
+3. **Flutter Engineer** implements strictly following the approved decisions. No scope creep beyond what the spec describes.
+4. Submit for review to **architect** or **qa-engineer** — never the same agent that wrote the code. Reviewer checks implementation against the decisions.
+5. For any task spanning more than 2 files or touching architecture, use Plan Mode first.
 
-## Do-not-do list
-- Never hand-write Riverpod providers — always use `@riverpod`.
-- Never import Firebase/Firestore in `lib/domain/`.
-- Never call Firestore directly from screens, widgets, or providers.
-- Never use `print()` — use `debugPrint`.
-- Never log emails, passwords, UIDs, or session passwords.
-- Never commit `.env`, service account JSON, or signing keys.
-- Never throw raw strings — use custom exceptions from `lib/core/errors/`.
-- Never edit `*.g.dart` or `*.freezed.dart` files manually.
-- Never add new state management libraries — Riverpod 2.x only.
-- Never add Freezed — plain Dart classes only.
-- Never use unbounded `pumpAndSettle()` in tests.
-- Never self-approve: the agent that writes code never reviews it.
-
-## Agent team
-Agent definitions in `.claude/agents/`. See each file for full scope.
-
-Writers: architect, flutter-engineer, firebase-specialist, qa-engineer, docs-writer
-Reviewers: code-reviewer, security-reviewer, accessibility-auditor
-
-## Workflows
-- **Run:** `cd apps/mobile && flutter run`
-- **Test:** `cd apps/mobile && flutter test`
-- **Analyze:** `cd apps/mobile && flutter analyze`
-- **Format:** `cd apps/mobile && dart format .`
-- **Codegen:** `cd apps/mobile && dart run build_runner build --delete-conflicting-outputs`
+Skip steps 1 and 2 only for changes touching a single file with no architectural impact.
 
 ## Do not edit
-- `apps/mobile/lib/firebase_options.dart` (auto-generated).
-- `**/*.g.dart`, `**/*.freezed.dart` (regenerate via codegen).
-- `android/app/build/**`, `ios/Pods/**`, `.dart_tool/`, `build/`.
+- `**/*.g.dart` — Riverpod/JSON codegen output
+- `**/*.freezed.dart` — Freezed model codegen output
+- `**/generated_plugin_registrant.*` — Flutter plugin registry
+- `apps/mobile/android/app/build/**` — Android build artifacts
+- `apps/mobile/ios/Pods/**` — CocoaPods dependencies
+- `docs/decisions/` — Architect writes, human approves, no one else edits
+- `docs/audit/evidence/` — screenshots and logs only, no code
+
+To regenerate: `dart run build_runner build --delete-conflicting-outputs`
+
+## Conventions
+
+### Imports
+- Always use package imports (`package:mobile/...`) — never relative imports (`../../`).
+- Enforced by `always_use_package_imports` lint; run `dart fix --apply` to fix violations.
+
+### Errors
+- Domain errors are sealed classes in `lib/core/errors/`; never throw strings.
+
+### Logging
+- All log calls go through `lib/core/logger.dart` only; never use `print()`.
+- Log levels: debug, info, warning, error. Use the correct level.
+- No PII in any log output or Crashlytics custom keys.
+
+### Data
+- KMUTT email gate enforced at Firebase Auth level and in Firestore rules.
+- Hashtags stored as `List<String>` on session documents, free-text, lowercase.
+- No unbounded `ListView` — always `ListView.builder` with `itemCount` or paginated.
+- All remote images through `cached_network_image`; never `Image.network` directly.
+
+### Models
+- Freezed + json_serializable for all models; never hand-roll `toJson`/`fromJson`.
+
+### Analytics
+- Every event declared in `lib/core/analytics_events.dart` before use.
+
+## RBAC roles
+Two roles: student (default) and host (any user who creates a session).
+Role stored in `users/{uid}.role`. Firestore rules enforce role checks on all
+write operations. KMUTT domain validated server-side in Firestore rules.
+
+## Security expectations
+- No secrets or API keys in source; Firebase config injected via CI environment only.
+- No PII in logs, Crashlytics keys, or analytics events.
+- Firestore rules must use `diff().affectedKeys()` for field-level write validation.
+- Firestore rules must use `request.time` for all timestamp fields.
+- Users can only read and write their own documents unless role explicitly permits otherwise.
+- Crashlytics must catch all Flutter errors via `FlutterError.onError` and
+  `PlatformDispatcher.instance.onError`.
+- A deliberate debug-only test crash must exist to verify Crashlytics receives data.
+- TLS enforced by Firebase SDK; never disable certificate validation.
+- `flutter_secure_storage` for any token or sensitive value that must persist locally.

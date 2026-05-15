@@ -65,5 +65,4 @@ class DefaultFirebaseOptions {
     projectId: 'study-collab-4d0a0',
     storageBucket: 'study-collab-4d0a0.firebasestorage.app',
   );
-
 }
