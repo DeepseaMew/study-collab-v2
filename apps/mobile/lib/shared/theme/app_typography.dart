@@ -1,114 +1,77 @@
 import 'package:flutter/material.dart';
 
 /// App typography for Study Collab.
-/// Font: Poppins (Regular 400, Medium 500, SemiBold 600, Bold 700)
-/// Font files must exist in assets/fonts/ and be declared in pubspec.yaml.
+/// Source: Figma Design System — Typography panel (Poppins).
+/// Do not change values without updating Figma first.
 ///
-/// Usage: Theme.of(context).textTheme.displaySmall etc.
+/// Usage: Theme.of(context).textTheme.displayLarge etc.
 /// Never hardcode fontSize or fontWeight outside this file.
 abstract final class AppTypography {
   static const String _family = 'Poppins';
 
   static const TextTheme textTheme = TextTheme(
-    // ── Display ─────────────────────────────────────────────────────────────
-    /// Large screen titles
+    // ── Headline 1 — 40px · 700 · lh 1.2 · hero / splash ───────────────────
     displayLarge: TextStyle(
       fontFamily: _family,
-      fontSize: 32,
-      fontWeight: FontWeight.w700, // Bold
-      letterSpacing: -0.5,
+      fontSize: 40,
+      fontWeight: FontWeight.w700,
+      height: 1.2,
     ),
 
-    /// Section headings
+    // ── Headline 2 — 24px · 600 · lh 1.35 · screen titles ──────────────────
     displayMedium: TextStyle(
       fontFamily: _family,
-      fontSize: 26,
-      fontWeight: FontWeight.w700, // Bold
-      letterSpacing: -0.3,
+      fontSize: 24,
+      fontWeight: FontWeight.w600,
+      height: 1.35,
     ),
 
-    /// Card titles, greeting text
+    // ── Headline Small — 18px · 500 · lh 1.4 · section headers ─────────────
     displaySmall: TextStyle(
       fontFamily: _family,
-      fontSize: 22,
-      fontWeight: FontWeight.w600, // SemiBold
-    ),
-
-    // ── Headline ─────────────────────────────────────────────────────────────
-    headlineMedium: TextStyle(
-      fontFamily: _family,
       fontSize: 18,
-      fontWeight: FontWeight.w600, // SemiBold
+      fontWeight: FontWeight.w500,
+      height: 1.4,
     ),
 
-    headlineSmall: TextStyle(
-      fontFamily: _family,
-      fontSize: 16,
-      fontWeight: FontWeight.w600, // SemiBold
-    ),
-
-    // ── Title ────────────────────────────────────────────────────────────────
-    /// AppBar title, dialog title
+    // ── Title Large — 16px · 600 · lh 1.5 · card titles ────────────────────
     titleLarge: TextStyle(
       fontFamily: _family,
       fontSize: 16,
-      fontWeight: FontWeight.w600, // SemiBold
+      fontWeight: FontWeight.w600,
+      height: 1.5,
     ),
 
-    /// List item title, form labels
-    titleMedium: TextStyle(
-      fontFamily: _family,
-      fontSize: 14,
-      fontWeight: FontWeight.w500, // Medium
-    ),
-
-    titleSmall: TextStyle(
-      fontFamily: _family,
-      fontSize: 13,
-      fontWeight: FontWeight.w500, // Medium
-    ),
-
-    // ── Body ─────────────────────────────────────────────────────────────────
-    /// Default body text
+    // ── Body Large — 16px · 400 · lh 1.6 · paragraphs ──────────────────────
     bodyLarge: TextStyle(
       fontFamily: _family,
       fontSize: 16,
-      fontWeight: FontWeight.w400, // Regular
+      fontWeight: FontWeight.w400,
+      height: 1.6,
     ),
 
-    /// Secondary body, subtitles, hints
+    // ── Body Medium — 14px · 400 · lh 1.6 · descriptions ───────────────────
     bodyMedium: TextStyle(
       fontFamily: _family,
       fontSize: 14,
-      fontWeight: FontWeight.w400, // Regular
+      fontWeight: FontWeight.w400,
+      height: 1.6,
     ),
 
-    /// Captions, timestamps, small labels
-    bodySmall: TextStyle(
-      fontFamily: _family,
-      fontSize: 12,
-      fontWeight: FontWeight.w400, // Regular
-    ),
-
-    // ── Label ────────────────────────────────────────────────────────────────
-    /// Buttons
+    // ── Label Large — 14px · 500 · lh 1.4 · buttons / tags ─────────────────
     labelLarge: TextStyle(
       fontFamily: _family,
-      fontSize: 15,
-      fontWeight: FontWeight.w600, // SemiBold
+      fontSize: 14,
+      fontWeight: FontWeight.w500,
+      height: 1.4,
     ),
 
-    labelMedium: TextStyle(
-      fontFamily: _family,
-      fontSize: 13,
-      fontWeight: FontWeight.w500, // Medium
-    ),
-
+    // ── Label Small — 10px · 500 · lh 1.4 · captions / badges ──────────────
     labelSmall: TextStyle(
       fontFamily: _family,
-      fontSize: 11,
-      fontWeight: FontWeight.w500, // Medium
-      letterSpacing: 0.5,
+      fontSize: 10,
+      fontWeight: FontWeight.w500,
+      height: 1.4,
     ),
   );
 }

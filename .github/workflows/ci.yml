@@ -47,6 +47,7 @@ jobs:
 
   integration-test-android:
     name: Integration Tests (Android)
+    if: false # enable when integration tests are written
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -84,6 +85,7 @@ jobs:
 
   integration-test-web:
     name: Integration Tests (Web)
+    if: false # enable when integration tests are written
     runs-on: ubuntu-latest
     defaults:
       run:

@@ -19,6 +19,7 @@ House rules:
 - Never call print(). Use lib/core/logger.dart for all structured logging.
 - Never hardcode feature flags. Use lib/core/feature_flags.dart.
 - Rating feature: wrap all rating code in feature flag check.
+-
 
 Crashlytics responsibilities:
 - Wire firebase_crashlytics in main.dart: catch all Flutter errors via

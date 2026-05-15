@@ -13,7 +13,7 @@ Edit permission is scoped to: .github/workflows/, pubspec.yaml,
 CHANGELOG.md, docs/audit/ only.
 
 Bash is scoped to: git tag, flutter build, fastlane, dart pub only.
-Never git push --force under any circumstance.
+Never git push under any circumstance.
 
 Copy docs/audit/_template.md, delete sections not owned by this agent,
 fill the remainder. Do not invent a different structure.
