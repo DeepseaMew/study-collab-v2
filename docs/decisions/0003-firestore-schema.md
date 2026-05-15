@@ -59,7 +59,7 @@ All data lives as top-level Firestore collections: `users`, `sessions`, `friends
 
 ### Option B — Full subcollection nesting for all session-scoped and user-scoped data
 
-Session-scoped data lives under `sessions/{sessionId}/` as subcollections (`messages`, `ratings`, `notes`). Friend data lives under `users/{uid}/friends/`. DM messages live under `dms/{dmId}/messages/`. The `dms` collection is top-level; its document ID is a deterministic sorted-uid pair (e.g., `uid1_uid2` with `uid1 < uid2` lexicographically). User profiles are top-level at `users/{uid}`.
+Session-scoped data lives under `sessions/{sessionId}/` as subcollections (`messages`, `ratings`, `notes`). Friend data lives under `users/{uid}/friends/`. DM messages live under `dms/{dmId}/messages/`. The `dms/{dmId}` parent document stores only metadata; messages are the substantive content.
 
 **Trade-offs**
 - Pro: Security rules for session-scoped subcollections inherit the session document path; a single `get(/databases/$(database)/documents/sessions/$(sessionId))` call in a rules function checks membership and status without additional collection complexity.
@@ -106,16 +106,19 @@ Stores the public profile and aggregate score for each registered user.
 |---|---|---|
 | uid | String | Matches Firebase Auth UID; document ID equals this value |
 | displayName | String | Required; non-empty; max 100 characters |
+| fullName | String | Required; non-empty; max 150 characters. Collected at profile-setup screen. Used for display on profile and to support trust-building between users who meet in person. Must never appear in logs, Crashlytics keys, or analytics events (CLAUDE.md PII rule). |
 | email | String | Required; must match `@mail.kmutt.ac.th` or `@kmutt.ac.th`; validated in rules |
 | photoUrl | String | Nullable; Firebase Storage URL or external avatar URL |
 | hasHostedBefore | bool | UI hint only; `false` by default; set to `true` when user creates their first session. Never used as a security gate — per-session host authority is always checked via `sessions/{sessionId}.hostUid`. |
 | studentYear | int | Values 1–8; represents undergraduate or graduate year |
 | academicLevel | String | Enum: `undergraduate` or `graduate` |
+| faculty | String | Required after profile setup; stored as the `.name` string of the `KmuttFaculty` Dart enum (see ADR 0006). Empty string `''` on initial document creation; filled during profile setup. |
+| bio | String | Nullable; free text; max 300 characters. The user describes their program or department here. Not required; empty string `''` on initial document creation. |
 | profileScore | float | Range 0.0–1.0; denormalized percentage of thumbs-up ratings received; updated on each rating write by the rating write path |
 | createdAt | Timestamp | Set once on document creation using `request.time`; immutable after creation |
 | updatedAt | Timestamp | Updated on every profile write using `request.time` |
 
-No fields beyond the above may be stored on `users/{uid}`. No PII beyond displayName, email, and photoUrl is permitted.
+No fields beyond the above may be stored on `users/{uid}`. No PII beyond displayName, fullName, email, and photoUrl is permitted.
 
 ---
 
@@ -127,6 +130,7 @@ Stores the authoritative state of a study session. The `memberUids` array is the
 |---|---|---|
 | sessionId | String | Firestore auto-generated document ID; stored redundantly for client convenience |
 | hostUid | String | UID of the session creator; immutable after creation |
+| hostFaculty | String | Denormalized `.name` string of the host's `KmuttFaculty` enum value at session creation time. Copied from `users/{hostUid}.faculty` by the data layer when the session is created. Used by Index 8 to support faculty-filtered session search without requiring a `get()` on the user document inside rules. Immutable after creation. |
 | title | String | Required; non-empty; max 200 characters |
 | description | String | Nullable; max 2000 characters |
 | hashtags | List\<String\> | Each element is lowercase, free-text; max 20 elements; stored as Firestore array |
@@ -140,6 +144,8 @@ Stores the authoritative state of a study session. The `memberUids` array is the
 | endedAt | Timestamp | Nullable; set by host when session ends; written using `request.time`; immutable once set |
 | createdAt | Timestamp | Set once on document creation using `request.time`; immutable |
 | updatedAt | Timestamp | Updated on every session write using `request.time` |
+
+**Denormalization rationale for `hostFaculty`:** the session search screen must filter public sessions by faculty. Without `hostFaculty` on the session document, this filter would require either (a) a `get()` call on `users/{hostUid}` inside Firestore rules for every query result — which is not supported inside collection-query evaluation — or (b) a client-side post-filter after fetching unfiltered results, which is expensive. A denormalized string field enables a standard Firestore composite index and keeps the query server-side. The staleness risk is negligible: a user's faculty does not change after account creation.
 
 ---
 
@@ -368,9 +374,9 @@ match /users/{uid} {
   allow create: if isKmuttUser()
     && request.auth.uid == uid
     && request.resource.data.keys().hasAll([
-         'uid', 'displayName', 'email', 'hasHostedBefore',
-         'studentYear', 'academicLevel', 'profileScore',
-         'createdAt', 'updatedAt'
+         'uid', 'displayName', 'fullName', 'email', 'hasHostedBefore',
+         'studentYear', 'academicLevel', 'faculty',
+         'profileScore', 'createdAt', 'updatedAt'
        ])
     && request.resource.data.email.matches('.*@(mail\\.kmutt\\.ac\\.th|kmutt\\.ac\\.th)$')
     && request.resource.data.createdAt == request.time
@@ -384,8 +390,9 @@ match /users/{uid} {
   allow update: if isKmuttUser()
     && request.auth.uid == uid
     && request.resource.data.diff(resource.data).affectedKeys()
-         .hasOnly(['displayName', 'photoUrl', 'studentYear', 'academicLevel',
-                   'hasHostedBefore', 'profileScore', 'updatedAt'])
+         .hasOnly(['displayName', 'fullName', 'photoUrl', 'studentYear', 'academicLevel',
+                   'faculty', 'bio', 'hasHostedBefore', 'profileScore',
+                   'updatedAt'])
     && request.resource.data.updatedAt == request.time
     && request.resource.data.uid == resource.data.uid
     && request.resource.data.createdAt == resource.data.createdAt
@@ -416,13 +423,13 @@ match /sessions/{sessionId} {
     && request.resource.data.createdAt == request.time
     && request.resource.data.updatedAt == request.time
     && request.resource.data.keys().hasAll([
-         'sessionId', 'hostUid', 'title', 'hashtags', 'academicLevel',
+         'sessionId', 'hostUid', 'hostFaculty', 'title', 'hashtags', 'academicLevel',
          'studentYear', 'visibility', 'memberUids', 'status',
          'scheduledAt', 'createdAt', 'updatedAt'
        ]);
 
   // Update: host only; restricted mutable fields; status may only advance forward;
-  // updatedAt must equal request.time; hostUid and createdAt are immutable.
+  // updatedAt must equal request.time; hostUid, hostFaculty and createdAt are immutable.
   allow update: if isHost(sessionId)
     && request.resource.data.diff(resource.data).affectedKeys()
          .hasOnly(['title', 'description', 'hashtags', 'academicLevel',
@@ -430,6 +437,7 @@ match /sessions/{sessionId} {
                    'status', 'scheduledAt', 'endedAt', 'updatedAt'])
     && request.resource.data.updatedAt == request.time
     && request.resource.data.hostUid == resource.data.hostUid
+    && request.resource.data.hostFaculty == resource.data.hostFaculty
     && request.resource.data.createdAt == resource.data.createdAt;
 
   // Delete: host only; only when status is 'scheduled' (not active or ended).
@@ -641,6 +649,14 @@ Note: The cap check using `getAfter(...)` requires the session document to maint
 - Staleness risk: one rating event. The score visible on the profile screen lags by at most the duration of the batch write that creates the rating and updates the score. In practice this is sub-second. No background job or scheduled function is required.
 - Transactional requirement: the rating creation and the profileScore update must be in the same Firestore batch write. If the batch fails, neither the rating nor the score update is committed. The use case must handle batch failure with a typed `AppError` from `lib/core/errors/`.
 
+### `hostFaculty` on `sessions/{sessionId}`
+
+- What is duplicated: the host user's faculty enum name string is copied from `users/{hostUid}.faculty` onto the session document at creation time.
+- Where it lives: `sessions/{sessionId}.hostFaculty` (a String field).
+- What triggers an update: set once on session creation by the `SessionRepositoryImpl`; immutable thereafter. The data layer reads `users/{hostUid}.faculty` from Firestore (or from the currently-authenticated user's cached profile) and writes it to the session document in the same create call.
+- Why it exists: the session search screen must support filtering public sessions by faculty. Without this field, the Firestore query would have to post-filter client-side (expensive for large result sets) or require a Firestore `get()` inside rules (not supported for collection queries). A denormalized string field enables Index 8 and keeps the filter server-side.
+- Staleness risk: negligible. A KMUTT student's faculty affiliation does not change. If a user's faculty ever did change (data correction), existing sessions would carry the old value, which is acceptable — the session was created under that faculty context.
+
 ### `dmId` determinism (not a denormalized field, but a data-layer contract)
 
 - The `dmId` for a DM conversation between users A and B is always constructed as `min(uidA, uidB) + '_' + max(uidA, uidB)` using lexicographic comparison.
@@ -653,7 +669,7 @@ Note: The cap check using `getAfter(...)` requires the session document to maint
 
 - The Flutter Engineer must implement datasource classes for seven distinct path patterns: `users/{uid}`, `sessions/{sessionId}`, `sessions/{sessionId}/messages/{messageId}`, `dms/{dmId}/messages/{messageId}`, `users/{uid}/friends/{friendUid}`, `sessions/{sessionId}/ratings/{raterUid}`, and `sessions/{sessionId}/notes/{noteId}`. Each datasource is a separate class in its feature's `data/datasources/` directory.
 - All Firestore document paths are string constants; the domain layer never references a Firestore path. A `FirestorePaths` constants class in `lib/core/` (data layer accessible) must define all path templates.
-- The `firestore.indexes.json` file must define all seven composite indexes listed above before any feature goes to production; Firestore does not automatically create composite indexes for new query patterns.
+- The `firestore.indexes.json` file must define all composite indexes listed above before any feature goes to production; Firestore does not automatically create composite indexes for new query patterns.
 - The `firestore.rules` file must implement all helper functions and per-collection rules exactly as sketched; the security reviewer must audit the final rules file against this ADR before the first production deployment.
 - Adding `noteCount` to the session document (required by the notes cap enforcement) means the session update rule must explicitly permit `noteCount` in its `diff().affectedKeys().hasOnly(...)` list; this is a coupling between the notes feature and the sessions rules block.
 - The batch-write requirement for friend operations (both directions atomically) and for rating + profileScore (rating creation + score update atomically) means the repository implementations for these features must use `WriteBatch`, not individual `set`/`update` calls.
@@ -676,3 +692,131 @@ If the team determines that Option B (full subcollection nesting) is wrong and w
 6. The domain layer and entities are unaffected because they contain no Firestore paths or types.
 7. The QA engineer re-runs the full test matrix against the new paths before the migration is considered complete.
 8. The release engineer cuts a new app version that targets the new collection paths; the old paths must remain readable (not deleted) until the migration is confirmed complete and the old app version is no longer in use.
+
+---
+
+## Amendments
+
+### Amendment A — Add `faculty` and `department` to `users/{uid}`; add `hostFaculty` to `sessions/{sessionId}`; add Index 8
+
+**Date:** 2026-05-16
+**Context:** ADR 0006 (0006-faculty-department-enum.md) defines the `KmuttFaculty` and `KmuttDepartment` Dart enums. This amendment incorporates the resulting Firestore field additions into the canonical schema defined above. The sections above have been updated in place; this amendment records the delta for audit purposes.
+
+**Fields added to `users/{uid}`:**
+
+| Field | Type | Notes |
+|---|---|---|
+| `faculty` | String | `.name` of `KmuttFaculty` enum; empty string `''` on initial document creation; required non-empty after profile-setup completes (ADR 0005 / 0006) |
+| `department` | String | `.name` of `KmuttDepartment` enum; empty string `''` on initial document creation; required non-empty after profile-setup completes; must be a valid department within the stored `faculty` value |
+
+**Firestore rules impact on `users/{uid}`:**
+- `create` rule: `faculty` and `department` added to `keys().hasAll(...)` required-fields list.
+- `update` rule: `faculty` and `department` added to `diff().affectedKeys().hasOnly(...)` permitted-mutable-fields list.
+- No new validation of the enum value string is added to Firestore rules in v1; the valid-value constraint is enforced client-side by the Dart enum. If the rules need server-side enum validation in future, a new ADR is required.
+
+**Field added to `sessions/{sessionId}`:**
+
+| Field | Type | Notes |
+|---|---|---|
+| `hostFaculty` | String | `.name` of `KmuttFaculty` enum; copied from `users/{hostUid}.faculty` at session creation by `SessionRepositoryImpl`; immutable |
+
+**Firestore rules impact on `sessions/{sessionId}`:**
+- `create` rule: `hostFaculty` added to `keys().hasAll(...)` required-fields list.
+- `update` rule: `hostFaculty` added to immutability check: `request.resource.data.hostFaculty == resource.data.hostFaculty`.
+
+**Index 8 — Faculty-filtered session search:**
+
+- Collection path: `sessions`
+- Fields: `hostFaculty` (ascending equality filter), `status` (ascending equality filter), `scheduledAt` (ascending)
+- Feature: Search screen — filter public sessions by host faculty and session status, ordered by scheduled time. Enables a query such as `where('hostFaculty', isEqualTo: 'engineeringAndIndustrialTechnology').where('status', isEqualTo: 'scheduled').orderBy('scheduledAt')`.
+- Collection-group index: No (top-level collection only).
+- Justification: without this index, a faculty filter on `sessions` combined with an equality filter on `status` and an order-by on `scheduledAt` would require a full collection scan. Firestore rejects composite queries without a matching index.
+
+---
+
+### Amendment B — Drop `department`; add `bio` to `users/{uid}`
+
+**Date:** 2026-05-16
+**Context:** The product decision to drop `department` from the user model makes `KmuttDepartment` enum and its Firestore field unnecessary. Users will describe their program or department as free text in a `bio` field instead. `KmuttFaculty` and the `faculty` field are retained unchanged. This amendment supersedes the `department`-related portions of Amendment A above and updates the canonical schema and rules sketch in place accordingly.
+
+**Field removed from `users/{uid}`:**
+
+| Field | Reason |
+|---|---|
+| `department` | Dropped entirely. The `KmuttDepartment` enum is removed from the codebase (see ADR 0006 Amendment A). Existing Firestore documents carrying a `department` key are stale; a migration script in `tools/` must strip the field on next write or via a one-time batch update. |
+
+**Field added to `users/{uid}`:**
+
+| Field | Type | Notes |
+|---|---|---|
+| `bio` | String | Nullable; free text; max 300 characters. The user describes their program or department here. Not required at profile creation; empty string `''` on initial document creation. |
+
+**Firestore rules impact on `users/{uid}`:**
+- `create` rule: `department` removed from `keys().hasAll(...)` required-fields list. `bio` is not required at creation and therefore is not added to `hasAll`.
+- `update` rule: `department` removed from `diff().affectedKeys().hasOnly(...)`. `bio` added to `diff().affectedKeys().hasOnly(...)` because it is user-editable after account creation.
+
+**No impact on `sessions/{sessionId}` rules or indexes.** `hostFaculty` is retained; the department field was never on session documents.
+
+**Reversal cost if the team restores `department`:** re-add the `KmuttDepartment` enum to the domain layer, restore the `department` field to the schema table, update the create `hasAll` and update `hasOnly` lists in the rules sketch, and run a Firestore data migration to back-fill `department` on existing user documents from whatever free-text `bio` value was stored. Medium effort — no index changes required, but the migration must handle arbitrary free-text values that cannot be mechanically mapped back to enum names.
+
+---
+
+### Amendment C — Add `fullName` to `users/{uid}`
+
+**Date:** 2026-05-16
+**Context:** The product team requires a legal full name field on user profiles to support trust-building between students who meet in person at study sessions. `displayName` is a short handle chosen by the user and is insufficient for identity confirmation. `fullName` is a distinct field carrying PII obligations: it must never appear in logs, Crashlytics keys, or analytics events (CLAUDE.md PII rule). The constraint in the original schema footer that limited PII fields to `displayName`, `email`, and `photoUrl` is amended here to also permit `fullName`. All other PII constraints remain in force.
+
+**Field added to `users/{uid}`:**
+
+| Field | Type | Constraints / Notes |
+|---|---|---|
+| `fullName` | String | Required; non-empty; max 150 characters. Collected at the profile-setup screen (see ADR 0005 Amendment B). Used for display on the profile screen and to support in-person identity confirmation between study-session participants. Must never appear in logs, Crashlytics keys, or analytics events (CLAUDE.md PII rule). |
+
+**Updated PII constraint (replaces the original footer note on `users/{uid}`):**
+
+No fields beyond those listed in the schema table may be stored on `users/{uid}`. No PII beyond `displayName`, `fullName`, `email`, and `photoUrl` is permitted.
+
+**Firestore rules impact on `users/{uid}`:**
+- `create` rule: `fullName` added to `keys().hasAll(...)` required-fields list. The canonical list after this amendment is: `'uid', 'displayName', 'fullName', 'email', 'hasHostedBefore', 'studentYear', 'academicLevel', 'faculty', 'profileScore', 'createdAt', 'updatedAt'`. The rules sketch in the body of this document has been updated in place.
+- `update` rule: `fullName` added to `diff().affectedKeys().hasOnly(...)` permitted-mutable-fields list, because a user must be able to correct their name after initial profile setup. The rules sketch in the body of this document has been updated in place.
+- No other rule blocks are affected; `fullName` is scoped to `users/{uid}` only and is never copied to session documents or any other collection.
+
+**Reversal cost if the team removes `fullName`:** remove the field from the `users/{uid}` schema table, remove it from the `create` `hasAll` list and the `update` `hasOnly` list in the Firestore rules sketch, remove it from the `UserProfile` domain entity and data model, remove the input field from the profile-setup screen (ADR 0005), and run a Firestore data migration to strip the field from existing user documents. Medium effort — no index changes required, no subcollection impact, but the migration must touch every `users/{uid}` document that has already stored a `fullName` value.
+
+---
+
+### Amendment D — Field write-time split: `fullName` moves to signup; `displayName` placeholder written at signup
+
+**Date:** 2026-05-16
+**Supersedes (in part):** Amendment C note that `fullName` is "Collected at the profile-setup screen." That statement is superseded by ADR 0007 (0007-signup-profile-setup-field-split.md, Accepted 2026-05-16).
+
+**Context:** ADR 0007 records the product owner's decision to collect `fullName` on the signup screen, not the profile-setup screen. This amendment corrects the write-time attribution recorded in Amendment C and specifies the exact create and update rule consequences.
+
+**Change to when `fullName` is written:**
+
+`fullName` is now written by `signUpWithEmail` in `AuthRepositoryImpl` as part of the initial `users/{uid}` document creation (the `set` with `SetOptions(merge: false)` call that immediately follows `createUserWithEmailAndPassword`). It is written with the real trimmed value the user entered on the signup screen. The profile-setup `completeProfile` update call must NOT write `fullName`; it was already stored at signup and is immutable from the profile-setup path.
+
+**Change to when `displayName` placeholder is written:**
+
+`displayName` is written as `''` (empty string placeholder) in the `signUpWithEmail` initial document write. It is overwritten with the real value the user provides on the profile-setup screen by the `completeProfile` update call.
+
+**`faculty` and `bio` placeholder writes at signup:**
+
+`faculty` and `bio` are also written as `''` (empty string placeholders) in the `signUpWithEmail` initial write, so that the complete schema field set is present in the document from the moment of creation. They are overwritten by `completeProfile` at profile-setup time.
+
+**Firestore rules impact on `users/{uid}` — create path:**
+
+The `create` rule's `keys().hasAll(...)` list already includes `fullName` (added by Amendment C). No change to the list is required. The canonical required-fields list remains: `'uid', 'displayName', 'fullName', 'email', 'hasHostedBefore', 'studentYear', 'academicLevel', 'faculty', 'profileScore', 'createdAt', 'updatedAt'`. Every key in this list is present in the `signUpWithEmail` write payload as specified in ADR 0007.
+
+**Firestore rules impact on `users/{uid}` — update path (`completeProfile`):**
+
+The `completeProfile` Firestore `update` call writes only: `displayName`, `faculty`, `bio`, `hasCompletedProfile`, and `updatedAt`. It must NOT write `fullName`. Therefore the `diff().affectedKeys().hasOnly(...)` list in the update rule must NOT include `fullName` as a key the `completeProfile` call is permitted to change in isolation; `fullName` remains in the `hasOnly` list solely to permit a future edit-profile flow where the user corrects their legal name. The `completeProfile` call itself does not touch `fullName`, so the rule is not violated.
+
+**Summary of authoritative write payloads (cross-reference ADR 0007):**
+
+| Write call | Writes `fullName`? | Writes `displayName`? | Notes |
+|---|---|---|---|
+| `signUpWithEmail` (initial create) | Yes — real trimmed value from signup form | Yes — `''` placeholder | Both written in same `set` call |
+| `completeProfile` (profile-setup update) | No | Yes — real trimmed value from profile-setup form | `fullName` must be absent from this update payload |
+
+**Reversal cost:** if the team moves `fullName` collection back to profile-setup, the `signUpWithEmail` write must be updated to write `fullName: ''` as a placeholder, `completeProfile` must restore `'fullName': fullName` to its update payload, and all six files listed in ADR 0007 must be updated in a single PR. No Firestore index changes are required. No data migration is required for users who signed up after ADR 0007 was accepted, because `fullName` is already present in their signup-time document.
