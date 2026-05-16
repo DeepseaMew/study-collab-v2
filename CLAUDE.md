@@ -11,21 +11,15 @@ students to find peers for study sessions.
 ├── .claude/
 │   ├── settings.json
 │   ├── agents/          ← architect, flutter-engineer, qa-engineer, security-reviewer, release-engineer
-│   └── commands/        ← /new-feature, /pr-review, /qa-sweep, /release
 ├── apps/
 │   └── mobile/          ← Flutter app (run all flutter commands from here)
 │       ├── lib/
 │       ├── test/
-│       ├── integration_test/
 │       ├── android/
-│       └── ios/
-├── packages/            ← shared Dart packages (design system, auth, networking)
-├── tools/               ← repo scripts (codegen, release)
 └── docs/
     ├── decisions/        ← Architecture Decision Records (ADRs)
     ├── audit/            ← structured reviewer audit reports
-    │   └── evidence/     ← screenshots, Crashlytics dashboard, golden images
-    └── runbooks/         ← release.md and operational guides
+        └── evidence/     ← screenshots, Crashlytics dashboard, golden images
 ```
 
 
