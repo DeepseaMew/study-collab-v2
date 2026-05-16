@@ -116,7 +116,10 @@ A human must set Status to Accepted in the decision record before implementation
 - Notes extend the session context, not a standalone feature
 
 ### Calendar
-- A monthly/weekly calendar view to visualize hitory sessions and upcoming sessions. 
+- A monthly/weekly calendar view to visualize hitory sessions and upcoming sessions.
+
+### Navigation Bar
+- at the bottom, lead to home, calendar, messages and my sessions 
 
 ## Agents
 Role-scoped agents live in .claude/agents/. Specify which agent is active at the start of every session.

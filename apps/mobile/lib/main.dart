@@ -19,10 +19,7 @@ import 'package:mobile/shared/theme/app_typography.dart';
 // redirect unauthenticated users to the sign-in route. See ADR 0001.
 final _router = GoRouter(
   routes: [
-    GoRoute(
-      path: '/',
-      builder: (context, state) => const _HomeScreen(),
-    ),
+    GoRoute(path: '/', builder: (context, state) => const _HomeScreen()),
   ],
 );
 
@@ -31,27 +28,25 @@ final _router = GoRouter(
 Future<void> main() async {
   // runZonedGuarded is the outermost error boundary. All unhandled async errors
   // that escape the Flutter framework are caught here and sent to Crashlytics.
-  await runZonedGuarded<Future<void>>(
-    _bootstrap,
-    (Object error, StackTrace stack) {
-      appLogger.error(
-        'Unhandled error in root zone',
-        exception: error,
-        stackTrace: stack,
-      );
-      // Non-fatal: allow the app to continue if possible.
-      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-    },
-  );
+  await runZonedGuarded<Future<void>>(_bootstrap, (
+    Object error,
+    StackTrace stack,
+  ) {
+    appLogger.error(
+      'Unhandled error in root zone',
+      exception: error,
+      stackTrace: stack,
+    );
+    // Non-fatal: allow the app to continue if possible.
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+  });
 }
 
 Future<void> _bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // 1. Firebase initialization.
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // 2. Firestore offline persistence (ADR 0002 — Option C).
   //    Android/iOS: enabled by default. Web: requires explicit opt-in.
@@ -75,9 +70,7 @@ Future<void> _bootstrap() async {
 
   runApp(
     // 4. Riverpod — wrap the entire widget tree in ProviderScope.
-    const ProviderScope(
-      child: _StudyCollabApp(),
-    ),
+    const ProviderScope(child: _StudyCollabApp()),
   );
 }
 
@@ -119,9 +112,7 @@ class _HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: const Center(
-        child: Text('Study Collab'),
-      ),
+      body: const Center(child: Text('Study Collab')),
       // 7. Debug-only test crash button.
       //    This FloatingActionButton is ONLY compiled into debug builds.
       //    It will not appear in profile or release builds.
