@@ -1,4 +1,4 @@
-# 0003 — Firestore Schema and Security Rules Design
+# 0001 — Firestore Schema and Security Rules Design
 
 | Field | Value |
 |---|---|
