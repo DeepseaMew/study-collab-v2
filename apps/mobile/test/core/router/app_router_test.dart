@@ -44,9 +44,7 @@ class _StubNotifier extends AuthStateNotifier {
 Widget _buildApp({required AsyncValue<AuthState> authState}) {
   return ProviderScope(
     overrides: [
-      authStateNotifierProvider.overrideWith(
-        () => _StubNotifier(authState),
-      ),
+      authStateNotifierProvider.overrideWith(() => _StubNotifier(authState)),
     ],
     child: Consumer(
       builder: (context, ref, _) {
@@ -84,25 +82,22 @@ const _kHomeAnchor = 'Home';
 void main() {
   // ── Unauthenticated guard ─────────────────────────────────────────────────
 
-  testWidgets(
-    'unauthenticated: protected route /home redirects to /sign-in',
-    (tester) async {
-      // GoRouter initialLocation is /sign-in by default and then the stub
-      // fires; since the router always starts at its initialLocation and then
-      // evaluates the redirect, we verify the unauthenticated guard by
-      // checking that /sign-in is shown (router starts there and guard keeps
-      // it there for unauthenticated state).
-      await tester.pumpWidget(
-        _buildApp(
-          authState: const AsyncValue.data(AuthState.unauthenticated()),
-        ),
-      );
-      await tester.pumpAndSettle(const Duration(seconds: 3));
+  testWidgets('unauthenticated: protected route /home redirects to /sign-in', (
+    tester,
+  ) async {
+    // GoRouter initialLocation is /sign-in by default and then the stub
+    // fires; since the router always starts at its initialLocation and then
+    // evaluates the redirect, we verify the unauthenticated guard by
+    // checking that /sign-in is shown (router starts there and guard keeps
+    // it there for unauthenticated state).
+    await tester.pumpWidget(
+      _buildApp(authState: const AsyncValue.data(AuthState.unauthenticated())),
+    );
+    await tester.pumpAndSettle(const Duration(seconds: 3));
 
-      // Should land on sign-in screen, not home.
-      expect(find.text(_kSignInAnchor), findsOneWidget);
-    },
-  );
+    // Should land on sign-in screen, not home.
+    expect(find.text(_kSignInAnchor), findsOneWidget);
+  });
 
   testWidgets(
     'unauthenticated: already on /sign-in stays on /sign-in (no redirect)',
@@ -142,50 +137,43 @@ void main() {
 
   // ── Unverified guard ──────────────────────────────────────────────────────
 
-  testWidgets(
-    'unverified: any route redirects to /verify-email',
-    (tester) async {
-      await tester.pumpWidget(
-        _buildApp(
-          authState: const AsyncValue.data(AuthState.unverified()),
-        ),
-      );
-      await tester.pumpAndSettle(const Duration(seconds: 3));
+  testWidgets('unverified: any route redirects to /verify-email', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _buildApp(authState: const AsyncValue.data(AuthState.unverified())),
+    );
+    await tester.pumpAndSettle(const Duration(seconds: 3));
 
-      expect(find.text(_kVerifyEmailAnchor), findsOneWidget);
-    },
-  );
+    expect(find.text(_kVerifyEmailAnchor), findsOneWidget);
+  });
 
-  testWidgets(
-    'unverified: already on /verify-email stays (no redirect)',
-    (tester) async {
-      await tester.pumpWidget(
-        _buildApp(
-          authState: const AsyncValue.data(AuthState.unverified()),
-        ),
-      );
-      await tester.pumpAndSettle(const Duration(seconds: 3));
+  testWidgets('unverified: already on /verify-email stays (no redirect)', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _buildApp(authState: const AsyncValue.data(AuthState.unverified())),
+    );
+    await tester.pumpAndSettle(const Duration(seconds: 3));
 
-      // Guard sends to /verify-email and stays there.
-      expect(find.text(_kVerifyEmailAnchor), findsOneWidget);
-    },
-  );
+    // Guard sends to /verify-email and stays there.
+    expect(find.text(_kVerifyEmailAnchor), findsOneWidget);
+  });
 
   // ── PendingProfileSetup guard ─────────────────────────────────────────────
 
-  testWidgets(
-    'pendingProfileSetup: any route redirects to /profile-setup',
-    (tester) async {
-      await tester.pumpWidget(
-        _buildApp(
-          authState: const AsyncValue.data(AuthState.pendingProfileSetup()),
-        ),
-      );
-      await tester.pumpAndSettle(const Duration(seconds: 3));
+  testWidgets('pendingProfileSetup: any route redirects to /profile-setup', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _buildApp(
+        authState: const AsyncValue.data(AuthState.pendingProfileSetup()),
+      ),
+    );
+    await tester.pumpAndSettle(const Duration(seconds: 3));
 
-      expect(find.text(_kProfileSetupAnchor), findsOneWidget);
-    },
-  );
+    expect(find.text(_kProfileSetupAnchor), findsOneWidget);
+  });
 
   testWidgets(
     'pendingProfileSetup: already on /profile-setup stays (no redirect)',
@@ -204,50 +192,39 @@ void main() {
 
   // ── Authenticated guard ───────────────────────────────────────────────────
 
-  testWidgets(
-    'authenticated: /sign-in redirects to /home',
-    (tester) async {
-      await tester.pumpWidget(
-        _buildApp(
-          authState: const AsyncValue.data(AuthState.authenticated()),
-        ),
-      );
-      await tester.pumpAndSettle(const Duration(seconds: 3));
+  testWidgets('authenticated: /sign-in redirects to /home', (tester) async {
+    await tester.pumpWidget(
+      _buildApp(authState: const AsyncValue.data(AuthState.authenticated())),
+    );
+    await tester.pumpAndSettle(const Duration(seconds: 3));
 
-      // Authenticated guard redirects away from /sign-in to /home.
-      expect(find.text(_kHomeAnchor), findsWidgets);
-    },
-  );
+    // Authenticated guard redirects away from /sign-in to /home.
+    expect(find.text(_kHomeAnchor), findsWidgets);
+  });
 
-  testWidgets(
-    'authenticated: /verify-email redirects to /home',
-    (tester) async {
-      // Start authenticated; router would boot at /sign-in and then redirect
-      // to /home. Verify the guard blocks /verify-email for authenticated users
-      // by checking home is shown (as the guard redirects all auth-only paths).
-      await tester.pumpWidget(
-        _buildApp(
-          authState: const AsyncValue.data(AuthState.authenticated()),
-        ),
-      );
-      await tester.pumpAndSettle(const Duration(seconds: 3));
+  testWidgets('authenticated: /verify-email redirects to /home', (
+    tester,
+  ) async {
+    // Start authenticated; router would boot at /sign-in and then redirect
+    // to /home. Verify the guard blocks /verify-email for authenticated users
+    // by checking home is shown (as the guard redirects all auth-only paths).
+    await tester.pumpWidget(
+      _buildApp(authState: const AsyncValue.data(AuthState.authenticated())),
+    );
+    await tester.pumpAndSettle(const Duration(seconds: 3));
 
-      expect(find.text(_kHomeAnchor), findsWidgets);
-    },
-  );
+    expect(find.text(_kHomeAnchor), findsWidgets);
+  });
 
-  testWidgets(
-    'authenticated: already on /home stays on /home (no redirect)',
-    (tester) async {
-      await tester.pumpWidget(
-        _buildApp(
-          authState: const AsyncValue.data(AuthState.authenticated()),
-        ),
-      );
-      await tester.pumpAndSettle(const Duration(seconds: 3));
+  testWidgets('authenticated: already on /home stays on /home (no redirect)', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _buildApp(authState: const AsyncValue.data(AuthState.authenticated())),
+    );
+    await tester.pumpAndSettle(const Duration(seconds: 3));
 
-      // Authenticated state with initial /sign-in → redirected to /home, stays.
-      expect(find.text(_kHomeAnchor), findsWidgets);
-    },
-  );
+    // Authenticated state with initial /sign-in → redirected to /home, stays.
+    expect(find.text(_kHomeAnchor), findsWidgets);
+  });
 }

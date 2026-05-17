@@ -55,9 +55,7 @@ void _stubSignUpSuccess(_MockAuthDatasource ds) {
     ),
   ).thenAnswer((_) async => mockCredential);
 
-  when(
-    () => ds.updateDisplayName(any()),
-  ).thenAnswer((_) async {});
+  when(() => ds.updateDisplayName(any())).thenAnswer((_) async {});
 
   when(() => ds.sendEmailVerification()).thenAnswer((_) async {});
 }
@@ -121,164 +119,166 @@ void main() {
   // For each case: assert KmuttDomainRejected is thrown AND that
   // createUserWithEmailAndPassword is NEVER called (guard fires before Firebase).
 
-  group('signUp — rejected emails (must throw KmuttDomainRejected, no Firebase call)', () {
-    test('3. uppercase domain: student@MAIL.KMUTT.AC.TH — rejected (no /i flag, matches ADR 0001)', () async {
-      // Spec: case-sensitive regex, so uppercase domain must be rejected.
-      // Implementation has no /i flag → behaviour matches spec (no deviation).
-      await expectLater(
-        repo.signUp(
-          fullName: 'Test',
-          email: 'student@MAIL.KMUTT.AC.TH',
-          password: 'password123',
-        ),
-        throwsA(isA<KmuttDomainRejected>()),
+  group(
+    'signUp — rejected emails (must throw KmuttDomainRejected, no Firebase call)',
+    () {
+      test(
+        '3. uppercase domain: student@MAIL.KMUTT.AC.TH — rejected (no /i flag, matches ADR 0001)',
+        () async {
+          // Spec: case-sensitive regex, so uppercase domain must be rejected.
+          // Implementation has no /i flag → behaviour matches spec (no deviation).
+          await expectLater(
+            repo.signUp(
+              fullName: 'Test',
+              email: 'student@MAIL.KMUTT.AC.TH',
+              password: 'password123',
+            ),
+            throwsA(isA<KmuttDomainRejected>()),
+          );
+
+          verifyNever(
+            () => mockDatasource.createUserWithEmailAndPassword(
+              email: any(named: 'email'),
+              password: any(named: 'password'),
+            ),
+          );
+        },
       );
 
-      verifyNever(
-        () => mockDatasource.createUserWithEmailAndPassword(
-          email: any(named: 'email'),
-          password: any(named: 'password'),
-        ),
-      );
-    });
-
-    test('4. wrong domain: user@gmail.com', () async {
-      await expectLater(
-        repo.signUp(
-          fullName: 'Test',
-          email: 'user@gmail.com',
-          password: 'password123',
-        ),
-        throwsA(isA<KmuttDomainRejected>()),
-      );
-
-      verifyNever(
-        () => mockDatasource.createUserWithEmailAndPassword(
-          email: any(named: 'email'),
-          password: any(named: 'password'),
-        ),
-      );
-    });
-
-    test('5. lookalike subdomain: user@kmutt.ac.th.evil.com', () async {
-      await expectLater(
-        repo.signUp(
-          fullName: 'Test',
-          email: 'user@kmutt.ac.th.evil.com',
-          password: 'password123',
-        ),
-        throwsA(isA<KmuttDomainRejected>()),
-      );
-
-      verifyNever(
-        () => mockDatasource.createUserWithEmailAndPassword(
-          email: any(named: 'email'),
-          password: any(named: 'password'),
-        ),
-      );
-    });
-
-    test('6. double-@ injection: user@evil.com@mail.kmutt.ac.th', () async {
-      // Regex: ^[^@]+@ — the [^@]+ local-part disallows a second @ before the
-      // domain, so this address is rejected. Verifies defence against injection.
-      await expectLater(
-        repo.signUp(
-          fullName: 'Test',
-          email: 'user@evil.com@mail.kmutt.ac.th',
-          password: 'password123',
-        ),
-        throwsA(isA<KmuttDomainRejected>()),
-      );
-
-      verifyNever(
-        () => mockDatasource.createUserWithEmailAndPassword(
-          email: any(named: 'email'),
-          password: any(named: 'password'),
-        ),
-      );
-    });
-
-    test(
-      '7. leading whitespace: " user@mail.kmutt.ac.th" — '
-      'signUp() trims before regex; datasource receives trimmed email',
-      () async {
-        // After trimming, "user@mail.kmutt.ac.th" is a valid KMUTT address,
-        // so the guard passes and the datasource is called with the trimmed value.
-        _stubSignUpSuccess(mockDatasource);
-
-        await repo.signUp(
-          fullName: 'Test',
-          email: ' user@mail.kmutt.ac.th',
-          password: 'password123',
-        );
-
-        // Datasource must receive the TRIMMED email, not the raw input.
-        verify(
-          () => mockDatasource.createUserWithEmailAndPassword(
-            email: 'user@mail.kmutt.ac.th',
+      test('4. wrong domain: user@gmail.com', () async {
+        await expectLater(
+          repo.signUp(
+            fullName: 'Test',
+            email: 'user@gmail.com',
             password: 'password123',
           ),
-        ).called(1);
-      },
-    );
-
-    test(
-      '8. trailing whitespace: "user@mail.kmutt.ac.th " — '
-      'signUp() trims before regex; datasource receives trimmed email',
-      () async {
-        // After trimming, "user@mail.kmutt.ac.th" is a valid KMUTT address.
-        _stubSignUpSuccess(mockDatasource);
-
-        await repo.signUp(
-          fullName: 'Test',
-          email: 'user@mail.kmutt.ac.th ',
-          password: 'password123',
+          throwsA(isA<KmuttDomainRejected>()),
         );
 
-        // Datasource must receive the TRIMMED email, not the raw input.
-        verify(
+        verifyNever(
           () => mockDatasource.createUserWithEmailAndPassword(
-            email: 'user@mail.kmutt.ac.th',
+            email: any(named: 'email'),
+            password: any(named: 'password'),
+          ),
+        );
+      });
+
+      test('5. lookalike subdomain: user@kmutt.ac.th.evil.com', () async {
+        await expectLater(
+          repo.signUp(
+            fullName: 'Test',
+            email: 'user@kmutt.ac.th.evil.com',
             password: 'password123',
           ),
-        ).called(1);
-      },
-    );
+          throwsA(isA<KmuttDomainRejected>()),
+        );
 
-    test('9. empty string: ""', () async {
-      await expectLater(
-        repo.signUp(
-          fullName: 'Test',
-          email: '',
-          password: 'password123',
-        ),
-        throwsA(isA<KmuttDomainRejected>()),
+        verifyNever(
+          () => mockDatasource.createUserWithEmailAndPassword(
+            email: any(named: 'email'),
+            password: any(named: 'password'),
+          ),
+        );
+      });
+
+      test('6. double-@ injection: user@evil.com@mail.kmutt.ac.th', () async {
+        // Regex: ^[^@]+@ — the [^@]+ local-part disallows a second @ before the
+        // domain, so this address is rejected. Verifies defence against injection.
+        await expectLater(
+          repo.signUp(
+            fullName: 'Test',
+            email: 'user@evil.com@mail.kmutt.ac.th',
+            password: 'password123',
+          ),
+          throwsA(isA<KmuttDomainRejected>()),
+        );
+
+        verifyNever(
+          () => mockDatasource.createUserWithEmailAndPassword(
+            email: any(named: 'email'),
+            password: any(named: 'password'),
+          ),
+        );
+      });
+
+      test(
+        '7. leading whitespace: " user@mail.kmutt.ac.th" — '
+        'signUp() trims before regex; datasource receives trimmed email',
+        () async {
+          // After trimming, "user@mail.kmutt.ac.th" is a valid KMUTT address,
+          // so the guard passes and the datasource is called with the trimmed value.
+          _stubSignUpSuccess(mockDatasource);
+
+          await repo.signUp(
+            fullName: 'Test',
+            email: ' user@mail.kmutt.ac.th',
+            password: 'password123',
+          );
+
+          // Datasource must receive the TRIMMED email, not the raw input.
+          verify(
+            () => mockDatasource.createUserWithEmailAndPassword(
+              email: 'user@mail.kmutt.ac.th',
+              password: 'password123',
+            ),
+          ).called(1);
+        },
       );
 
-      verifyNever(
-        () => mockDatasource.createUserWithEmailAndPassword(
-          email: any(named: 'email'),
-          password: any(named: 'password'),
-        ),
-      );
-    });
+      test(
+        '8. trailing whitespace: "user@mail.kmutt.ac.th " — '
+        'signUp() trims before regex; datasource receives trimmed email',
+        () async {
+          // After trimming, "user@mail.kmutt.ac.th" is a valid KMUTT address.
+          _stubSignUpSuccess(mockDatasource);
 
-    test('10. malformed: "not-an-email"', () async {
-      await expectLater(
-        repo.signUp(
-          fullName: 'Test',
-          email: 'not-an-email',
-          password: 'password123',
-        ),
-        throwsA(isA<KmuttDomainRejected>()),
+          await repo.signUp(
+            fullName: 'Test',
+            email: 'user@mail.kmutt.ac.th ',
+            password: 'password123',
+          );
+
+          // Datasource must receive the TRIMMED email, not the raw input.
+          verify(
+            () => mockDatasource.createUserWithEmailAndPassword(
+              email: 'user@mail.kmutt.ac.th',
+              password: 'password123',
+            ),
+          ).called(1);
+        },
       );
 
-      verifyNever(
-        () => mockDatasource.createUserWithEmailAndPassword(
-          email: any(named: 'email'),
-          password: any(named: 'password'),
-        ),
-      );
-    });
-  });
+      test('9. empty string: ""', () async {
+        await expectLater(
+          repo.signUp(fullName: 'Test', email: '', password: 'password123'),
+          throwsA(isA<KmuttDomainRejected>()),
+        );
+
+        verifyNever(
+          () => mockDatasource.createUserWithEmailAndPassword(
+            email: any(named: 'email'),
+            password: any(named: 'password'),
+          ),
+        );
+      });
+
+      test('10. malformed: "not-an-email"', () async {
+        await expectLater(
+          repo.signUp(
+            fullName: 'Test',
+            email: 'not-an-email',
+            password: 'password123',
+          ),
+          throwsA(isA<KmuttDomainRejected>()),
+        );
+
+        verifyNever(
+          () => mockDatasource.createUserWithEmailAndPassword(
+            email: any(named: 'email'),
+            password: any(named: 'password'),
+          ),
+        );
+      });
+    },
+  );
 }

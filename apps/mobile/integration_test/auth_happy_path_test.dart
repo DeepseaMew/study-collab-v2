@@ -65,8 +65,9 @@ void main() {
   //
   // Android emulator communicates with the host machine via 10.0.2.2.
   // Web/desktop/iOS simulator reaches the host as localhost.
-  final String emulatorHost =
-      defaultTargetPlatform == TargetPlatform.android ? '10.0.2.2' : 'localhost';
+  final String emulatorHost = defaultTargetPlatform == TargetPlatform.android
+      ? '10.0.2.2'
+      : 'localhost';
 
   setUpAll(() async {
     await Firebase.initializeApp(
@@ -96,108 +97,96 @@ void main() {
     final oobCode = code['oobCode'] as String;
 
     // Follow the verify link so the emulator marks the account as verified.
-    final verifyUrl = Uri.http(
-      '$emulatorHost:9099',
-      '/emulator/action',
-      {
-        'mode': 'verifyEmail',
-        'lang': 'en',
-        'oobCode': oobCode,
-        'apiKey': 'fake-api-key',
-      },
-    );
+    final verifyUrl = Uri.http('$emulatorHost:9099', '/emulator/action', {
+      'mode': 'verifyEmail',
+      'lang': 'en',
+      'oobCode': oobCode,
+      'apiKey': 'fake-api-key',
+    });
     await http.get(verifyUrl);
   }
 
-  testWidgets(
-    'happy path: sign-up → verify-email → profile-setup → home',
-    (tester) async {
-      // ── Unique email per run (cleanup strategy) ──────────────────────────
-      //
-      // Using a unique timestamp-based address on each run means:
-      //   - No cleanup HTTP calls needed.
-      //   - Re-runs never conflict with previous accounts.
-      //   - The emulator is reset between CI jobs by design.
-      final uniqueEmail =
-          'test-${DateTime.now().millisecondsSinceEpoch}@mail.kmutt.ac.th';
-      const password = 'Test1234!';
+  testWidgets('happy path: sign-up → verify-email → profile-setup → home', (
+    tester,
+  ) async {
+    // ── Unique email per run (cleanup strategy) ──────────────────────────
+    //
+    // Using a unique timestamp-based address on each run means:
+    //   - No cleanup HTTP calls needed.
+    //   - Re-runs never conflict with previous accounts.
+    //   - The emulator is reset between CI jobs by design.
+    final uniqueEmail =
+        'test-${DateTime.now().millisecondsSinceEpoch}@mail.kmutt.ac.th';
+    const password = 'Test1234!';
 
-      // ── Step 1: launch the real app with real router ─────────────────────
-      await tester.pumpWidget(
-        const ProviderScope(
-          child: _TestApp(),
-        ),
-      );
-      await tester.pumpAndSettle(const Duration(seconds: 3));
+    // ── Step 1: launch the real app with real router ─────────────────────
+    await tester.pumpWidget(const ProviderScope(child: _TestApp()));
+    await tester.pumpAndSettle(const Duration(seconds: 3));
 
-      // ── Step 2: navigate to sign-up ──────────────────────────────────────
-      // Sign-in screen shows 'Welcome back!' and a link-style button to sign up.
-      expect(find.text('Welcome back!'), findsOneWidget);
+    // ── Step 2: navigate to sign-up ──────────────────────────────────────
+    // Sign-in screen shows 'Welcome back!' and a link-style button to sign up.
+    expect(find.text('Welcome back!'), findsOneWidget);
 
-      // The sign-up navigation button says 'Create Account' on the sign-in screen.
-      await tester.tap(find.text('Create Account'));
-      await tester.pumpAndSettle(const Duration(seconds: 2));
+    // The sign-up navigation button says 'Create Account' on the sign-in screen.
+    await tester.tap(find.text('Create Account'));
+    await tester.pumpAndSettle(const Duration(seconds: 2));
 
-      // ── Step 3: fill the sign-up form ────────────────────────────────────
-      // Fields are found by index (no widget keys assigned — tracked as
-      // flutter-engineer finding: sign_up_screen.dart fields missing Key()).
-      //
-      // TextFormField order on screen: Full name, Email, Password, Confirm Password.
-      final fields = find.byType(TextFormField);
-      expect(fields, findsNWidgets(4));
+    // ── Step 3: fill the sign-up form ────────────────────────────────────
+    // Fields are found by index (no widget keys assigned — tracked as
+    // flutter-engineer finding: sign_up_screen.dart fields missing Key()).
+    //
+    // TextFormField order on screen: Full name, Email, Password, Confirm Password.
+    final fields = find.byType(TextFormField);
+    expect(fields, findsNWidgets(4));
 
-      await tester.enterText(fields.at(0), 'Test User');
-      await tester.enterText(fields.at(1), uniqueEmail);
-      await tester.enterText(fields.at(2), password);
-      await tester.enterText(fields.at(3), password);
+    await tester.enterText(fields.at(0), 'Test User');
+    await tester.enterText(fields.at(1), uniqueEmail);
+    await tester.enterText(fields.at(2), password);
+    await tester.enterText(fields.at(3), password);
 
-      // Tap the submit button identified by its label text.
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Create Account'));
-      await tester.pumpAndSettle(const Duration(seconds: 5));
+    // Tap the submit button identified by its label text.
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Create Account'));
+    await tester.pumpAndSettle(const Duration(seconds: 5));
 
-      // ── Step 4: verify-email screen ──────────────────────────────────────
-      expect(find.text('Verify your email'), findsOneWidget);
+    // ── Step 4: verify-email screen ──────────────────────────────────────
+    expect(find.text('Verify your email'), findsOneWidget);
 
-      // Mark the account as verified via the Auth emulator oobCode flow,
-      // then reload so Firebase Auth picks up emailVerified = true.
-      await markEmailVerified(uniqueEmail);
-      await FirebaseAuth.instance.currentUser!.reload();
+    // Mark the account as verified via the Auth emulator oobCode flow,
+    // then reload so Firebase Auth picks up emailVerified = true.
+    await markEmailVerified(uniqueEmail);
+    await FirebaseAuth.instance.currentUser!.reload();
 
-      // Tap the confirm button; the notifier calls reloadUser() which will
-      // re-check auth state and transition to pendingProfileSetup.
-      await tester.tap(
-        find.widgetWithText(ElevatedButton, "I've verified my email"),
-      );
-      await tester.pumpAndSettle(const Duration(seconds: 10));
+    // Tap the confirm button; the notifier calls reloadUser() which will
+    // re-check auth state and transition to pendingProfileSetup.
+    await tester.tap(
+      find.widgetWithText(ElevatedButton, "I've verified my email"),
+    );
+    await tester.pumpAndSettle(const Duration(seconds: 10));
 
-      // ── Step 5: profile-setup screen ─────────────────────────────────────
-      expect(find.text('Set up your profile'), findsOneWidget);
+    // ── Step 5: profile-setup screen ─────────────────────────────────────
+    expect(find.text('Set up your profile'), findsOneWidget);
 
-      // Display name field is the first TextFormField on this screen.
-      final profileFields = find.byType(TextFormField);
-      await tester.enterText(profileFields.first, 'Test User');
+    // Display name field is the first TextFormField on this screen.
+    final profileFields = find.byType(TextFormField);
+    await tester.enterText(profileFields.first, 'Test User');
 
-      // Faculty dropdown — tap and choose first item.
-      // byWidgetPredicate uses `is` (covariant) so it matches the concrete
-      // DropdownButtonFormField<KmuttFaculty> type; byType<dynamic> would not.
-      await tester.tap(
-        find.byWidgetPredicate((w) => w is DropdownButtonFormField).first,
-      );
-      await tester.pumpAndSettle(const Duration(seconds: 2));
+    // Faculty dropdown — tap and choose first item.
+    // byWidgetPredicate uses `is` (covariant) so it matches the concrete
+    // DropdownButtonFormField<KmuttFaculty> type; byType<dynamic> would not.
+    await tester.tap(
+      find.byWidgetPredicate((w) => w is DropdownButtonFormField).first,
+    );
+    await tester.pumpAndSettle(const Duration(seconds: 2));
 
-      // Tap the first dropdown item in the overlay.
-      final dropdownItems =
-          find.byWidgetPredicate((w) => w is DropdownMenuItem);
-      await tester.tap(dropdownItems.first, warnIfMissed: false);
-      await tester.pumpAndSettle(const Duration(seconds: 2));
+    // Tap the first dropdown item in the overlay.
+    final dropdownItems = find.byWidgetPredicate((w) => w is DropdownMenuItem);
+    await tester.tap(dropdownItems.first, warnIfMissed: false);
+    await tester.pumpAndSettle(const Duration(seconds: 2));
 
-      await tester.tap(
-        find.widgetWithText(ElevatedButton, 'Save and continue'),
-      );
-      await tester.pumpAndSettle(const Duration(seconds: 5));
+    await tester.tap(find.widgetWithText(ElevatedButton, 'Save and continue'));
+    await tester.pumpAndSettle(const Duration(seconds: 5));
 
-      // ── Step 6: home screen ───────────────────────────────────────────────
-      expect(find.text('Home'), findsWidgets);
-    },
-  );
+    // ── Step 6: home screen ───────────────────────────────────────────────
+    expect(find.text('Home'), findsWidgets);
+  });
 }
