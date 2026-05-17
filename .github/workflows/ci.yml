@@ -81,6 +81,13 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Inject firebase_options.dart
+        working-directory: ${{ github.workspace }}
+        run: |
+          cat > apps/mobile/lib/firebase_options.dart << 'EOF'
+          ${{ secrets.FIREBASE_OPTIONS_DART }}
+          EOF
+
       - name: Inject google-services.json
         working-directory: ${{ github.workspace }}
         run: |
@@ -123,6 +130,13 @@ jobs:
         with:
           channel: stable
           cache: true
+
+      - name: Inject firebase_options.dart
+        working-directory: ${{ github.workspace }}
+        run: |
+          cat > apps/mobile/lib/firebase_options.dart << 'EOF'
+          ${{ secrets.FIREBASE_OPTIONS_DART }}
+          EOF
 
       - name: Install dependencies
         run: flutter pub get
