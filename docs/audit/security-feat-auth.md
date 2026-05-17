@@ -239,7 +239,7 @@ Status unchanged from Re-audit 1. No re-examination performed per task scope.
       "severity": "critical",
       "status": "FIXED",
       "title": "Live Firebase API keys committed in firebase_options.dart",
-      "evidence": "Neither AIzaSyAURkDGolbdID4YNF37LddnRwnTN1F02Oc nor AIzaSyCBhHGJrr7VdVtzCe80TFCzokPdTZzKp5A appears in the current file. File is untracked (git ls-files empty). .gitignore line 38 excludes **/lib/firebase_options.dart. Old keys present in git history at commits 9e56390, cbeda01, 689996d — informational only; keys revoked in Google Cloud Console."
+      "evidence": "Neither [REDACTED] nor [REDACTED] appears in the current file. File is untracked (git ls-files empty). .gitignore line 38 excludes **/lib/firebase_options.dart. Old keys present in git history at commits 9e56390, cbeda01, 689996d — informational only; keys revoked in Google Cloud Console."
     },
     {
       "id": "SEC-002",
