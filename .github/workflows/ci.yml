@@ -131,16 +131,17 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      - name: Firebase login
+        run: firebase login --no-localhost --token "${{ secrets.FIREBASE_TOKEN }}"
+        continue-on-error: true
+
       - name: Run integration tests (Android emulator)
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 34
           arch: x86_64
           working-directory: ${{ github.workspace }}
-          script: |
-            firebase emulators:exec --only auth,firestore \
-              "cd apps/mobile && flutter test integration_test/auth_happy_path_test.dart && \
-               flutter test integration_test/auth_flow_test.dart"
+          script: firebase emulators:exec --only auth,firestore "cd apps/mobile && flutter test integration_test/auth_happy_path_test.dart && flutter test integration_test/auth_flow_test.dart"
 
   integration-test-web:
     name: Integration Tests (Web)
