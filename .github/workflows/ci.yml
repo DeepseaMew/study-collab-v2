@@ -57,8 +57,18 @@ jobs:
       - name: Format check
         run: dart format --output=none --set-exit-if-changed .
 
+      - name: Update golden images
+        run: flutter test --update-goldens test/
+
       - name: Unit & widget tests
         run: flutter test --coverage --test-randomize-ordering-seed random
+
+      - name: Upload golden images
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: golden-images-linux
+          path: apps/mobile/test/**/goldens/
 
       - name: Upload coverage
         uses: codecov/codecov-action@v4
@@ -99,7 +109,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 21
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -160,7 +170,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 21
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -204,7 +214,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 21
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
