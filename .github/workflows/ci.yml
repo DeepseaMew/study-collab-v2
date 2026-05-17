@@ -7,8 +7,10 @@ on:
     branches: [main, develop]
 
 # Required GitHub Actions secrets:
-# FIREBASE_OPTIONS_DART — full contents of apps/mobile/lib/firebase_options.dart
-#                         Set in GitHub repo Settings → Secrets → Actions
+# FIREBASE_OPTIONS_DART  — full contents of apps/mobile/lib/firebase_options.dart
+#                          Set in GitHub repo Settings → Secrets → Actions
+# GOOGLE_SERVICES_JSON   — full contents of apps/mobile/android/app/google-services.json
+#                          Set in GitHub repo Settings → Secrets → Actions
 
 jobs:
   analyze-and-test:
@@ -34,6 +36,11 @@ jobs:
           cat > apps/mobile/lib/firebase_options.dart << 'EOF'
           ${{ secrets.FIREBASE_OPTIONS_DART }}
           EOF
+
+      - name: Inject google-services.json
+        working-directory: ${{ github.workspace }}
+        run: |
+          echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > apps/mobile/android/app/google-services.json
 
       - name: Install dependencies
         run: flutter pub get
@@ -73,6 +80,11 @@ jobs:
         with:
           channel: stable
           cache: true
+
+      - name: Inject google-services.json
+        working-directory: ${{ github.workspace }}
+        run: |
+          echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > apps/mobile/android/app/google-services.json
 
       - name: Install dependencies
         run: flutter pub get
@@ -161,6 +173,11 @@ jobs:
           cat > apps/mobile/lib/firebase_options.dart << 'EOF'
           ${{ secrets.FIREBASE_OPTIONS_DART }}
           EOF
+
+      - name: Inject google-services.json
+        working-directory: ${{ github.workspace }}
+        run: |
+          echo '${{ secrets.GOOGLE_SERVICES_JSON }}' > apps/mobile/android/app/google-services.json
 
       - name: flutter pub get
         run: flutter pub get
