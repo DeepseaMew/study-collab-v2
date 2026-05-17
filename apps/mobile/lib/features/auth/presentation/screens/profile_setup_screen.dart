@@ -67,7 +67,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
 
     await ref
         .read(authStateNotifierProvider.notifier)
-        .updateProfile(
+        .completeProfileSetup(
           displayName: _displayNameController.text.trim(),
           faculty: _selectedFaculty!.name,
           bio: _bioController.text.trim(),
@@ -123,6 +123,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                 const _FieldLabel(label: 'Display name'),
                 const SizedBox(height: 6),
                 TextFormField(
+                  key: const Key('displayNameField'),
                   controller: _displayNameController,
                   textInputAction: TextInputAction.next,
                   decoration: _inputDecoration(hint: 'How others will see you'),

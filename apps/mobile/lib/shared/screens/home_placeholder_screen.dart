@@ -1,3 +1,4 @@
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -50,8 +51,7 @@ class HomePlaceholderScreen extends ConsumerWidget {
                 appLogger.warning(
                   'Debug test crash triggered — intentional Crashlytics check',
                 );
-                // ignore: avoid_dynamic_calls
-                throw Exception('Test crash');
+                FirebaseCrashlytics.instance.crash();
               },
               label: const Text('Test Crash'),
               icon: const Icon(Icons.bug_report),

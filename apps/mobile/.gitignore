@@ -35,4 +35,6 @@ Thumbs.db
 **/GoogleService-Info.plist
 **/service-account.json
 **/*-service-account.json
-
+**/lib/firebase_options.dart
+apps/mobile/android/app/google-services.json 
+apps/mobile/android/app/google-services.json 

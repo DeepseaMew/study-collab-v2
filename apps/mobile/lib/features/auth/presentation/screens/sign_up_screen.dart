@@ -3,11 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/core/errors/auth_failure.dart';
 import 'package:mobile/core/router/app_router.dart';
+import 'package:mobile/core/validators/kmutt_email.dart';
 import 'package:mobile/features/auth/presentation/providers/auth_state_notifier_provider.dart';
 import 'package:mobile/shared/theme/app_colors.dart';
 import 'package:mobile/shared/theme/app_typography.dart';
-
-const _kmuttRegex = r'^[^@]+@(mail\.kmutt\.ac\.th|kmutt\.ac\.th)$';
 
 class SignUpScreen extends ConsumerStatefulWidget {
   const SignUpScreen({super.key});
@@ -94,6 +93,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                   const SizedBox(height: 16),
                 ],
                 _FormField(
+                  fieldKey: const Key('fullNameField'),
                   controller: _fullNameController,
                   label: 'Full name',
                   hint: 'Your full name',
@@ -108,6 +108,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                 ),
                 const SizedBox(height: 16),
                 _FormField(
+                  fieldKey: const Key('emailField'),
                   controller: _emailController,
                   label: 'Email',
                   hint: 'you@mail.kmutt.ac.th',
@@ -118,7 +119,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                     if (v == null || v.trim().isEmpty) {
                       return 'Email is required';
                     }
-                    if (!RegExp(_kmuttRegex).hasMatch(v.trim())) {
+                    if (!RegExp(kmuttEmailPattern).hasMatch(v.trim())) {
                       return 'Must be a KMUTT email address';
                     }
                     return null;
@@ -126,6 +127,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                 ),
                 const SizedBox(height: 16),
                 _FormField(
+                  fieldKey: const Key('passwordField'),
                   controller: _passwordController,
                   label: 'Password',
                   hint: '••••••••',
@@ -144,6 +146,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                 ),
                 const SizedBox(height: 16),
                 _FormField(
+                  fieldKey: const Key('confirmPasswordField'),
                   controller: _confirmPasswordController,
                   label: 'Confirm Password',
                   hint: '••••••••',
@@ -230,6 +233,7 @@ class _FormField extends StatelessWidget {
     required this.label,
     required this.hint,
     required this.prefixIcon,
+    this.fieldKey,
     this.keyboardType,
     this.textInputAction,
     this.obscureText = false,
@@ -242,6 +246,9 @@ class _FormField extends StatelessWidget {
   final String label;
   final String hint;
   final IconData prefixIcon;
+  // Key forwarded to the inner TextFormField so integration tests can find
+  // each field by key rather than by fragile index-based lookup.
+  final Key? fieldKey;
   final TextInputType? keyboardType;
   final TextInputAction? textInputAction;
   final bool obscureText;
@@ -264,6 +271,7 @@ class _FormField extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         TextFormField(
+          key: fieldKey,
           controller: controller,
           keyboardType: keyboardType,
           textInputAction: textInputAction,

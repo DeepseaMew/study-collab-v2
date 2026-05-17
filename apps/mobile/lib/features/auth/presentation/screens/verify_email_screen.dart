@@ -16,14 +16,15 @@ class VerifyEmailScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Stack(
+      body: SizedBox.expand(
+        child: Stack(
         children: [
           Positioned(
             top: -70,
             right: -70,
             child: Container(
-              width: 220,
-              height: 220,
+              width: 320,
+              height: 320,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: AppColors.accent.withValues(alpha: 0.08),
@@ -34,8 +35,8 @@ class VerifyEmailScreen extends ConsumerWidget {
             bottom: -90,
             left: -90,
             child: Container(
-              width: 260,
-              height: 260,
+              width: 320,
+              height: 320,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: AppColors.accent.withValues(alpha: 0.08),
@@ -155,6 +156,7 @@ class VerifyEmailScreen extends ConsumerWidget {
             ),
           ),
         ],
+      ),
       ),
     );
   }

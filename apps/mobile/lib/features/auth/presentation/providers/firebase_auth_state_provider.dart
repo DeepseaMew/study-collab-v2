@@ -5,5 +5,5 @@ part 'firebase_auth_state_provider.g.dart';
 
 @riverpod
 Stream<User?> firebaseAuthState(FirebaseAuthStateRef ref) {
-  return FirebaseAuth.instance.authStateChanges();
+  return FirebaseAuth.instance.idTokenChanges();
 }

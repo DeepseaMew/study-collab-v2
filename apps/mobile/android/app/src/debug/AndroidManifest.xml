@@ -4,4 +4,9 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Allow cleartext HTTP so the app can reach Firebase emulator endpoints
+         (Auth on port 9099, Firestore on port 8080) from the Android emulator
+         in debug builds. Android 9+ blocks cleartext traffic by default.
+         This flag must never appear in the main or release manifests. -->
+    <application android:usesCleartextTraffic="true" />
 </manifest>

@@ -1,0 +1,231 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Helper functions ────────────────────────────────────────────────────
+
+    function isKmuttUser() {
+      return request.auth != null
+        && request.auth.token.email_verified == true
+        && request.auth.token.email.matches('.*@(mail\\.kmutt\\.ac\\.th|kmutt\\.ac\\.th)$');
+    }
+
+    function isHost(sessionId) {
+      return isKmuttUser()
+        && get(/databases/$(database)/documents/sessions/$(sessionId)).data.hostUid
+           == request.auth.uid;
+    }
+
+    function isMember(sessionId) {
+      return isKmuttUser()
+        && request.auth.uid in
+           get(/databases/$(database)/documents/sessions/$(sessionId)).data.memberUids;
+    }
+
+    function sessionEnded(sessionId) {
+      return get(/databases/$(database)/documents/sessions/$(sessionId)).data.status
+        == 'ended';
+    }
+
+    function areFriends(uidA, uidB) {
+      return get(/databases/$(database)/documents/users/$(uidA)/friends/$(uidB)).data.status
+        == 'accepted'
+        && get(/databases/$(database)/documents/users/$(uidB)/friends/$(uidA)).data.status
+        == 'accepted';
+    }
+
+    // ── users/{uid} ─────────────────────────────────────────────────────────
+
+    match /users/{uid} {
+      allow read: if isKmuttUser();
+
+      allow create: if isKmuttUser()
+        && request.auth.uid == uid
+        && request.resource.data.keys().hasAll([
+             'uid', 'displayName', 'fullName', 'email', 'hasHostedBefore',
+             'studentYear', 'academicLevel', 'faculty',
+             'profileScore', 'createdAt', 'updatedAt'
+           ])
+        && request.resource.data.email.matches('.*@(mail\\.kmutt\\.ac\\.th|kmutt\\.ac\\.th)$')
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.hasHostedBefore == false
+        && request.resource.data.profileScore == 0.0;
+
+      allow update: if isKmuttUser()
+        && request.auth.uid == uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['displayName', 'fullName', 'photoUrl', 'studentYear', 'academicLevel',
+                       'faculty', 'bio', 'hasHostedBefore', 'profileScore', 'updatedAt'])
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.email == resource.data.email;
+
+      allow delete: if false;
+
+      // ── users/{uid}/friends/{friendUid} ──────────────────────────────────
+
+      match /friends/{friendUid} {
+        allow read: if isKmuttUser()
+          && (request.auth.uid == uid || request.auth.uid == friendUid);
+
+        allow create: if isKmuttUser()
+          && (request.auth.uid == uid || request.auth.uid == friendUid)
+          && request.resource.data.friendUid == friendUid
+          && request.resource.data.status == 'pending'
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.updatedAt == request.time
+          && request.resource.data.keys().hasAll([
+               'friendUid', 'status', 'initiatorUid', 'createdAt', 'updatedAt'
+             ]);
+
+        allow update: if isKmuttUser()
+          && (request.auth.uid == uid || request.auth.uid == friendUid)
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['status', 'updatedAt'])
+          && request.resource.data.updatedAt == request.time;
+
+        allow delete: if isKmuttUser()
+          && (request.auth.uid == uid || request.auth.uid == friendUid);
+      }
+    }
+
+    // ── sessions/{sessionId} ────────────────────────────────────────────────
+
+    match /sessions/{sessionId} {
+      allow read: if isKmuttUser()
+        && (resource.data.visibility == 'public'
+            || request.auth.uid in resource.data.memberUids);
+
+      allow create: if isKmuttUser()
+        && request.resource.data.hostUid == request.auth.uid
+        && request.resource.data.memberUids == [request.auth.uid]
+        && request.resource.data.status == 'scheduled'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.keys().hasAll([
+             'sessionId', 'hostUid', 'hostFaculty', 'title', 'hashtags', 'academicLevel',
+             'studentYear', 'visibility', 'memberUids', 'noteCount', 'status',
+             'scheduledAt', 'createdAt', 'updatedAt'
+           ]);
+
+      allow update: if isHost(sessionId)
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['title', 'description', 'hashtags', 'academicLevel',
+                       'studentYear', 'visibility', 'pin', 'memberUids',
+                       'noteCount', 'status', 'scheduledAt', 'endedAt', 'updatedAt'])
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.hostUid == resource.data.hostUid
+        && request.resource.data.hostFaculty == resource.data.hostFaculty
+        && request.resource.data.createdAt == resource.data.createdAt;
+
+      allow delete: if isHost(sessionId)
+        && resource.data.status == 'scheduled';
+
+      // ── sessions/{sessionId}/messages/{messageId} ────────────────────────
+
+      match /messages/{messageId} {
+        allow read: if isMember(sessionId);
+
+        allow create: if isMember(sessionId)
+          && request.resource.data.senderUid == request.auth.uid
+          && request.resource.data.sentAt == request.time
+          && request.resource.data.readBy == [request.auth.uid]
+          && request.resource.data.keys().hasAll([
+               'messageId', 'senderUid', 'text', 'sentAt', 'readBy'
+             ]);
+
+        allow update: if isMember(sessionId)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy'])
+          && request.auth.uid in request.resource.data.readBy;
+
+        allow delete: if false;
+      }
+
+      // ── sessions/{sessionId}/ratings/{raterUid} ──────────────────────────
+
+      match /ratings/{raterUid} {
+        allow read: if isMember(sessionId);
+
+        allow create: if isMember(sessionId)
+          && sessionEnded(sessionId)
+          && request.auth.uid == raterUid
+          && request.resource.data.raterUid == raterUid
+          && request.resource.data.rateeUid != raterUid
+          && request.resource.data.liked == true
+          && request.resource.data.ratedAt == request.time
+          && request.resource.data.keys().hasAll([
+               'raterUid', 'rateeUid', 'liked', 'ratedAt'
+             ]);
+
+        allow update: if false;
+        allow delete: if false;
+      }
+
+      // ── sessions/{sessionId}/notes/{noteId} ──────────────────────────────
+
+      match /notes/{noteId} {
+        allow read: if isMember(sessionId);
+
+        allow create: if isMember(sessionId)
+          && request.resource.data.uploaderUid == request.auth.uid
+          && request.resource.data.uploadedAt == request.time
+          && request.resource.data.sizeBytes > 0
+          && request.resource.data.sizeBytes <= 10485760
+          && request.resource.data.keys().hasAll([
+               'noteId', 'uploaderUid', 'fileName', 'mimeType',
+               'sizeBytes', 'storageRef', 'downloadUrl', 'uploadedAt'
+             ])
+          && getAfter(/databases/$(database)/documents/sessions/$(sessionId))
+               .data.noteCount <= 50;
+
+        allow update: if false;
+
+        allow delete: if isKmuttUser()
+          && (isHost(sessionId) || request.auth.uid == resource.data.uploaderUid);
+      }
+    }
+
+    // ── dms/{dmId} ──────────────────────────────────────────────────────────
+
+    match /dms/{dmId} {
+      allow read: if isKmuttUser()
+        && request.auth.uid in resource.data.participantUids;
+
+      allow create: if isKmuttUser()
+        && request.auth.uid in request.resource.data.participantUids
+        && request.resource.data.participantUids.size() == 2
+        && areFriends(request.resource.data.participantUids[0],
+                      request.resource.data.participantUids[1])
+        && request.resource.data.createdAt == request.time;
+
+      allow update: if false;
+      allow delete: if false;
+
+      match /messages/{messageId} {
+        allow read: if isKmuttUser()
+          && request.auth.uid in
+             get(/databases/$(database)/documents/dms/$(dmId)).data.participantUids;
+
+        allow create: if isKmuttUser()
+          && request.auth.uid in
+             get(/databases/$(database)/documents/dms/$(dmId)).data.participantUids
+          && request.resource.data.senderUid == request.auth.uid
+          && request.resource.data.sentAt == request.time
+          && request.resource.data.keys().hasAll([
+               'messageId', 'senderUid', 'text', 'sentAt', 'readBy'
+             ]);
+
+        allow update: if isKmuttUser()
+          && request.auth.uid in
+             get(/databases/$(database)/documents/dms/$(dmId)).data.participantUids
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy']);
+
+        allow delete: if false;
+      }
+    }
+
+  }
+}

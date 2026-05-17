@@ -1,5 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:mobile/core/analytics_events.dart';
 import 'package:mobile/core/errors/auth_failure.dart';
 import 'package:mobile/core/logger.dart';
@@ -7,6 +5,7 @@ import 'package:mobile/features/auth/data/datasources/auth_datasource.dart';
 import 'package:mobile/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:mobile/features/auth/domain/entities/auth_state.dart';
 import 'package:mobile/features/auth/domain/repositories/auth_repository.dart';
+import 'package:mobile/features/auth/domain/usecases/complete_profile_setup_use_case.dart';
 import 'package:mobile/features/auth/domain/usecases/reload_user_use_case.dart';
 import 'package:mobile/features/auth/domain/usecases/sign_in_use_case.dart';
 import 'package:mobile/features/auth/domain/usecases/sign_out_use_case.dart';
@@ -20,10 +19,7 @@ part 'auth_state_notifier_provider.g.dart';
 
 @riverpod
 AuthDatasource _authDatasource(_AuthDatasourceRef ref) {
-  return AuthDatasource(
-    auth: FirebaseAuth.instance,
-    firestore: FirebaseFirestore.instance,
-  );
+  return AuthDatasource.create();
 }
 
 @riverpod
@@ -37,9 +33,9 @@ AuthRepository authRepository(AuthRepositoryRef ref) {
 /// Returns an empty map when no user is signed in or the document is absent.
 @riverpod
 Future<Map<String, dynamic>> userProfile(UserProfileRef ref) async {
-  final user = FirebaseAuth.instance.currentUser;
-  if (user == null) return {};
-  return ref.read(authRepositoryProvider).getUserProfile(user.uid);
+  final uid = ref.read(authRepositoryProvider).currentUser;
+  if (uid == null) return {};
+  return ref.read(authRepositoryProvider).getUserProfile(uid);
 }
 
 // ── Auth state notifier ───────────────────────────────────────────────────────
@@ -52,9 +48,16 @@ class AuthStateNotifier extends _$AuthStateNotifier {
     final user = await ref.watch(firebaseAuthStateProvider.future);
 
     if (user == null) return const AuthState.unauthenticated();
-    if (!user.emailVerified) return const AuthState.unverified();
 
+    // Read the live in-memory currentUser value instead of the JWT claim
+    // carried by the idTokenChanges() stream snapshot. On the Firebase
+    // emulator the stream snapshot lags: it reports emailVerified=false even
+    // after reload() has set currentUser.emailVerified=true in memory, which
+    // would incorrectly overwrite a correct pendingProfileSetup state with
+    // unverified.
     final repo = ref.read(authRepositoryProvider);
+    if (!repo.isEmailVerified) return const AuthState.unverified();
+
     return repo.getAuthState();
   }
 
@@ -108,11 +111,11 @@ class AuthStateNotifier extends _$AuthStateNotifier {
 
   Future<void> reloadUser() async {
     state = const AsyncValue.loading();
+    final repo = ref.read(authRepositoryProvider);
     try {
-      await ReloadUserUseCase(ref.read(authRepositoryProvider)).execute();
-      // authStateChanges() may not emit on emailVerified change alone;
-      // invalidating forces build() to re-check Firestore.
-      ref.invalidateSelf();
+      await ReloadUserUseCase(repo).execute();
+      final authState = await repo.getAuthState();
+      state = AsyncData(authState);
     } on AuthFailure catch (e, st) {
       state = AsyncValue.error(e, st);
     } catch (e, st) {
@@ -131,24 +134,16 @@ class AuthStateNotifier extends _$AuthStateNotifier {
     }
   }
 
-  Future<void> updateProfile({
+  Future<void> completeProfileSetup({
     required String displayName,
     required String faculty,
     required String bio,
   }) async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
     state = const AsyncValue.loading();
     try {
-      await ref
-          .read(authRepositoryProvider)
-          .updateProfile(
-            uid: user.uid,
-            displayName: displayName,
-            faculty: faculty,
-            bio: bio,
-          );
+      await CompleteProfileSetupUseCase(
+        ref.read(authRepositoryProvider),
+      ).execute(displayName: displayName, faculty: faculty, bio: bio);
       appLogger.info(
         '${AnalyticsEvents.authProfileSetupCompleted} event fired',
       );
