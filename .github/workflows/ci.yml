@@ -252,4 +252,4 @@ jobs:
         working-directory: .
         run: |
           firebase emulators:exec --only auth,firestore \
-            "cd apps/mobile && dart run build_runner build --delete-conflicting-outputs && flutter test integration_test/auth_happy_path_test.dart -d linux"
+            "cd apps/mobile && dart run build_runner build --delete-conflicting-outputs && flutter test integration_test/auth_happy_path_test.dart -d linux --verbose 2>&1 | head -100"
