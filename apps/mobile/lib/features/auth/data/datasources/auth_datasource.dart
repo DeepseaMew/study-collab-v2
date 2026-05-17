@@ -32,7 +32,8 @@ class AuthDatasource {
   String? get currentUserDisplayName => _auth.currentUser?.displayName;
 
   /// Returns whether the current user's email address has been verified.
-  bool get currentUserEmailVerified => _auth.currentUser?.emailVerified ?? false;
+  bool get currentUserEmailVerified =>
+      _auth.currentUser?.emailVerified ?? false;
 
   Future<UserCredential> signInWithEmailAndPassword({
     required String email,
@@ -44,10 +45,18 @@ class AuthDatasource {
         password: password,
       );
     } on FirebaseAuthException catch (e, st) {
-      appLogger.error('signInWithEmailAndPassword failed', exception: e.code, stackTrace: st);
+      appLogger.error(
+        'signInWithEmailAndPassword failed',
+        exception: e.code,
+        stackTrace: st,
+      );
       throw _mapFirebaseException(e);
     } catch (e, st) {
-      appLogger.error('signInWithEmailAndPassword unexpected error', exception: '${e.runtimeType}: $e', stackTrace: st);
+      appLogger.error(
+        'signInWithEmailAndPassword unexpected error',
+        exception: '${e.runtimeType}: $e',
+        stackTrace: st,
+      );
       throw const AuthFailure.unknownFailure();
     }
   }
@@ -62,10 +71,18 @@ class AuthDatasource {
         password: password,
       );
     } on FirebaseAuthException catch (e, st) {
-      appLogger.error('createUserWithEmailAndPassword failed', exception: e.code, stackTrace: st);
+      appLogger.error(
+        'createUserWithEmailAndPassword failed',
+        exception: e.code,
+        stackTrace: st,
+      );
       throw _mapFirebaseException(e);
     } catch (e, st) {
-      appLogger.error('createUserWithEmailAndPassword unexpected error', exception: '${e.runtimeType}: $e', stackTrace: st);
+      appLogger.error(
+        'createUserWithEmailAndPassword unexpected error',
+        exception: '${e.runtimeType}: $e',
+        stackTrace: st,
+      );
       throw const AuthFailure.unknownFailure();
     }
   }
@@ -74,10 +91,18 @@ class AuthDatasource {
     try {
       await _auth.currentUser!.updateDisplayName(displayName);
     } on FirebaseAuthException catch (e, st) {
-      appLogger.error('updateDisplayName failed', exception: e.code, stackTrace: st);
+      appLogger.error(
+        'updateDisplayName failed',
+        exception: e.code,
+        stackTrace: st,
+      );
       throw _mapFirebaseException(e);
     } catch (e, st) {
-      appLogger.error('updateDisplayName unexpected error', exception: '${e.runtimeType}: $e', stackTrace: st);
+      appLogger.error(
+        'updateDisplayName unexpected error',
+        exception: '${e.runtimeType}: $e',
+        stackTrace: st,
+      );
       throw const AuthFailure.unknownFailure();
     }
   }
@@ -86,10 +111,18 @@ class AuthDatasource {
     try {
       await _auth.currentUser!.sendEmailVerification();
     } on FirebaseAuthException catch (e, st) {
-      appLogger.error('sendEmailVerification failed', exception: e.code, stackTrace: st);
+      appLogger.error(
+        'sendEmailVerification failed',
+        exception: e.code,
+        stackTrace: st,
+      );
       throw _mapFirebaseException(e);
     } catch (e, st) {
-      appLogger.error('sendEmailVerification unexpected error', exception: '${e.runtimeType}: $e', stackTrace: st);
+      appLogger.error(
+        'sendEmailVerification unexpected error',
+        exception: '${e.runtimeType}: $e',
+        stackTrace: st,
+      );
       throw const AuthFailure.unknownFailure();
     }
   }
@@ -99,10 +132,18 @@ class AuthDatasource {
       await _auth.currentUser!.reload();
       await _auth.currentUser!.getIdToken(true);
     } on FirebaseAuthException catch (e, st) {
-      appLogger.error('reloadCurrentUser failed', exception: e.code, stackTrace: st);
+      appLogger.error(
+        'reloadCurrentUser failed',
+        exception: e.code,
+        stackTrace: st,
+      );
       throw _mapFirebaseException(e);
     } catch (e, st) {
-      appLogger.error('reloadCurrentUser unexpected error', exception: '${e.runtimeType}: $e', stackTrace: st);
+      appLogger.error(
+        'reloadCurrentUser unexpected error',
+        exception: '${e.runtimeType}: $e',
+        stackTrace: st,
+      );
       throw const AuthFailure.unknownFailure();
     }
   }
@@ -114,7 +155,11 @@ class AuthDatasource {
       appLogger.error('signOut failed', exception: e.code, stackTrace: st);
       throw _mapFirebaseException(e);
     } catch (e, st) {
-      appLogger.error('signOut unexpected error', exception: '${e.runtimeType}: $e', stackTrace: st);
+      appLogger.error(
+        'signOut unexpected error',
+        exception: '${e.runtimeType}: $e',
+        stackTrace: st,
+      );
       throw const AuthFailure.unknownFailure();
     }
   }
@@ -143,8 +188,9 @@ class AuthDatasource {
     String uid, {
     bool forceServer = false,
   }) {
-    final options =
-        forceServer ? const GetOptions(source: Source.server) : null;
+    final options = forceServer
+        ? const GetOptions(source: Source.server)
+        : null;
     return _firestore.doc(FirestorePaths.userDoc(uid)).get(options);
   }
 

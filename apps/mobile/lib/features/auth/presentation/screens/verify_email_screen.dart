@@ -18,145 +18,150 @@ class VerifyEmailScreen extends ConsumerWidget {
       backgroundColor: AppColors.background,
       body: SizedBox.expand(
         child: Stack(
-        children: [
-          Positioned(
-            top: -70,
-            right: -70,
-            child: Container(
-              width: 320,
-              height: 320,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.accent.withValues(alpha: 0.08),
+          children: [
+            Positioned(
+              top: -70,
+              right: -70,
+              child: Container(
+                width: 320,
+                height: 320,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.accent.withValues(alpha: 0.08),
+                ),
               ),
             ),
-          ),
-          Positioned(
-            bottom: -90,
-            left: -90,
-            child: Container(
-              width: 320,
-              height: 320,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.accent.withValues(alpha: 0.08),
+            Positioned(
+              bottom: -90,
+              left: -90,
+              child: Container(
+                width: 320,
+                height: 320,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.accent.withValues(alpha: 0.08),
+                ),
               ),
             ),
-          ),
-          SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 48),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Center(
-                    child: Icon(
-                      Icons.mark_email_unread_outlined,
-                      size: 72,
-                      color: AppColors.accent,
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    'Verify your email',
-                    textAlign: TextAlign.center,
-                    style: AppTypography.textTheme.displayMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.text,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'We sent a verification link to your KMUTT email. '
-                    'Open the link, then tap the button below.',
-                    textAlign: TextAlign.center,
-                    style: AppTypography.textTheme.bodyMedium?.copyWith(
-                      color: AppColors.hint,
-                    ),
-                  ),
-                  const SizedBox(height: 36),
-                  if (failure != null) ...[
-                    _ErrorBanner(message: _mapFailure(failure)),
-                    const SizedBox(height: 16),
-                  ],
-                  SizedBox(
-                    height: 50,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.accent,
-                        foregroundColor: AppColors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+            SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 48,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const Center(
+                      child: Icon(
+                        Icons.mark_email_unread_outlined,
+                        size: 72,
+                        color: AppColors.accent,
                       ),
-                      onPressed: isLoading
-                          ? null
-                          : () => ref
-                                .read(authStateNotifierProvider.notifier)
-                                .reloadUser(),
-                      child: isLoading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: AppColors.white,
-                              ),
-                            )
-                          : Text(
-                              "I've verified my email",
-                              style: AppTypography.textTheme.labelLarge
-                                  ?.copyWith(
-                                    color: AppColors.white,
-                                    fontSize: 15,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                            ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    height: 50,
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppColors.accent,
-                        side: const BorderSide(color: AppColors.accent),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                    const SizedBox(height: 24),
+                    Text(
+                      'Verify your email',
+                      textAlign: TextAlign.center,
+                      style: AppTypography.textTheme.displayMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.text,
                       ),
-                      onPressed: isLoading
-                          ? null
-                          : () async {
-                              await ref
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'We sent a verification link to your KMUTT email. '
+                      'Open the link, then tap the button below.',
+                      textAlign: TextAlign.center,
+                      style: AppTypography.textTheme.bodyMedium?.copyWith(
+                        color: AppColors.hint,
+                      ),
+                    ),
+                    const SizedBox(height: 36),
+                    if (failure != null) ...[
+                      _ErrorBanner(message: _mapFailure(failure)),
+                      const SizedBox(height: 16),
+                    ],
+                    SizedBox(
+                      height: 50,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.accent,
+                          foregroundColor: AppColors.white,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: isLoading
+                            ? null
+                            : () => ref
                                   .read(authStateNotifierProvider.notifier)
-                                  .resendVerificationEmail();
-                              if (context.mounted &&
-                                  !ref
-                                      .read(authStateNotifierProvider)
-                                      .hasError) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Verification email resent'),
-                                  ),
-                                );
-                              }
-                            },
-                      child: Text(
-                        'Resend email',
-                        style: AppTypography.textTheme.labelLarge?.copyWith(
-                          color: AppColors.accent,
+                                  .reloadUser(),
+                        child: isLoading
+                            ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: AppColors.white,
+                                ),
+                              )
+                            : Text(
+                                "I've verified my email",
+                                style: AppTypography.textTheme.labelLarge
+                                    ?.copyWith(
+                                      color: AppColors.white,
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    SizedBox(
+                      height: 50,
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.accent,
+                          side: const BorderSide(color: AppColors.accent),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        onPressed: isLoading
+                            ? null
+                            : () async {
+                                await ref
+                                    .read(authStateNotifierProvider.notifier)
+                                    .resendVerificationEmail();
+                                if (context.mounted &&
+                                    !ref
+                                        .read(authStateNotifierProvider)
+                                        .hasError) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text(
+                                        'Verification email resent',
+                                      ),
+                                    ),
+                                  );
+                                }
+                              },
+                        child: Text(
+                          'Resend email',
+                          style: AppTypography.textTheme.labelLarge?.copyWith(
+                            color: AppColors.accent,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
-      ),
+          ],
+        ),
       ),
     );
   }

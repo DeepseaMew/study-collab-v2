@@ -9,10 +9,9 @@ class CompleteProfileSetupUseCase {
     required String displayName,
     required String faculty,
     required String bio,
-  }) =>
-      _repository.completeProfileSetup(
-        displayName: displayName,
-        faculty: faculty,
-        bio: bio,
-      );
+  }) => _repository.completeProfileSetup(
+    displayName: displayName,
+    faculty: faculty,
+    bio: bio,
+  );
 }
