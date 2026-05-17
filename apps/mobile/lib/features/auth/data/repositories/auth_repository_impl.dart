@@ -191,8 +191,9 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<AuthState> getAuthState() async {
     final uid = _datasource.currentUserUid;
     if (uid == null) return const AuthState.unauthenticated();
-    if (!_datasource.currentUserEmailVerified)
+    if (!_datasource.currentUserEmailVerified) {
       return const AuthState.unverified();
+    }
 
     try {
       final doc = await _datasource.getUserDocument(uid, forceServer: true);

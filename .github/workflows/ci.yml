@@ -136,7 +136,12 @@ jobs:
       - name: Run integration tests (Web)
         run: |
           chromedriver --port=4444 &
-          flutter test integration_test/ -d web-server --browser-name=chrome
+          sleep 3
+          flutter drive \
+            --driver=test_driver/integration_test.dart \
+            --target=integration_test/auth_happy_path_test.dart \
+            -d web-server \
+            --browser-name=chrome
 
   firebase-emulator:
     runs-on: ubuntu-latest
