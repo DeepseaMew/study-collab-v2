@@ -47,6 +47,7 @@ class HomePlaceholderScreen extends ConsumerWidget {
       ),
       floatingActionButton: kDebugMode
           ? FloatingActionButton.extended(
+              heroTag: null,
               onPressed: () {
                 appLogger.warning(
                   'Debug test crash triggered — intentional Crashlytics check',

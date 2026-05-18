@@ -97,7 +97,8 @@ service cloud.firestore {
     match /sessions/{sessionId} {
       allow read: if isKmuttUser()
         && (resource.data.visibility == 'public'
-            || request.auth.uid in resource.data.memberUids);
+            || request.auth.uid in resource.data.memberUids
+            || resource.data.hostUid == request.auth.uid);
 
       allow create: if isKmuttUser()
         && request.resource.data.hostUid == request.auth.uid
@@ -105,17 +106,20 @@ service cloud.firestore {
         && request.resource.data.status == 'scheduled'
         && request.resource.data.createdAt == request.time
         && request.resource.data.updatedAt == request.time
+        && (request.resource.data.visibility == 'public'
+            || request.resource.data.pin is string)
         && request.resource.data.keys().hasAll([
              'sessionId', 'hostUid', 'hostFaculty', 'title', 'hashtags', 'academicLevel',
              'studentYear', 'visibility', 'memberUids', 'noteCount', 'status',
-             'scheduledAt', 'createdAt', 'updatedAt'
+             'scheduledAt', 'location', 'capacity', 'hostDisplayName', 'createdAt', 'updatedAt'
            ]);
 
       allow update: if isHost(sessionId)
         && request.resource.data.diff(resource.data).affectedKeys()
              .hasOnly(['title', 'description', 'hashtags', 'academicLevel',
                        'studentYear', 'visibility', 'pin', 'memberUids',
-                       'noteCount', 'status', 'scheduledAt', 'endedAt', 'updatedAt'])
+                       'noteCount', 'status', 'scheduledAt', 'scheduledEndAt',
+                       'location', 'capacity', 'endedAt', 'updatedAt'])
         && request.resource.data.updatedAt == request.time
         && request.resource.data.hostUid == resource.data.hostUid
         && request.resource.data.hostFaculty == resource.data.hostFaculty
@@ -123,6 +127,25 @@ service cloud.firestore {
 
       allow delete: if isHost(sessionId)
         && resource.data.status == 'scheduled';
+
+     // ── sessions/{sessionId}/requests/{uid} ────────────────────────
+      match /requests/{uid} {
+        allow read: if isHost(sessionId)
+          || (isKmuttUser() && request.auth.uid == uid);
+
+        allow create: if isKmuttUser()
+          && request.auth.uid == uid
+          && request.resource.data.keys().hasAll(['uid', 'displayName', 'requestedAt'])
+          && request.resource.data.requestedAt == request.time
+          && (get(/databases/$(database)/documents/sessions/$(sessionId)).data.visibility == 'public'
+              || request.resource.data.pin == get(/databases/$(database)/documents/sessions/$(sessionId)).data.pin);
+
+        allow delete: if isHost(sessionId)
+          || (isKmuttUser() && request.auth.uid == uid);
+
+        allow update: if false;
+      }
+    }
 
       // ── sessions/{sessionId}/messages/{messageId} ────────────────────────
 
@@ -228,4 +251,3 @@ service cloud.firestore {
     }
 
   }
-}

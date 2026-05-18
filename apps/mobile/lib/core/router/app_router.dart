@@ -7,6 +7,14 @@ import 'package:mobile/features/auth/presentation/screens/profile_setup_screen.d
 import 'package:mobile/features/auth/presentation/screens/sign_in_screen.dart';
 import 'package:mobile/features/auth/presentation/screens/sign_up_screen.dart';
 import 'package:mobile/features/auth/presentation/screens/verify_email_screen.dart';
+import 'package:mobile/features/my_sessions/presentation/screens/host_session_detail_screen.dart';
+import 'package:mobile/features/my_sessions/presentation/screens/member_session_detail_screen.dart';
+import 'package:mobile/features/my_sessions/presentation/screens/my_sessions_screen.dart';
+import 'package:mobile/features/sessions/presentation/screens/create_session_screen.dart';
+import 'package:mobile/features/sessions/presentation/screens/edit_session_screen.dart';
+import 'package:mobile/features/sessions/presentation/screens/members_list_screen.dart';
+import 'package:mobile/features/sessions/presentation/screens/requests_screen.dart';
+import 'package:mobile/features/sessions/presentation/screens/session_detail_screen.dart';
 import 'package:mobile/shared/screens/home_placeholder_screen.dart';
 import 'package:mobile/shared/theme/app_colors.dart';
 import 'package:mobile/shared/theme/app_typography.dart';
@@ -23,6 +31,17 @@ abstract final class RouteConstants {
   static const String calendar = '/calendar';
   static const String messages = '/messages';
   static const String mySessions = '/my-sessions';
+
+  // My Sessions detail routes
+  static const String mySessionMember = '/my-sessions/session/:id/member';
+  static const String mySessionHost = '/my-sessions/session/:id/host';
+
+  // Session routes
+  static const String sessionCreate = '/sessions/create';
+  static const String sessionDetail = '/sessions/:id';
+  static const String sessionEdit = '/sessions/:id/edit';
+  static const String sessionMembers = '/sessions/:id/members';
+  static const String sessionRequests = '/sessions/:id/requests';
 }
 
 // ── Router change notifier ────────────────────────────────────────────────────
@@ -90,6 +109,17 @@ class _ShellScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: navigationShell,
+      floatingActionButton: navigationShell.currentIndex == 3
+          ? FloatingActionButton(
+              heroTag: null,
+              onPressed: () => context.push(RouteConstants.sessionCreate),
+              backgroundColor: AppColors.accent,
+              foregroundColor: Colors.white,
+              shape: const CircleBorder(),
+              child: const Icon(Icons.add),
+            )
+          : null,
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       bottomNavigationBar: NavigationBar(
         backgroundColor: AppColors.background,
         indicatorColor: AppColors.secondary,
@@ -166,6 +196,39 @@ GoRouter router(RouterRef ref) {
         path: RouteConstants.profileSetup,
         builder: (_, __) => const ProfileSetupScreen(),
       ),
+
+      // ── Session routes (push over the shell) ────────────────────────────
+      GoRoute(
+        path: RouteConstants.sessionCreate,
+        builder: (_, __) => const CreateSessionScreen(),
+      ),
+      GoRoute(
+        path: '/sessions/:id',
+        builder: (_, state) => SessionDetailScreen(
+          sessionId: state.pathParameters['id']!,
+        ),
+        routes: [
+          GoRoute(
+            path: 'edit',
+            builder: (_, state) => EditSessionScreen(
+              sessionId: state.pathParameters['id']!,
+            ),
+          ),
+          GoRoute(
+            path: 'members',
+            builder: (_, state) => MembersListScreen(
+              sessionId: state.pathParameters['id']!,
+            ),
+          ),
+          GoRoute(
+            path: 'requests',
+            builder: (_, state) => RequestsScreen(
+              sessionId: state.pathParameters['id']!,
+            ),
+          ),
+        ],
+      ),
+
       StatefulShellRoute.indexedStack(
         builder: (_, __, shell) => _ShellScaffold(navigationShell: shell),
         branches: [
@@ -199,8 +262,22 @@ GoRouter router(RouterRef ref) {
             routes: [
               GoRoute(
                 path: RouteConstants.mySessions,
-                // TODO(sessions-adr): replace when Sessions ADR is accepted.
-                builder: (_, __) => _comingSoonScreen('My Sessions'),
+                builder: (_, __) => const MySessionsScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'session/:id/member',
+                    builder: (_, state) => MemberSessionDetailScreen(
+                      sessionId: state.pathParameters['id']!,
+                      isCompleted: state.extra == true,
+                    ),
+                  ),
+                  GoRoute(
+                    path: 'session/:id/host',
+                    builder: (_, state) => HostSessionDetailScreen(
+                      sessionId: state.pathParameters['id']!,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

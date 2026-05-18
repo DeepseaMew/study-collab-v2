@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | Proposed |
+| Status | Accepted |
 | Date | 2026-05-18 |
 | Architect session | claude-sonnet-4-6 / 2026-05-18 |
 | Affects | Sessions, My Sessions, Dashboard (session_card), Firestore schema amendment (ADR 0001), firestore.indexes.json, firestore.rules, data/datasources, domain/entities, presentation/providers, core/router, shared/widgets |
@@ -13,7 +13,7 @@
 
 Approved by: Eve
 Date: 2026-05-18
-Notes: <!-- conditions or concerns, leave blank if none -->
+Notes: -
 
 ---
 
