@@ -50,16 +50,16 @@ SessionEntity _session({String status = 'scheduled'}) {
 }
 
 UserEntity _user(String uid) => UserEntity(
-      uid: uid,
-      displayName: 'User $uid',
-      fullName: 'Full Name',
-      email: '$uid@mail.kmutt.ac.th',
-      hasHostedBefore: true,
-      studentYear: 2,
-      academicLevel: 'undergraduate',
-      faculty: 'Engineering',
-      profileScore: 0.0,
-    );
+  uid: uid,
+  displayName: 'User $uid',
+  fullName: 'Full Name',
+  email: '$uid@mail.kmutt.ac.th',
+  hasHostedBefore: true,
+  studentYear: 2,
+  academicLevel: 'undergraduate',
+  faculty: 'Engineering',
+  profileScore: 0.0,
+);
 
 Widget _buildScreen({
   AsyncValue<SessionEntity?> sessionState = const AsyncValue.loading(),
@@ -77,12 +77,15 @@ Widget _buildScreen({
     ),
   );
 
-  when(() => requestRepo.watchRequests(any()))
-      .thenAnswer((_) => Stream.value(requests));
-  when(() => requestRepo.approveRequest(any(), any(), any()))
-      .thenAnswer((_) async {});
-  when(() => requestRepo.declineRequest(any(), any(), any()))
-      .thenAnswer((_) async {});
+  when(
+    () => requestRepo.watchRequests(any()),
+  ).thenAnswer((_) => Stream.value(requests));
+  when(
+    () => requestRepo.approveRequest(any(), any(), any()),
+  ).thenAnswer((_) async {});
+  when(
+    () => requestRepo.declineRequest(any(), any(), any()),
+  ).thenAnswer((_) async {});
   when(() => sessionRepo.endSession(any(), any())).thenAnswer((_) async {});
 
   return ProviderScope(
@@ -94,12 +97,12 @@ Widget _buildScreen({
           data: (s) => Stream.value(s),
         ),
       ),
-      sessionMembersProvider('sess-1').overrideWith(
-        (_) => Stream.value(const <UserEntity>[]),
-      ),
-      joinRequestsProvider('sess-1').overrideWith(
-        (_) => Stream.value(requests),
-      ),
+      sessionMembersProvider(
+        'sess-1',
+      ).overrideWith((_) => Stream.value(const <UserEntity>[])),
+      joinRequestsProvider(
+        'sess-1',
+      ).overrideWith((_) => Stream.value(requests)),
       currentUserProvider.overrideWith(
         (_) => Stream.value(currentUser ?? _user('host-1')),
       ),
@@ -113,8 +116,9 @@ Widget _buildScreen({
 }
 
 void main() {
-  testWidgets('HostSessionDetailScreen smoke test — loading renders spinner',
-      (tester) async {
+  testWidgets('HostSessionDetailScreen smoke test — loading renders spinner', (
+    tester,
+  ) async {
     await mockNetworkImagesFor(() async {
       await tester.pumpWidget(_buildScreen());
       await tester.pump(const Duration(milliseconds: 100));
@@ -150,46 +154,49 @@ void main() {
   });
 
   testWidgets(
-      'HostSessionDetailScreen — "Hosting" badge is visible in session info card',
-      (tester) async {
-    await mockNetworkImagesFor(() async {
-      await tester.pumpWidget(
-        _buildScreen(sessionState: AsyncValue.data(_session())),
-      );
-      await tester.pumpAndSettle(const Duration(seconds: 3));
+    'HostSessionDetailScreen — "Hosting" badge is visible in session info card',
+    (tester) async {
+      await mockNetworkImagesFor(() async {
+        await tester.pumpWidget(
+          _buildScreen(sessionState: AsyncValue.data(_session())),
+        );
+        await tester.pumpAndSettle(const Duration(seconds: 3));
 
-      expect(find.text('Hosting'), findsOneWidget);
-    });
-  });
+        expect(find.text('Hosting'), findsOneWidget);
+      });
+    },
+  );
 
   testWidgets(
-      'HostSessionDetailScreen — End Session button exists on Members tab',
-      (tester) async {
-    await mockNetworkImagesFor(() async {
-      // Use a tall test surface so the ListView renders all items.
-      tester.view.physicalSize = const Size(1080, 1920);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
+    'HostSessionDetailScreen — End Session button exists on Members tab',
+    (tester) async {
+      await mockNetworkImagesFor(() async {
+        // Use a tall test surface so the ListView renders all items.
+        tester.view.physicalSize = const Size(1080, 1920);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
 
-      await tester.pumpWidget(
-        _buildScreen(sessionState: AsyncValue.data(_session())),
-      );
-      await tester.pumpAndSettle(const Duration(seconds: 3));
+        await tester.pumpWidget(
+          _buildScreen(sessionState: AsyncValue.data(_session())),
+        );
+        await tester.pumpAndSettle(const Duration(seconds: 3));
 
-      // Scroll the Members ListView to reveal the End Session button.
-      await tester.scrollUntilVisible(
-        find.text('End Session'),
-        100,
-        scrollable: find.byType(Scrollable).first,
-      );
+        // Scroll the Members ListView to reveal the End Session button.
+        await tester.scrollUntilVisible(
+          find.text('End Session'),
+          100,
+          scrollable: find.byType(Scrollable).first,
+        );
 
-      expect(find.text('End Session'), findsOneWidget);
-    });
-  });
+        expect(find.text('End Session'), findsOneWidget);
+      });
+    },
+  );
 
-  testWidgets('HostSessionDetailScreen — error state renders error message',
-      (tester) async {
+  testWidgets('HostSessionDetailScreen — error state renders error message', (
+    tester,
+  ) async {
     await mockNetworkImagesFor(() async {
       await tester.pumpWidget(
         _buildScreen(
@@ -208,8 +215,9 @@ void main() {
     });
   });
 
-  testWidgets('HostSessionDetailScreen — null session renders not-found text',
-      (tester) async {
+  testWidgets('HostSessionDetailScreen — null session renders not-found text', (
+    tester,
+  ) async {
     await mockNetworkImagesFor(() async {
       await tester.pumpWidget(
         _buildScreen(sessionState: const AsyncValue.data(null)),
@@ -221,27 +229,28 @@ void main() {
   });
 
   testWidgets(
-      'HostSessionDetailScreen — Requests tab shows pending count badge when requests exist',
-      (tester) async {
-    await mockNetworkImagesFor(() async {
-      final req = JoinRequestEntity(
-        uid: 'req-user-1',
-        displayName: 'Requester One',
-        requestedAt: DateTime(2026, 5, 18, 9),
-      );
-      await tester.pumpWidget(
-        _buildScreen(
-          sessionState: AsyncValue.data(_session()),
-          requests: [req],
-        ),
-      );
-      await tester.pumpAndSettle(const Duration(seconds: 3));
+    'HostSessionDetailScreen — Requests tab shows pending count badge when requests exist',
+    (tester) async {
+      await mockNetworkImagesFor(() async {
+        final req = JoinRequestEntity(
+          uid: 'req-user-1',
+          displayName: 'Requester One',
+          requestedAt: DateTime(2026, 5, 18, 9),
+        );
+        await tester.pumpWidget(
+          _buildScreen(
+            sessionState: AsyncValue.data(_session()),
+            requests: [req],
+          ),
+        );
+        await tester.pumpAndSettle(const Duration(seconds: 3));
 
-      // Tap Requests tab
-      await tester.tap(find.text('Requests'));
-      await tester.pumpAndSettle(const Duration(seconds: 1));
+        // Tap Requests tab
+        await tester.tap(find.text('Requests'));
+        await tester.pumpAndSettle(const Duration(seconds: 1));
 
-      expect(find.text('Requester One'), findsOneWidget);
-    });
-  });
+        expect(find.text('Requester One'), findsOneWidget);
+      });
+    },
+  );
 }

@@ -41,8 +41,9 @@ class SessionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isHost = session.hostUid == currentUserId;
-    final subjectLabel =
-        session.hashtags.isNotEmpty ? session.hashtags.first : session.academicLevel;
+    final subjectLabel = session.hashtags.isNotEmpty
+        ? session.hashtags.first
+        : session.academicLevel;
     final progress = session.capacity > 0
         ? (session.participantCount / session.capacity).clamp(0.0, 1.0)
         : 0.0;
@@ -51,201 +52,211 @@ class SessionCard extends StatelessWidget {
       label: 'Session: ${session.title}',
       button: true,
       child: GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.06),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── Header row: subject chip + status badge + lock + 3-dot menu
-              Row(
-                children: [
-                  _SubjectChip(label: subjectLabel),
-                  const SizedBox(width: 8),
-                  _StatusBadge(
-                    label: isHost ? 'Hosting' : 'Joined',
-                    color: isHost ? AppColors.accent : AppColors.success,
-                  ),
-                  if (session.visibility == 'private') ...[
-                    const SizedBox(width: 6),
-                    const Icon(
-                      Icons.lock_outline,
-                      size: 13,
-                      color: AppColors.hint,
+        onTap: onTap,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.06),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ── Header row: subject chip + status badge + lock + 3-dot menu
+                Row(
+                  children: [
+                    _SubjectChip(label: subjectLabel),
+                    const SizedBox(width: 8),
+                    _StatusBadge(
+                      label: isHost ? 'Hosting' : 'Joined',
+                      color: isHost ? AppColors.accent : AppColors.success,
+                    ),
+                    if (session.visibility == 'private') ...[
+                      const SizedBox(width: 6),
+                      const Icon(
+                        Icons.lock_outline,
+                        size: 13,
+                        color: AppColors.hint,
+                      ),
+                    ],
+                    const Spacer(),
+                    _ThreeDotMenu(
+                      session: session,
+                      isHost: isHost,
+                      currentUserId: currentUserId,
                     ),
                   ],
-                  const Spacer(),
-                  _ThreeDotMenu(
-                    session: session,
-                    isHost: isHost,
-                    currentUserId: currentUserId,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-
-              // ── Title ─────────────────────────────────────────────────────
-              Text(
-                session.title,
-                style: const TextStyle(
-                  color: AppColors.text,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
                 ),
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-              const SizedBox(height: 6),
+                const SizedBox(height: 10),
 
-              // ── Host name ─────────────────────────────────────────────────
-              Row(
-                children: [
-                  _HostAvatar(
-                    displayName: session.hostDisplayName,
-                    photoUrl: session.hostPhotoUrl,
-                    radius: 10,
+                // ── Title ─────────────────────────────────────────────────────
+                Text(
+                  session.title,
+                  style: const TextStyle(
+                    color: AppColors.text,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
                   ),
-                  const SizedBox(width: 6),
-                  Text(
-                    session.hostDisplayName,
-                    style: const TextStyle(
-                      color: AppColors.hint,
-                      fontSize: 12,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 6),
+
+                // ── Host name ─────────────────────────────────────────────────
+                Row(
+                  children: [
+                    _HostAvatar(
+                      displayName: session.hostDisplayName,
+                      photoUrl: session.hostPhotoUrl,
+                      radius: 10,
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 6),
+                    const SizedBox(width: 6),
+                    Text(
+                      session.hostDisplayName,
+                      style: const TextStyle(
+                        color: AppColors.hint,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
 
-              // ── Date / time ───────────────────────────────────────────────
-              Row(
-                children: [
-                  const Icon(
-                    Icons.calendar_today_outlined,
-                    size: 12,
-                    color: AppColors.hint,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    session.scheduledEndAt != null
-                        ? '${DateFormatter.relativeDate(session.scheduledAt)}  '
-                            '${DateFormatter.timeRange(session.scheduledAt, session.scheduledEndAt!)}'
-                        : DateFormatter.relativeDate(session.scheduledAt),
-                    style: const TextStyle(color: AppColors.hint, fontSize: 11),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-
-              // ── Location ──────────────────────────────────────────────────
-              if (session.location.isNotEmpty) ...[
+                // ── Date / time ───────────────────────────────────────────────
                 Row(
                   children: [
                     const Icon(
-                      Icons.location_on_outlined,
+                      Icons.calendar_today_outlined,
                       size: 12,
                       color: AppColors.hint,
                     ),
                     const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        session.location,
-                        style: const TextStyle(
-                          color: AppColors.hint,
-                          fontSize: 11,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
+                    Text(
+                      session.scheduledEndAt != null
+                          ? '${DateFormatter.relativeDate(session.scheduledAt)}  '
+                                '${DateFormatter.timeRange(session.scheduledAt, session.scheduledEndAt!)}'
+                          : DateFormatter.relativeDate(session.scheduledAt),
+                      style: const TextStyle(
+                        color: AppColors.hint,
+                        fontSize: 11,
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 4),
-              ],
 
-              // ── Description ───────────────────────────────────────────────
-              if (session.description != null &&
-                  session.description!.isNotEmpty) ...[
-                Text(
-                  session.description!,
-                  style: const TextStyle(color: AppColors.hint, fontSize: 12),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                // ── Location ──────────────────────────────────────────────────
+                if (session.location.isNotEmpty) ...[
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.location_on_outlined,
+                        size: 12,
+                        color: AppColors.hint,
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          session.location,
+                          style: const TextStyle(
+                            color: AppColors.hint,
+                            fontSize: 11,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                ],
+
+                // ── Description ───────────────────────────────────────────────
+                if (session.description != null &&
+                    session.description!.isNotEmpty) ...[
+                  Text(
+                    session.description!,
+                    style: const TextStyle(color: AppColors.hint, fontSize: 12),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                ],
+
+                const SizedBox(height: 4),
+
+                // ── Member count + spots left ──────────────────────────────────
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      '${session.participantCount}/${session.capacity} members',
+                      style: const TextStyle(
+                        color: AppColors.hint,
+                        fontSize: 11,
+                      ),
+                    ),
+                    Text(
+                      session.isFull
+                          ? 'Full'
+                          : '${session.spotsLeft} spots left',
+                      style: TextStyle(
+                        color: session.isFull
+                            ? AppColors.error
+                            : AppColors.hint,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 4),
-              ],
 
-              const SizedBox(height: 4),
-
-              // ── Member count + spots left ──────────────────────────────────
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '${session.participantCount}/${session.capacity} members',
-                    style: const TextStyle(color: AppColors.hint, fontSize: 11),
+                // ── Capacity progress bar ─────────────────────────────────────
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    color: AppColors.accent,
+                    backgroundColor: AppColors.secondary,
+                    minHeight: 5,
                   ),
-                  Text(
-                    session.isFull ? 'Full' : '${session.spotsLeft} spots left',
-                    style: TextStyle(
-                      color: session.isFull ? AppColors.error : AppColors.hint,
-                      fontSize: 11,
+                ),
+
+                // ── Join button (home/search only) ────────────────────────────
+                if (showJoinButton) ...[
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.accent,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(double.infinity, 40),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                      onPressed: onJoinTap,
+                      child: const Text(
+                        'Request to Join',
+                        style: TextStyle(fontSize: 13),
+                      ),
                     ),
                   ),
                 ],
-              ),
-              const SizedBox(height: 4),
-
-              // ── Capacity progress bar ─────────────────────────────────────
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: progress,
-                  color: AppColors.accent,
-                  backgroundColor: AppColors.secondary,
-                  minHeight: 5,
-                ),
-              ),
-
-              // ── Join button (home/search only) ────────────────────────────
-              if (showJoinButton) ...[
-                const SizedBox(height: 10),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.accent,
-                      foregroundColor: Colors.white,
-                      minimumSize: const Size(double.infinity, 40),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    onPressed: onJoinTap,
-                    child: const Text(
-                      'Request to Join',
-                      style: TextStyle(fontSize: 13),
-                    ),
-                  ),
-                ),
               ],
-            ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }
@@ -322,8 +333,7 @@ class _HostAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final initial =
-        displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
+    final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
 
     if (photoUrl != null && photoUrl!.isNotEmpty) {
       return CircleAvatar(
@@ -367,17 +377,12 @@ class _ThreeDotMenu extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return PopupMenuButton<_CardMenuAction>(
       tooltip: isHost ? 'Session options' : 'Member options',
-      icon: const Icon(
-        Icons.more_vert,
-        size: 18,
-        color: AppColors.hint,
-      ),
+      icon: const Icon(Icons.more_vert, size: 18, color: AppColors.hint),
       onSelected: (action) {
         switch (action) {
           case _CardMenuAction.edit:
             context.push(
-              RouteConstants.sessionEdit
-                  .replaceFirst(':id', session.sessionId),
+              RouteConstants.sessionEdit.replaceFirst(':id', session.sessionId),
             );
           case _CardMenuAction.delete:
             _showDeleteDialog(context, ref);
@@ -413,8 +418,9 @@ class _ThreeDotMenu extends ConsumerWidget {
         return StatefulBuilder(
           builder: (ctx, setDialogState) => AlertDialog(
             backgroundColor: AppColors.surface,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             title: const Text(
               'Delete Session?',
               style: TextStyle(
@@ -503,8 +509,9 @@ class _ThreeDotMenu extends ConsumerWidget {
         return StatefulBuilder(
           builder: (ctx, setDialogState) => AlertDialog(
             backgroundColor: AppColors.surface,
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             title: const Text(
               'Leave Session?',
               style: TextStyle(

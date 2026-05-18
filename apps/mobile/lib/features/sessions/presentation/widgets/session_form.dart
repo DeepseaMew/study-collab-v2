@@ -59,6 +59,7 @@ class _SessionFormState extends ConsumerState<SessionForm>
   // ── Step 3 — Capacity, visibility & filters ──────────────────────────────
   int _capacity = 5;
   String _visSegment = 'public';
+
   /// Auto-generated 6-digit numeric PIN for private sessions.
   /// Never shown to the host during creation; stored on submit only.
   String? _autoPin;
@@ -98,7 +99,8 @@ class _SessionFormState extends ConsumerState<SessionForm>
       _titleCtrl.text = s.title;
       _descCtrl.text = s.description ?? '';
       _startTime = s.scheduledAt;
-      _endTime = s.scheduledEndAt ?? s.scheduledAt.add(const Duration(hours: 2));
+      _endTime =
+          s.scheduledEndAt ?? s.scheduledAt.add(const Duration(hours: 2));
       _locationCtrl.text = s.location;
       _capacity = s.capacity;
       _visSegment = s.visibility == 'private' ? 'private' : 'public';
@@ -163,10 +165,7 @@ class _SessionFormState extends ConsumerState<SessionForm>
 
   void _showError(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(msg),
-        backgroundColor: AppColors.error,
-      ),
+      SnackBar(content: Text(msg), backgroundColor: AppColors.error),
     );
   }
 
@@ -211,10 +210,7 @@ class _SessionFormState extends ConsumerState<SessionForm>
           updates['academicLevel'] = _academicLevel;
         }
         await repo.editSession(s.sessionId, me.uid, updates);
-        appLogger.info(
-          'Session edited',
-          extra: {'sessionId': s.sessionId},
-        );
+        appLogger.info('Session edited', extra: {'sessionId': s.sessionId});
         // Analytics: declared in analytics_events.dart
         appLogger.debug(AnalyticsEvents.sessionEdited);
       } else {
@@ -293,8 +289,7 @@ class _SessionFormState extends ConsumerState<SessionForm>
 
   void _addHashtag() {
     // Strip '#', trim, lowercase, deduplicate — required by CLAUDE.md.
-    final tag =
-        _hashtagCtrl.text.trim().replaceAll('#', '').toLowerCase();
+    final tag = _hashtagCtrl.text.trim().replaceAll('#', '').toLowerCase();
     if (tag.isNotEmpty && !_hashtags.contains(tag) && _hashtags.length < 20) {
       setState(() {
         _hashtags.add(tag);
@@ -421,10 +416,7 @@ class _SessionFormState extends ConsumerState<SessionForm>
 // ── Step progress bar ─────────────────────────────────────────────────────────
 
 class _StepProgressBar extends StatelessWidget {
-  const _StepProgressBar({
-    required this.currentStep,
-    required this.totalSteps,
-  });
+  const _StepProgressBar({required this.currentStep, required this.totalSteps});
 
   final int currentStep;
   final int totalSteps;
@@ -635,17 +627,11 @@ class _Step1BasicInfo extends StatelessWidget {
             children: [
               _SectionLabel(label: 'Subject'),
               SizedBox(width: 4),
-              Text(
-                '*',
-                style: TextStyle(color: AppColors.error, fontSize: 14),
-              ),
+              Text('*', style: TextStyle(color: AppColors.error, fontSize: 14)),
             ],
           ),
           const SizedBox(height: 12),
-          _SubjectChipGrid(
-            selected: subject,
-            onSelected: onSubjectChanged,
-          ),
+          _SubjectChipGrid(selected: subject, onSelected: onSubjectChanged),
           if (subjectError != null) ...[
             const SizedBox(height: 6),
             Text(
@@ -672,10 +658,7 @@ const List<String> _subjects = [
 ];
 
 class _SubjectChipGrid extends StatelessWidget {
-  const _SubjectChipGrid({
-    required this.selected,
-    required this.onSelected,
-  });
+  const _SubjectChipGrid({required this.selected, required this.onSelected});
 
   final String? selected;
   final ValueChanged<String?> onSelected;
@@ -692,30 +675,29 @@ class _SubjectChipGrid extends StatelessWidget {
           selected: isActive,
           button: true,
           child: GestureDetector(
-          onTap: () => onSelected(isActive ? null : subject),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              color: isActive
-                  ? AppColors.accent.withValues(alpha: 0.18)
-                  : AppColors.secondary,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: isActive ? AppColors.accent : Colors.transparent,
-                width: 1.5,
+            onTap: () => onSelected(isActive ? null : subject),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              decoration: BoxDecoration(
+                color: isActive
+                    ? AppColors.accent.withValues(alpha: 0.18)
+                    : AppColors.secondary,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: isActive ? AppColors.accent : Colors.transparent,
+                  width: 1.5,
+                ),
+              ),
+              child: Text(
+                subject,
+                style: TextStyle(
+                  color: isActive ? AppColors.accent : AppColors.hint,
+                  fontSize: 13,
+                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                ),
               ),
             ),
-            child: Text(
-              subject,
-              style: TextStyle(
-                color: isActive ? AppColors.accent : AppColors.hint,
-                fontSize: 13,
-                fontWeight:
-                    isActive ? FontWeight.w600 : FontWeight.w400,
-              ),
-            ),
-          ),
           ),
         );
       }).toList(),
@@ -761,9 +743,7 @@ class _Step2TimeLocation extends StatelessWidget {
       initialEntryMode: TimePickerEntryMode.input,
     );
     if (time == null) return;
-    onPicked(
-      DateTime(date.year, date.month, date.day, time.hour, time.minute),
-    );
+    onPicked(DateTime(date.year, date.month, date.day, time.hour, time.minute));
   }
 
   @override
@@ -1040,9 +1020,8 @@ class _AcademicLevelSelector extends StatelessWidget {
               _FilterChip(
                 label: 'Graduate',
                 selected: selected == 'graduate',
-                onTap: () => onChanged(
-                  selected == 'graduate' ? null : 'graduate',
-                ),
+                onTap: () =>
+                    onChanged(selected == 'graduate' ? null : 'graduate'),
               ),
             ],
           ),

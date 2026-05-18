@@ -40,8 +40,7 @@ Stream<UserEntity?> currentUser(CurrentUserRef ref) {
                   (data['academicLevel'] as String?) ?? 'undergraduate',
               faculty: (data['faculty'] as String?) ?? '',
               bio: data['bio'] as String?,
-              profileScore:
-                  ((data['profileScore'] as num?) ?? 0.0).toDouble(),
+              profileScore: ((data['profileScore'] as num?) ?? 0.0).toDouble(),
             );
           } catch (e, st) {
             appLogger.error(

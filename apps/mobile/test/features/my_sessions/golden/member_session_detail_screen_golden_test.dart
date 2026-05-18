@@ -54,15 +54,13 @@ Widget _buildScreen(double textScale) {
 
   return ProviderScope(
     overrides: [
-      sessionStreamProvider('sess-golden-member').overrideWith(
-        (_) => Stream.value(_session()),
-      ),
-      sessionMembersProvider('sess-golden-member').overrideWith(
-        (_) => Stream.value(const <UserEntity>[]),
-      ),
-      currentUserProvider.overrideWith(
-        (_) => Stream.value(fakeUser),
-      ),
+      sessionStreamProvider(
+        'sess-golden-member',
+      ).overrideWith((_) => Stream.value(_session())),
+      sessionMembersProvider(
+        'sess-golden-member',
+      ).overrideWith((_) => Stream.value(const <UserEntity>[])),
+      currentUserProvider.overrideWith((_) => Stream.value(fakeUser)),
     ],
     child: MaterialApp(
       locale: const Locale('th'),
@@ -78,9 +76,7 @@ Widget _buildScreen(double textScale) {
       ),
       home: MediaQuery(
         data: MediaQueryData(textScaler: TextScaler.linear(textScale)),
-        child: const MemberSessionDetailScreen(
-          sessionId: 'sess-golden-member',
-        ),
+        child: const MemberSessionDetailScreen(sessionId: 'sess-golden-member'),
       ),
     ),
   );

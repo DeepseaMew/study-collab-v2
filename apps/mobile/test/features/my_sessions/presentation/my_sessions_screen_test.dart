@@ -15,16 +15,16 @@ import 'package:mobile/features/sessions/domain/entities/session_entity.dart';
 import 'package:network_image_mock/network_image_mock.dart';
 
 UserEntity _fakeUser() => const UserEntity(
-      uid: 'user-1',
-      displayName: 'Test User',
-      fullName: 'Test Full',
-      email: 'user1@mail.kmutt.ac.th',
-      hasHostedBefore: false,
-      studentYear: 2,
-      academicLevel: 'undergraduate',
-      faculty: 'Engineering',
-      profileScore: 0.0,
-    );
+  uid: 'user-1',
+  displayName: 'Test User',
+  fullName: 'Test Full',
+  email: 'user1@mail.kmutt.ac.th',
+  hasHostedBefore: false,
+  studentYear: 2,
+  academicLevel: 'undergraduate',
+  faculty: 'Engineering',
+  profileScore: 0.0,
+);
 
 SessionEntity _session(String id, String status) {
   final now = DateTime(2026, 5, 18, 10);
@@ -51,12 +51,15 @@ SessionEntity _session(String id, String status) {
 }
 
 Widget _buildScreen({
-  AsyncValue<List<SessionEntity>> upcoming =
-      const AsyncValue.data(<SessionEntity>[]),
-  AsyncValue<List<SessionEntity>> completed =
-      const AsyncValue.data(<SessionEntity>[]),
-  AsyncValue<List<SessionEntity>> hosted =
-      const AsyncValue.data(<SessionEntity>[]),
+  AsyncValue<List<SessionEntity>> upcoming = const AsyncValue.data(
+    <SessionEntity>[],
+  ),
+  AsyncValue<List<SessionEntity>> completed = const AsyncValue.data(
+    <SessionEntity>[],
+  ),
+  AsyncValue<List<SessionEntity>> hosted = const AsyncValue.data(
+    <SessionEntity>[],
+  ),
   UserEntity? user,
 }) {
   return ProviderScope(
@@ -123,45 +126,49 @@ void main() {
     });
   });
 
-  testWidgets(
-      'MySessionsScreen — search bar is present', (tester) async {
+  testWidgets('MySessionsScreen — search bar is present', (tester) async {
     await mockNetworkImagesFor(() async {
       await tester.pumpWidget(_buildScreen());
       await tester.pumpAndSettle(const Duration(seconds: 3));
 
-      expect(find.widgetWithText(TextField, 'Search sessions...'), findsOneWidget);
+      expect(
+        find.widgetWithText(TextField, 'Search sessions...'),
+        findsOneWidget,
+      );
     });
   });
 
   testWidgets(
-      'MySessionsScreen — empty Upcoming tab shows empty state message', (
+    'MySessionsScreen — empty Upcoming tab shows empty state message',
+    (tester) async {
+      await mockNetworkImagesFor(() async {
+        await tester.pumpWidget(_buildScreen());
+        await tester.pumpAndSettle(const Duration(seconds: 3));
+
+        expect(find.text('No upcoming sessions.'), findsOneWidget);
+      });
+    },
+  );
+
+  testWidgets(
+    'MySessionsScreen — Upcoming tab renders session cards when data available',
+    (tester) async {
+      await mockNetworkImagesFor(() async {
+        await tester.pumpWidget(
+          _buildScreen(
+            upcoming: AsyncValue.data([_session('s1', 'scheduled')]),
+          ),
+        );
+        await tester.pumpAndSettle(const Duration(seconds: 3));
+
+        expect(find.text('Session s1'), findsOneWidget);
+      });
+    },
+  );
+
+  testWidgets('MySessionsScreen — unauthenticated state shows sign-in prompt', (
     tester,
   ) async {
-    await mockNetworkImagesFor(() async {
-      await tester.pumpWidget(_buildScreen());
-      await tester.pumpAndSettle(const Duration(seconds: 3));
-
-      expect(find.text('No upcoming sessions.'), findsOneWidget);
-    });
-  });
-
-  testWidgets(
-      'MySessionsScreen — Upcoming tab renders session cards when data available',
-      (tester) async {
-    await mockNetworkImagesFor(() async {
-      await tester.pumpWidget(
-        _buildScreen(
-          upcoming: AsyncValue.data([_session('s1', 'scheduled')]),
-        ),
-      );
-      await tester.pumpAndSettle(const Duration(seconds: 3));
-
-      expect(find.text('Session s1'), findsOneWidget);
-    });
-  });
-
-  testWidgets('MySessionsScreen — unauthenticated state shows sign-in prompt',
-      (tester) async {
     await mockNetworkImagesFor(() async {
       await tester.pumpWidget(
         ProviderScope(
@@ -173,15 +180,13 @@ void main() {
       );
       await tester.pumpAndSettle(const Duration(seconds: 3));
 
-      expect(
-        find.text('Sign in to see your sessions.'),
-        findsOneWidget,
-      );
+      expect(find.text('Sign in to see your sessions.'), findsOneWidget);
     });
   });
 
-  testWidgets(
-      'MySessionsScreen — search filters sessions by title', (tester) async {
+  testWidgets('MySessionsScreen — search filters sessions by title', (
+    tester,
+  ) async {
     await mockNetworkImagesFor(() async {
       await tester.pumpWidget(
         _buildScreen(

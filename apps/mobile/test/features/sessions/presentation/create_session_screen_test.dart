@@ -18,16 +18,16 @@ import 'package:network_image_mock/network_image_mock.dart';
 class _MockSessionRepository extends Mock implements SessionRepository {}
 
 UserEntity _fakeUser() => const UserEntity(
-      uid: 'user-1',
-      displayName: 'Test User',
-      fullName: 'Test Full User',
-      email: 'test@mail.kmutt.ac.th',
-      hasHostedBefore: false,
-      studentYear: 2,
-      academicLevel: 'undergraduate',
-      faculty: 'Engineering',
-      profileScore: 0.0,
-    );
+  uid: 'user-1',
+  displayName: 'Test User',
+  fullName: 'Test Full User',
+  email: 'test@mail.kmutt.ac.th',
+  hasHostedBefore: false,
+  studentYear: 2,
+  academicLevel: 'undergraduate',
+  faculty: 'Engineering',
+  profileScore: 0.0,
+);
 
 Widget _buildScreen({UserEntity? user}) {
   final repo = _MockSessionRepository();
@@ -53,8 +53,9 @@ Widget _buildScreen({UserEntity? user}) {
       updatedAt: DateTime(2026, 5, 18),
     ),
   );
-  when(() => repo.createSession(any(), plainTextPin: any(named: 'plainTextPin')))
-      .thenAnswer((_) async {});
+  when(
+    () => repo.createSession(any(), plainTextPin: any(named: 'plainTextPin')),
+  ).thenAnswer((_) async {});
 
   return ProviderScope(
     overrides: [
@@ -103,65 +104,67 @@ void main() {
   });
 
   testWidgets(
-      'CreateSessionScreen — tapping Next with empty title shows inline error',
-      (tester) async {
-    await mockNetworkImagesFor(() async {
-      await tester.pumpWidget(_buildScreen());
-      await tester.pumpAndSettle(const Duration(seconds: 3));
+    'CreateSessionScreen — tapping Next with empty title shows inline error',
+    (tester) async {
+      await mockNetworkImagesFor(() async {
+        await tester.pumpWidget(_buildScreen());
+        await tester.pumpAndSettle(const Duration(seconds: 3));
 
-      // Do not enter a title — tap Next immediately.
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Next'));
-      await tester.pumpAndSettle(const Duration(seconds: 1));
+        // Do not enter a title — tap Next immediately.
+        await tester.tap(find.widgetWithText(ElevatedButton, 'Next'));
+        await tester.pumpAndSettle(const Duration(seconds: 1));
 
-      // The inline error for title should appear.
-      expect(find.text('Session title is required'), findsOneWidget);
-    });
-  });
-
-  testWidgets(
-      'CreateSessionScreen — step progress bar renders with 3 segments', (
-    tester,
-  ) async {
-    await mockNetworkImagesFor(() async {
-      await tester.pumpWidget(_buildScreen());
-      await tester.pumpAndSettle(const Duration(seconds: 3));
-
-      // The progress bar is built from 3 Container segments.
-      // The Scaffold is present as the outer shell.
-      expect(find.byType(Scaffold), findsOneWidget);
-    });
-  });
+        // The inline error for title should appear.
+        expect(find.text('Session title is required'), findsOneWidget);
+      });
+    },
+  );
 
   testWidgets(
-      'CreateSessionScreen — visibility segmented button is present on step 0',
-      (tester) async {
-    await mockNetworkImagesFor(() async {
-      await tester.pumpWidget(_buildScreen());
-      await tester.pumpAndSettle(const Duration(seconds: 3));
+    'CreateSessionScreen — step progress bar renders with 3 segments',
+    (tester) async {
+      await mockNetworkImagesFor(() async {
+        await tester.pumpWidget(_buildScreen());
+        await tester.pumpAndSettle(const Duration(seconds: 3));
 
-      expect(find.text('Public'), findsOneWidget);
-      expect(find.text('Private'), findsOneWidget);
-    });
-  });
+        // The progress bar is built from 3 Container segments.
+        // The Scaffold is present as the outer shell.
+        expect(find.byType(Scaffold), findsOneWidget);
+      });
+    },
+  );
 
   testWidgets(
-      'CreateSessionScreen — switching to Private shows auto-PIN info text', (
-    tester,
-  ) async {
-    await mockNetworkImagesFor(() async {
-      await tester.pumpWidget(_buildScreen());
-      await tester.pumpAndSettle(const Duration(seconds: 3));
+    'CreateSessionScreen — visibility segmented button is present on step 0',
+    (tester) async {
+      await mockNetworkImagesFor(() async {
+        await tester.pumpWidget(_buildScreen());
+        await tester.pumpAndSettle(const Duration(seconds: 3));
 
-      await tester.tap(find.text('Private'));
-      await tester.pumpAndSettle(const Duration(seconds: 1));
+        expect(find.text('Public'), findsOneWidget);
+        expect(find.text('Private'), findsOneWidget);
+      });
+    },
+  );
 
-      // The manual PIN field is gone; a descriptive info line appears instead.
-      expect(
-        find.textContaining('A secure PIN will be generated automatically'),
-        findsOneWidget,
-      );
-      // No manual password input should exist.
-      expect(find.text('Session password (min 4 chars)'), findsNothing);
-    });
-  });
+  testWidgets(
+    'CreateSessionScreen — switching to Private shows auto-PIN info text',
+    (tester) async {
+      await mockNetworkImagesFor(() async {
+        await tester.pumpWidget(_buildScreen());
+        await tester.pumpAndSettle(const Duration(seconds: 3));
+
+        await tester.tap(find.text('Private'));
+        await tester.pumpAndSettle(const Duration(seconds: 1));
+
+        // The manual PIN field is gone; a descriptive info line appears instead.
+        expect(
+          find.textContaining('A secure PIN will be generated automatically'),
+          findsOneWidget,
+        );
+        // No manual password input should exist.
+        expect(find.text('Session password (min 4 chars)'), findsNothing);
+      });
+    },
+  );
 }

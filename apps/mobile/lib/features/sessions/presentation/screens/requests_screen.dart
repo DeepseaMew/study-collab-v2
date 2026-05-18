@@ -65,10 +65,7 @@ class RequestsScreen extends ConsumerWidget {
                     padding: EdgeInsets.all(24),
                     child: Text(
                       'Could not load requests.',
-                      style: TextStyle(
-                        color: AppColors.hint,
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(color: AppColors.hint, fontSize: 14),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -142,7 +139,9 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
   Future<void> _approve() async {
     setState(() => _approvingLoading = true);
     try {
-      await ref.read(joinRequestRepositoryProvider).approveRequest(
+      await ref
+          .read(joinRequestRepositoryProvider)
+          .approveRequest(
             widget.sessionId,
             widget.callerUid,
             widget.request.uid,
@@ -175,7 +174,9 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
   Future<void> _decline() async {
     setState(() => _decliningLoading = true);
     try {
-      await ref.read(joinRequestRepositoryProvider).declineRequest(
+      await ref
+          .read(joinRequestRepositoryProvider)
+          .declineRequest(
             widget.sessionId,
             widget.callerUid,
             widget.request.uid,
@@ -225,11 +226,13 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
           CircleAvatar(
             radius: 22,
             backgroundColor: AppColors.secondary,
-            backgroundImage: widget.request.photoUrl != null &&
+            backgroundImage:
+                widget.request.photoUrl != null &&
                     widget.request.photoUrl!.isNotEmpty
                 ? CachedNetworkImageProvider(widget.request.photoUrl!)
                 : null,
-            child: widget.request.photoUrl == null ||
+            child:
+                widget.request.photoUrl == null ||
                     widget.request.photoUrl!.isEmpty
                 ? Text(
                     initial,
@@ -256,10 +259,7 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
                 ),
                 Text(
                   DateFormatter.relative(widget.request.requestedAt),
-                  style: const TextStyle(
-                    color: AppColors.hint,
-                    fontSize: 11,
-                  ),
+                  style: const TextStyle(color: AppColors.hint, fontSize: 11),
                 ),
               ],
             ),

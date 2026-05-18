@@ -21,9 +21,9 @@ class SessionRepositoryImpl implements SessionRepository {
 
   @override
   Stream<List<SessionEntity>> watchPublicSessions() {
-    return _datasource
-        .watchPublicSessions()
-        .map((models) => models.map((m) => m.toEntity()).toList());
+    return _datasource.watchPublicSessions().map(
+      (models) => models.map((m) => m.toEntity()).toList(),
+    );
   }
 
   @override
@@ -108,14 +108,18 @@ class SessionRepositoryImpl implements SessionRepository {
       throw const NotFoundException('Session not found.');
     }
     if (session.hostUid != callerUid) {
-      throw const AuthorisationException('Only the host may edit this session.');
+      throw const AuthorisationException(
+        'Only the host may edit this session.',
+      );
     }
 
     // Convert DateTime to Timestamp if present.
     final firestoreUpdates = <String, dynamic>{};
     for (final entry in updates.entries) {
       if (entry.value is DateTime) {
-        firestoreUpdates[entry.key] = Timestamp.fromDate(entry.value as DateTime);
+        firestoreUpdates[entry.key] = Timestamp.fromDate(
+          entry.value as DateTime,
+        );
       } else {
         firestoreUpdates[entry.key] = entry.value;
       }

@@ -23,9 +23,9 @@ abstract class JoinRequestModel with _$JoinRequestModel {
 
   /// Converts to the domain [JoinRequestEntity].
   JoinRequestEntity toEntity() => JoinRequestEntity(
-        uid: uid,
-        displayName: displayName,
-        photoUrl: photoUrl,
-        requestedAt: requestedAt,
-      );
+    uid: uid,
+    displayName: displayName,
+    photoUrl: photoUrl,
+    requestedAt: requestedAt,
+  );
 }

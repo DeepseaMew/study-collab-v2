@@ -24,9 +24,8 @@ class EditSessionScreen extends ConsumerWidget {
     final meAsync = ref.watch(currentUserProvider);
 
     return sessionAsync.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (e, st) {
         appLogger.error(
           'EditSessionScreen failed to load session',
@@ -182,10 +181,7 @@ class _DeleteDialogState extends ConsumerState<_DeleteDialog> {
       actions: [
         TextButton(
           onPressed: _deleting ? null : () => Navigator.pop(context),
-          child: const Text(
-            'Cancel',
-            style: TextStyle(color: AppColors.hint),
-          ),
+          child: const Text('Cancel', style: TextStyle(color: AppColors.hint)),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(

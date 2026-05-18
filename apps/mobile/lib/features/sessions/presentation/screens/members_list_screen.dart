@@ -27,7 +27,8 @@ class MembersListScreen extends ConsumerWidget {
     // Only true once both providers have resolved to non-null data — guards
     // against a race where sessionAsync is still loading and hostUid is null,
     // which would cause isViewerHost to be false for one or more frames.
-    final isViewerHost = sessionAsync.hasValue &&
+    final isViewerHost =
+        sessionAsync.hasValue &&
         currentUserAsync.hasValue &&
         hostUid != null &&
         currentUser != null &&
@@ -117,8 +118,9 @@ class _MemberTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final initial =
-        member.displayName.isNotEmpty ? member.displayName[0].toUpperCase() : '?';
+    final initial = member.displayName.isNotEmpty
+        ? member.displayName[0].toUpperCase()
+        : '?';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -133,7 +135,8 @@ class _MemberTile extends StatelessWidget {
           CircleAvatar(
             radius: 22,
             backgroundColor: AppColors.secondary,
-            backgroundImage: member.photoUrl != null && member.photoUrl!.isNotEmpty
+            backgroundImage:
+                member.photoUrl != null && member.photoUrl!.isNotEmpty
                 ? CachedNetworkImageProvider(member.photoUrl!)
                 : null,
             child: member.photoUrl == null || member.photoUrl!.isEmpty
@@ -191,10 +194,7 @@ class _MemberTile extends StatelessWidget {
                 if (showFaculty && member.faculty.isNotEmpty)
                   Text(
                     member.faculty,
-                    style: const TextStyle(
-                      color: AppColors.hint,
-                      fontSize: 12,
-                    ),
+                    style: const TextStyle(color: AppColors.hint, fontSize: 12),
                   ),
               ],
             ),

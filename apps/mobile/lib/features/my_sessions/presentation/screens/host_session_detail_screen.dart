@@ -204,8 +204,7 @@ class _HostSessionDetailScreenState
           if (session != null && me != null)
             PopupMenuButton<_HostAction>(
               icon: const Icon(Icons.more_vert, color: Colors.white),
-              onSelected: (action) =>
-                  _onMenuAction(action, session, me.uid),
+              onSelected: (action) => _onMenuAction(action, session, me.uid),
               itemBuilder: (_) => const [
                 PopupMenuItem(
                   value: _HostAction.edit,
@@ -252,10 +251,7 @@ class _HostSessionDetailScreenState
           final requests = requestsAsync.asData?.value ?? [];
           return Column(
             children: [
-              _SessionInfoCard(
-                session: session,
-                currentUserId: me?.uid ?? '',
-              ),
+              _SessionInfoCard(session: session, currentUserId: me?.uid ?? ''),
               TabBar(
                 controller: _tab,
                 indicatorColor: AppColors.accent,
@@ -284,11 +280,8 @@ class _HostSessionDetailScreenState
                       members: members,
                       onEndSession: me == null
                           ? null
-                          : () => _showEndSessionSheet(
-                                session,
-                                members,
-                                me.uid,
-                              ),
+                          : () =>
+                                _showEndSessionSheet(session, members, me.uid),
                     ),
                     const _NotesTab(),
                     _RequestsTab(
@@ -310,10 +303,7 @@ class _HostSessionDetailScreenState
 // ── Session info card ──────────────────────────────────────────────────────────
 
 class _SessionInfoCard extends ConsumerStatefulWidget {
-  const _SessionInfoCard({
-    required this.session,
-    required this.currentUserId,
-  });
+  const _SessionInfoCard({required this.session, required this.currentUserId});
 
   final SessionEntity session;
   final String currentUserId;
@@ -379,8 +369,9 @@ class _SessionInfoCardState extends ConsumerState<_SessionInfoCard> {
     final progress = session.capacity > 0
         ? (session.participantCount / session.capacity).clamp(0.0, 1.0)
         : 0.0;
-    final subjectLabel =
-        session.hashtags.isNotEmpty ? session.hashtags.first : session.academicLevel;
+    final subjectLabel = session.hashtags.isNotEmpty
+        ? session.hashtags.first
+        : session.academicLevel;
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -402,8 +393,10 @@ class _SessionInfoCardState extends ConsumerState<_SessionInfoCard> {
           Row(
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.accent.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(20),
@@ -422,8 +415,10 @@ class _SessionInfoCardState extends ConsumerState<_SessionInfoCard> {
               ),
               const SizedBox(width: 8),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.accent,
                   borderRadius: BorderRadius.circular(20),
@@ -476,7 +471,7 @@ class _SessionInfoCardState extends ConsumerState<_SessionInfoCard> {
                 child: Text(
                   session.scheduledEndAt != null
                       ? '${DateFormatter.relativeDate(session.scheduledAt)}  '
-                          '${DateFormatter.timeRange(session.scheduledAt, session.scheduledEndAt!)}'
+                            '${DateFormatter.timeRange(session.scheduledAt, session.scheduledEndAt!)}'
                       : DateFormatter.relativeDate(session.scheduledAt),
                   style: const TextStyle(color: AppColors.hint, fontSize: 13),
                   overflow: TextOverflow.ellipsis,
@@ -505,11 +500,7 @@ class _SessionInfoCardState extends ConsumerState<_SessionInfoCard> {
           const SizedBox(height: 6),
           Row(
             children: [
-              const Icon(
-                Icons.group_outlined,
-                size: 14,
-                color: AppColors.hint,
-              ),
+              const Icon(Icons.group_outlined, size: 14, color: AppColors.hint),
               const SizedBox(width: 6),
               Text(
                 '${session.participantCount}/${session.capacity} members',
@@ -522,11 +513,7 @@ class _SessionInfoCardState extends ConsumerState<_SessionInfoCard> {
             const SizedBox(height: 6),
             Row(
               children: [
-                const Icon(
-                  Icons.lock_outline,
-                  size: 14,
-                  color: AppColors.hint,
-                ),
+                const Icon(Icons.lock_outline, size: 14, color: AppColors.hint),
                 const SizedBox(width: 6),
                 const Text(
                   'PIN',
@@ -613,10 +600,12 @@ class _MembersTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hostMember =
-        members.where((m) => m.uid == session.hostUid).firstOrNull;
-    final nonHostMembers =
-        members.where((m) => m.uid != session.hostUid).toList();
+    final hostMember = members
+        .where((m) => m.uid == session.hostUid)
+        .firstOrNull;
+    final nonHostMembers = members
+        .where((m) => m.uid != session.hostUid)
+        .toList();
     final previewMembers = nonHostMembers.take(5).toList();
 
     return SingleChildScrollView(
@@ -651,8 +640,10 @@ class _MembersTab extends StatelessWidget {
               ),
               TextButton(
                 onPressed: () => context.push(
-                  RouteConstants.sessionMembers
-                      .replaceFirst(':id', session.sessionId),
+                  RouteConstants.sessionMembers.replaceFirst(
+                    ':id',
+                    session.sessionId,
+                  ),
                 ),
                 child: const Text(
                   'View all',
@@ -788,8 +779,7 @@ class _NotesTab extends StatelessWidget {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
-                borderSide:
-                    const BorderSide(color: AppColors.accent, width: 2),
+                borderSide: const BorderSide(color: AppColors.accent, width: 2),
               ),
             ),
           ),
@@ -869,7 +859,10 @@ class _RequestsTab extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: AppColors.accent,
                     borderRadius: BorderRadius.circular(12),
@@ -894,7 +887,11 @@ class _RequestsTab extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.inbox_outlined, size: 48, color: AppColors.secondary),
+                  Icon(
+                    Icons.inbox_outlined,
+                    size: 48,
+                    color: AppColors.secondary,
+                  ),
                   SizedBox(height: 8),
                   Text(
                     'No pending requests',
@@ -938,7 +935,9 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
   Future<void> _approve() async {
     setState(() => _approvingLoading = true);
     try {
-      await ref.read(joinRequestRepositoryProvider).approveRequest(
+      await ref
+          .read(joinRequestRepositoryProvider)
+          .approveRequest(
             widget.sessionId,
             widget.callerUid,
             widget.request.uid,
@@ -971,7 +970,9 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
   Future<void> _decline() async {
     setState(() => _decliningLoading = true);
     try {
-      await ref.read(joinRequestRepositoryProvider).declineRequest(
+      await ref
+          .read(joinRequestRepositoryProvider)
+          .declineRequest(
             widget.sessionId,
             widget.callerUid,
             widget.request.uid,
@@ -1021,11 +1022,13 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
           CircleAvatar(
             radius: 20,
             backgroundColor: AppColors.secondary,
-            backgroundImage: widget.request.photoUrl != null &&
+            backgroundImage:
+                widget.request.photoUrl != null &&
                     widget.request.photoUrl!.isNotEmpty
                 ? CachedNetworkImageProvider(widget.request.photoUrl!)
                 : null,
-            child: widget.request.photoUrl == null ||
+            child:
+                widget.request.photoUrl == null ||
                     widget.request.photoUrl!.isEmpty
                 ? Text(
                     initial,
@@ -1138,20 +1141,19 @@ class _EndSessionSheetState extends ConsumerState<_EndSessionSheet> {
   bool _submitting = false;
 
   List<UserEntity> get _sorted {
-    final host =
-        widget.members.where((m) => m.uid == widget.session.hostUid).toList();
+    final host = widget.members
+        .where((m) => m.uid == widget.session.hostUid)
+        .toList();
     final self = widget.members
         .where(
           (m) =>
-              m.uid == widget.currentUserId &&
-              m.uid != widget.session.hostUid,
+              m.uid == widget.currentUserId && m.uid != widget.session.hostUid,
         )
         .toList();
     final others = widget.members
         .where(
           (m) =>
-              m.uid != widget.session.hostUid &&
-              m.uid != widget.currentUserId,
+              m.uid != widget.session.hostUid && m.uid != widget.currentUserId,
         )
         .toList();
     return [...host, ...self, ...others];
@@ -1260,8 +1262,9 @@ class _EndSessionSheetState extends ConsumerState<_EndSessionSheet> {
                   const Spacer(),
                   IconButton(
                     icon: const Icon(Icons.close, color: AppColors.hint),
-                    onPressed:
-                        _submitting ? null : () => Navigator.pop(context),
+                    onPressed: _submitting
+                        ? null
+                        : () => Navigator.pop(context),
                     visualDensity: VisualDensity.compact,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),
@@ -1281,7 +1284,7 @@ class _EndSessionSheetState extends ConsumerState<_EndSessionSheet> {
               Text(
                 widget.session.scheduledEndAt != null
                     ? '${DateFormatter.relativeDate(widget.session.scheduledAt)} · '
-                        '${DateFormatter.timeRange(widget.session.scheduledAt, widget.session.scheduledEndAt!)}'
+                          '${DateFormatter.timeRange(widget.session.scheduledAt, widget.session.scheduledEndAt!)}'
                     : DateFormatter.relativeDate(widget.session.scheduledAt),
                 style: const TextStyle(color: AppColors.hint, fontSize: 13),
               ),
@@ -1330,8 +1333,10 @@ class _EndSessionSheetState extends ConsumerState<_EndSessionSheet> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide:
-                        const BorderSide(color: AppColors.accent, width: 2),
+                    borderSide: const BorderSide(
+                      color: AppColors.accent,
+                      width: 2,
+                    ),
                   ),
                 ),
               ),
@@ -1345,8 +1350,7 @@ class _EndSessionSheetState extends ConsumerState<_EndSessionSheet> {
                         padding: EdgeInsets.symmetric(vertical: 12),
                         child: Text(
                           'No participants found.',
-                          style:
-                              TextStyle(color: AppColors.hint, fontSize: 13),
+                          style: TextStyle(color: AppColors.hint, fontSize: 13),
                         ),
                       )
                     : ListView.builder(
@@ -1496,8 +1500,7 @@ class _Avatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final initial =
-        displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
+    final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
 
     if (photoUrl != null && photoUrl!.isNotEmpty) {
       return CircleAvatar(

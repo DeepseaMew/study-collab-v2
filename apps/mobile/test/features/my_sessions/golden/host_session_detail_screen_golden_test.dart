@@ -53,8 +53,9 @@ Widget _buildScreen(double textScale) {
   final sessionRepo = _MockSessionRepository();
   final requestRepo = _MockJoinRequestRepository();
 
-  when(() => requestRepo.watchRequests(any()))
-      .thenAnswer((_) => Stream.value(const <JoinRequestEntity>[]));
+  when(
+    () => requestRepo.watchRequests(any()),
+  ).thenAnswer((_) => Stream.value(const <JoinRequestEntity>[]));
   when(() => sessionRepo.endSession(any(), any())).thenAnswer((_) async {});
 
   const fakeUser = UserEntity(
@@ -71,18 +72,16 @@ Widget _buildScreen(double textScale) {
 
   return ProviderScope(
     overrides: [
-      sessionStreamProvider('sess-golden-host').overrideWith(
-        (_) => Stream.value(_session()),
-      ),
-      sessionMembersProvider('sess-golden-host').overrideWith(
-        (_) => Stream.value(const <UserEntity>[]),
-      ),
-      joinRequestsProvider('sess-golden-host').overrideWith(
-        (_) => Stream.value(const <JoinRequestEntity>[]),
-      ),
-      currentUserProvider.overrideWith(
-        (_) => Stream.value(fakeUser),
-      ),
+      sessionStreamProvider(
+        'sess-golden-host',
+      ).overrideWith((_) => Stream.value(_session())),
+      sessionMembersProvider(
+        'sess-golden-host',
+      ).overrideWith((_) => Stream.value(const <UserEntity>[])),
+      joinRequestsProvider(
+        'sess-golden-host',
+      ).overrideWith((_) => Stream.value(const <JoinRequestEntity>[])),
+      currentUserProvider.overrideWith((_) => Stream.value(fakeUser)),
       sessionRepositoryProvider.overrideWithValue(sessionRepo),
       joinRequestRepositoryProvider.overrideWithValue(requestRepo),
     ],
@@ -100,9 +99,7 @@ Widget _buildScreen(double textScale) {
       ),
       home: MediaQuery(
         data: MediaQueryData(textScaler: TextScaler.linear(textScale)),
-        child: const HostSessionDetailScreen(
-          sessionId: 'sess-golden-host',
-        ),
+        child: const HostSessionDetailScreen(sessionId: 'sess-golden-host'),
       ),
     ),
   );

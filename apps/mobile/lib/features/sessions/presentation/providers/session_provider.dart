@@ -10,9 +10,7 @@ part 'session_provider.g.dart';
 /// Provides the [SessionRepository] implementation.
 @riverpod
 SessionRepository sessionRepository(SessionRepositoryRef ref) {
-  return SessionRepositoryImpl(
-    SessionDatasource(FirebaseFirestore.instance),
-  );
+  return SessionRepositoryImpl(SessionDatasource(FirebaseFirestore.instance));
 }
 
 /// Watches a single session by ID.
@@ -25,8 +23,6 @@ Stream<SessionEntity?> sessionStream(SessionStreamRef ref, String sessionId) {
 
 /// Watches all public sessions.
 @riverpod
-Stream<List<SessionEntity>> publicSessionsStream(
-  PublicSessionsStreamRef ref,
-) {
+Stream<List<SessionEntity>> publicSessionsStream(PublicSessionsStreamRef ref) {
   return ref.watch(sessionRepositoryProvider).watchPublicSessions();
 }

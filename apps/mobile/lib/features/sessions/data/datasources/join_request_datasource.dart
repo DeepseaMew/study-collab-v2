@@ -14,7 +14,9 @@ class JoinRequestDatasource {
 
   CollectionReference<Map<String, dynamic>> _requestsCollection(
     String sessionId,
-  ) => _firestore.collection(FirestorePaths.sessionRequestsCollection(sessionId));
+  ) => _firestore.collection(
+    FirestorePaths.sessionRequestsCollection(sessionId),
+  );
 
   DocumentReference<Map<String, dynamic>> _requestDoc(
     String sessionId,
@@ -31,18 +33,16 @@ class JoinRequestDatasource {
   /// Reads only `sessions/{sessionId}/requests/{uid}` — never a collection
   /// query. Returns true while the document is present (request is pending).
   Stream<bool> watchMyRequest(String sessionId, String uid) {
-    return _requestDoc(sessionId, uid)
-        .snapshots()
-        .map((doc) => doc.exists);
+    return _requestDoc(sessionId, uid).snapshots().map((doc) => doc.exists);
   }
 
   /// Watches all join requests for a session.
   Stream<List<JoinRequestModel>> watchRequests(String sessionId) {
-    return _requestsCollection(sessionId)
-        .orderBy('requestedAt', descending: false)
-        .snapshots()
-        .map((snap) {
-          return snap.docs.map((doc) {
+    return _requestsCollection(
+      sessionId,
+    ).orderBy('requestedAt', descending: false).snapshots().map((snap) {
+      return snap.docs
+          .map((doc) {
             try {
               return JoinRequestModel.fromJson(doc.data());
             } catch (e, st) {
@@ -54,8 +54,10 @@ class JoinRequestDatasource {
               );
               return null;
             }
-          }).whereType<JoinRequestModel>().toList();
-        });
+          })
+          .whereType<JoinRequestModel>()
+          .toList();
+    });
   }
 
   // ── Writes ─────────────────────────────────────────────────────────────────
@@ -69,10 +71,7 @@ class JoinRequestDatasource {
     try {
       data['requestedAt'] = FieldValue.serverTimestamp();
       await _requestDoc(sessionId, uid).set(data);
-      appLogger.info(
-        'Join request submitted',
-        extra: {'sessionId': sessionId},
-      );
+      appLogger.info('Join request submitted', extra: {'sessionId': sessionId});
     } on FirebaseException catch (e, st) {
       appLogger.error(
         'Firestore submit join request failed',
@@ -129,10 +128,7 @@ class JoinRequestDatasource {
         'updatedAt': FieldValue.serverTimestamp(),
       });
       await batch.commit();
-      appLogger.info(
-        'Join request approved',
-        extra: {'sessionId': sessionId},
-      );
+      appLogger.info('Join request approved', extra: {'sessionId': sessionId});
     } on FirebaseException catch (e, st) {
       appLogger.error(
         'Firestore approve join request failed',
@@ -148,10 +144,7 @@ class JoinRequestDatasource {
   Future<void> declineRequest(String sessionId, String requestUid) async {
     try {
       await _requestDoc(sessionId, requestUid).delete();
-      appLogger.info(
-        'Join request declined',
-        extra: {'sessionId': sessionId},
-      );
+      appLogger.info('Join request declined', extra: {'sessionId': sessionId});
     } on FirebaseException catch (e, st) {
       appLogger.error(
         'Firestore decline join request failed',
@@ -167,10 +160,7 @@ class JoinRequestDatasource {
   Future<void> withdrawRequest(String sessionId, String uid) async {
     try {
       await _requestDoc(sessionId, uid).delete();
-      appLogger.info(
-        'Join request withdrawn',
-        extra: {'sessionId': sessionId},
-      );
+      appLogger.info('Join request withdrawn', extra: {'sessionId': sessionId});
     } on FirebaseException catch (e, st) {
       appLogger.error(
         'Firestore withdraw join request failed',

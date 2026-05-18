@@ -6,9 +6,6 @@ part 'hosted_sessions_provider.g.dart';
 
 /// Watches sessions hosted by the current user.
 @riverpod
-Stream<List<SessionEntity>> hostedSessions(
-  HostedSessionsRef ref,
-  String uid,
-) {
+Stream<List<SessionEntity>> hostedSessions(HostedSessionsRef ref, String uid) {
   return ref.watch(mySessionsRepositoryProvider).watchHostedSessions(uid);
 }

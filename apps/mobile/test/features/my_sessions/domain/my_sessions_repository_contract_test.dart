@@ -53,23 +53,27 @@ void main() {
         _session(id: 's1'),
         _session(id: 's2', status: 'active'),
       ];
-      when(() => repo.watchUpcomingSessions('user-1'))
-          .thenAnswer((_) => Stream.value(upcoming));
+      when(
+        () => repo.watchUpcomingSessions('user-1'),
+      ).thenAnswer((_) => Stream.value(upcoming));
 
       expect(
         repo.watchUpcomingSessions('user-1'),
         emits(
           allOf(
             hasLength(2),
-            isNot(contains(predicate<SessionEntity>((s) => s.status == 'ended'))),
+            isNot(
+              contains(predicate<SessionEntity>((s) => s.status == 'ended')),
+            ),
           ),
         ),
       );
     });
 
     test('emits empty list when no upcoming sessions', () {
-      when(() => repo.watchUpcomingSessions('user-1'))
-          .thenAnswer((_) => Stream.value(const []));
+      when(
+        () => repo.watchUpcomingSessions('user-1'),
+      ).thenAnswer((_) => Stream.value(const []));
 
       expect(repo.watchUpcomingSessions('user-1'), emits(isEmpty));
     });
@@ -81,17 +85,16 @@ void main() {
         _session(id: 's3', status: 'ended'),
         _session(id: 's4', status: 'ended'),
       ];
-      when(() => repo.watchCompletedSessions('user-1'))
-          .thenAnswer((_) => Stream.value(completed));
+      when(
+        () => repo.watchCompletedSessions('user-1'),
+      ).thenAnswer((_) => Stream.value(completed));
 
       expect(
         repo.watchCompletedSessions('user-1'),
         emits(
           allOf(
             hasLength(2),
-            everyElement(
-              predicate<SessionEntity>((s) => s.status == 'ended'),
-            ),
+            everyElement(predicate<SessionEntity>((s) => s.status == 'ended')),
           ),
         ),
       );
@@ -104,8 +107,9 @@ void main() {
         _session(id: 's5', hostUid: 'user-1'),
         _session(id: 's6', hostUid: 'user-1'),
       ];
-      when(() => repo.watchHostedSessions('user-1'))
-          .thenAnswer((_) => Stream.value(hosted));
+      when(
+        () => repo.watchHostedSessions('user-1'),
+      ).thenAnswer((_) => Stream.value(hosted));
 
       expect(
         repo.watchHostedSessions('user-1'),
@@ -121,8 +125,9 @@ void main() {
     });
 
     test('emits empty list when user has no hosted sessions', () {
-      when(() => repo.watchHostedSessions('user-1'))
-          .thenAnswer((_) => Stream.value(const []));
+      when(
+        () => repo.watchHostedSessions('user-1'),
+      ).thenAnswer((_) => Stream.value(const []));
 
       expect(repo.watchHostedSessions('user-1'), emits(isEmpty));
     });

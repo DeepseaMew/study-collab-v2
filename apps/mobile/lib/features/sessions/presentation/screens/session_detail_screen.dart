@@ -34,9 +34,8 @@ class SessionDetailScreen extends ConsumerWidget {
     final sessionAsync = ref.watch(sessionStreamProvider(sessionId));
 
     return sessionAsync.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (e, st) {
         appLogger.error(
           'SessionDetailScreen failed to load',
@@ -158,8 +157,10 @@ class _SessionDetailBody extends ConsumerWidget {
                       case _HostAction.edit:
                         unawaited(
                           context.push(
-                            RouteConstants.sessionEdit
-                                .replaceFirst(':id', session.sessionId),
+                            RouteConstants.sessionEdit.replaceFirst(
+                              ':id',
+                              session.sessionId,
+                            ),
                           ),
                         );
                       case _HostAction.delete:
@@ -173,18 +174,15 @@ class _SessionDetailBody extends ConsumerWidget {
                             ),
                             actions: [
                               OutlinedButton(
-                                onPressed: () =>
-                                    Navigator.pop(context, false),
+                                onPressed: () => Navigator.pop(context, false),
                                 child: const Text('Cancel'),
                               ),
                               ElevatedButton(
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor:
-                                      const Color(0xFFE53E3E),
+                                  backgroundColor: const Color(0xFFE53E3E),
                                   foregroundColor: Colors.white,
                                 ),
-                                onPressed: () =>
-                                    Navigator.pop(context, true),
+                                onPressed: () => Navigator.pop(context, true),
                                 child: const Text('Delete'),
                               ),
                             ],
@@ -227,8 +225,7 @@ class _SessionDetailBody extends ConsumerWidget {
                       case _HostAction.copyLink:
                         await Clipboard.setData(
                           ClipboardData(
-                            text:
-                                'studycollab://session/${session.sessionId}',
+                            text: 'studycollab://session/${session.sessionId}',
                           ),
                         );
                         if (context.mounted) {
@@ -340,9 +337,11 @@ class _SessionDetailBody extends ConsumerWidget {
                     trailingLabel: members.length > 3 ? 'See All' : null,
                     onTrailingTap: members.length > 3
                         ? () => context.push(
-                              RouteConstants.sessionMembers
-                                  .replaceFirst(':id', session.sessionId),
-                            )
+                            RouteConstants.sessionMembers.replaceFirst(
+                              ':id',
+                              session.sessionId,
+                            ),
+                          )
                         : null,
                   ),
                   const SizedBox(height: 8),
@@ -350,18 +349,14 @@ class _SessionDetailBody extends ConsumerWidget {
                     loading: () => const _LoadingRow(),
                     error: (_, __) =>
                         const _ErrorRow(message: 'Could not load members'),
-                    data: (list) => _MembersPreviewRow(
-                      members: list.take(5).toList(),
-                    ),
+                    data: (list) =>
+                        _MembersPreviewRow(members: list.take(5).toList()),
                   ),
                   const SizedBox(height: 24),
 
                   // ── Pending requests (host-only) ──────────────────────────
                   if (isHost) ...[
-                    _HostRequestsSection(
-                      session: session,
-                      callerUid: me.uid,
-                    ),
+                    _HostRequestsSection(session: session, callerUid: me.uid),
                     const SizedBox(height: 24),
                   ],
 
@@ -386,10 +381,12 @@ class _InfoChipsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final subjectLabel =
-        session.hashtags.isNotEmpty ? session.hashtags.first : session.academicLevel;
-    final visibilityLabel =
-        session.visibility == 'private' ? 'Private' : 'Public';
+    final subjectLabel = session.hashtags.isNotEmpty
+        ? session.hashtags.first
+        : session.academicLevel;
+    final visibilityLabel = session.visibility == 'private'
+        ? 'Private'
+        : 'Public';
 
     return Wrap(
       spacing: 8,
@@ -400,9 +397,7 @@ class _InfoChipsRow extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColors.accent.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: AppColors.accent.withValues(alpha: 0.25),
-            ),
+            border: Border.all(color: AppColors.accent.withValues(alpha: 0.25)),
           ),
           child: Text(
             subjectLabel,
@@ -451,8 +446,8 @@ class _HostRow extends StatelessWidget {
         CircleAvatar(
           radius: 18,
           backgroundColor: AppColors.accent.withValues(alpha: 0.15),
-          backgroundImage: session.hostPhotoUrl != null &&
-                  session.hostPhotoUrl!.isNotEmpty
+          backgroundImage:
+              session.hostPhotoUrl != null && session.hostPhotoUrl!.isNotEmpty
               ? CachedNetworkImageProvider(session.hostPhotoUrl!)
               : null,
           child: session.hostPhotoUrl == null || session.hostPhotoUrl!.isEmpty
@@ -492,11 +487,7 @@ class _HostRow extends StatelessWidget {
 // ── Info card ─────────────────────────────────────────────────────────────────
 
 class _InfoCard extends StatelessWidget {
-  const _InfoCard({
-    required this.icon,
-    required this.label,
-    this.sub,
-  });
+  const _InfoCard({required this.icon, required this.label, this.sub});
 
   final IconData icon;
   final String label;
@@ -530,10 +521,7 @@ class _InfoCard extends StatelessWidget {
                 if (sub != null)
                   Text(
                     sub!,
-                    style: const TextStyle(
-                      color: AppColors.hint,
-                      fontSize: 12,
-                    ),
+                    style: const TextStyle(color: AppColors.hint, fontSize: 12),
                   ),
               ],
             ),
@@ -722,7 +710,9 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
   Future<void> _approve() async {
     setState(() => _approvingLoading = true);
     try {
-      await ref.read(joinRequestRepositoryProvider).approveRequest(
+      await ref
+          .read(joinRequestRepositoryProvider)
+          .approveRequest(
             widget.session.sessionId,
             widget.callerUid,
             widget.request.uid,
@@ -733,11 +723,7 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
       );
       appLogger.debug(AnalyticsEvents.sessionRequestApproved);
     } catch (e, st) {
-      appLogger.error(
-        'Approve request failed',
-        exception: e,
-        stackTrace: st,
-      );
+      appLogger.error('Approve request failed', exception: e, stackTrace: st);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -753,14 +739,16 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
 
   Future<void> _decline() async {
     if (widget.callerUid.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('You must be signed in.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('You must be signed in.')));
       return;
     }
     setState(() => _decliningLoading = true);
     try {
-      await ref.read(joinRequestRepositoryProvider).declineRequest(
+      await ref
+          .read(joinRequestRepositoryProvider)
+          .declineRequest(
             widget.session.sessionId,
             widget.callerUid,
             widget.request.uid,
@@ -771,11 +759,7 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
       );
       appLogger.debug(AnalyticsEvents.sessionRequestDeclined);
     } catch (e, st) {
-      appLogger.error(
-        'Decline request failed',
-        exception: e,
-        stackTrace: st,
-      );
+      appLogger.error('Decline request failed', exception: e, stackTrace: st);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -809,11 +793,13 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
           CircleAvatar(
             radius: 18,
             backgroundColor: AppColors.secondary,
-            backgroundImage: widget.request.photoUrl != null &&
+            backgroundImage:
+                widget.request.photoUrl != null &&
                     widget.request.photoUrl!.isNotEmpty
                 ? CachedNetworkImageProvider(widget.request.photoUrl!)
                 : null,
-            child: widget.request.photoUrl == null ||
+            child:
+                widget.request.photoUrl == null ||
                     widget.request.photoUrl!.isEmpty
                 ? Text(
                     initial,
@@ -908,10 +894,7 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
 // ── Host requests section (host-only widget — subscribes joinRequestsProvider) ─
 
 class _HostRequestsSection extends ConsumerWidget {
-  const _HostRequestsSection({
-    required this.session,
-    required this.callerUid,
-  });
+  const _HostRequestsSection({required this.session, required this.callerUid});
 
   final SessionEntity session;
   final String callerUid;
@@ -929,16 +912,17 @@ class _HostRequestsSection extends ConsumerWidget {
           trailingLabel: requests.length > 3 ? 'See All' : null,
           onTrailingTap: requests.length > 3
               ? () => context.push(
-                    RouteConstants.sessionRequests
-                        .replaceFirst(':id', session.sessionId),
-                  )
+                  RouteConstants.sessionRequests.replaceFirst(
+                    ':id',
+                    session.sessionId,
+                  ),
+                )
               : null,
         ),
         const SizedBox(height: 8),
         requestsAsync.when(
           loading: () => const _LoadingRow(),
-          error: (_, __) =>
-              const _ErrorRow(message: 'Could not load requests'),
+          error: (_, __) => const _ErrorRow(message: 'Could not load requests'),
           data: (list) {
             if (list.isEmpty) {
               return const Padding(
@@ -1018,7 +1002,11 @@ class _JoinActionRow extends ConsumerWidget {
 
     // Check pending via single-document watch (requester reads own doc only).
     final isPending =
-        ref.watch(myPendingRequestProvider(session.sessionId, me!.uid)).asData?.value ?? false;
+        ref
+            .watch(myPendingRequestProvider(session.sessionId, me!.uid))
+            .asData
+            ?.value ??
+        false;
 
     if (isPending) {
       return Container(
@@ -1062,7 +1050,9 @@ class _NotJoinedActionsState extends ConsumerState<_NotJoinedActions> {
     if (me == null) return;
     setState(() => _loading = true);
     try {
-      await ref.read(joinRequestRepositoryProvider).submitRequest(
+      await ref
+          .read(joinRequestRepositoryProvider)
+          .submitRequest(
             widget.session.sessionId,
             JoinRequestEntity(
               uid: me.uid,
@@ -1109,18 +1099,20 @@ class _NotJoinedActionsState extends ConsumerState<_NotJoinedActions> {
         photoUrl: me.photoUrl,
         requestedAt: DateTime.now(),
       );
-      await ref.read(joinRequestRepositoryProvider).joinWithPin(
-            widget.session.sessionId,
-            request,
-            password,
-          );
+      await ref
+          .read(joinRequestRepositoryProvider)
+          .joinWithPin(widget.session.sessionId, request, password);
       appLogger.info(
         'Joined private session with PIN',
         extra: {'sessionId': widget.session.sessionId},
       );
       appLogger.debug(AnalyticsEvents.sessionJoined);
     } catch (e, st) {
-      appLogger.error('Join with password failed', exception: e, stackTrace: st);
+      appLogger.error(
+        'Join with password failed',
+        exception: e,
+        stackTrace: st,
+      );
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -1212,7 +1204,9 @@ class _JoinPasswordDialogState extends State<_JoinPasswordDialog> {
           hintText: 'Password',
           suffixIcon: IconButton(
             icon: Icon(
-              _obscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+              _obscure
+                  ? Icons.visibility_off_outlined
+                  : Icons.visibility_outlined,
               size: 18,
               color: AppColors.hint,
             ),

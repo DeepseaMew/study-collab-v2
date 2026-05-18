@@ -204,27 +204,23 @@ GoRouter router(RouterRef ref) {
       ),
       GoRoute(
         path: '/sessions/:id',
-        builder: (_, state) => SessionDetailScreen(
-          sessionId: state.pathParameters['id']!,
-        ),
+        builder: (_, state) =>
+            SessionDetailScreen(sessionId: state.pathParameters['id']!),
         routes: [
           GoRoute(
             path: 'edit',
-            builder: (_, state) => EditSessionScreen(
-              sessionId: state.pathParameters['id']!,
-            ),
+            builder: (_, state) =>
+                EditSessionScreen(sessionId: state.pathParameters['id']!),
           ),
           GoRoute(
             path: 'members',
-            builder: (_, state) => MembersListScreen(
-              sessionId: state.pathParameters['id']!,
-            ),
+            builder: (_, state) =>
+                MembersListScreen(sessionId: state.pathParameters['id']!),
           ),
           GoRoute(
             path: 'requests',
-            builder: (_, state) => RequestsScreen(
-              sessionId: state.pathParameters['id']!,
-            ),
+            builder: (_, state) =>
+                RequestsScreen(sessionId: state.pathParameters['id']!),
           ),
         ],
       ),

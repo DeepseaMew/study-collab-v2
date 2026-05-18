@@ -63,8 +63,9 @@ void main() {
         _model(id: 's2', status: 'active'),
         _model(id: 's3', status: 'ended'),
       ];
-      when(() => datasource.watchMemberSessionsForUpcoming('u1'))
-          .thenAnswer((_) => Stream.value(models));
+      when(
+        () => datasource.watchMemberSessionsForUpcoming('u1'),
+      ).thenAnswer((_) => Stream.value(models));
 
       final entities = await repo.watchUpcomingSessions('u1').first;
 
@@ -77,35 +78,40 @@ void main() {
         _model(id: 's1', status: 'ended'),
         _model(id: 's2', status: 'ended'),
       ];
-      when(() => datasource.watchMemberSessionsForUpcoming('u1'))
-          .thenAnswer((_) => Stream.value(models));
+      when(
+        () => datasource.watchMemberSessionsForUpcoming('u1'),
+      ).thenAnswer((_) => Stream.value(models));
 
       final entities = await repo.watchUpcomingSessions('u1').first;
 
       expect(entities, isEmpty);
     });
 
-    test('passes through all sessions when none are ended and all in future',
-        () async {
-      final models = [
-        _model(id: 's1', status: 'scheduled'),
-        _model(id: 's2', status: 'scheduled'),
-      ];
-      when(() => datasource.watchMemberSessionsForUpcoming('u1'))
-          .thenAnswer((_) => Stream.value(models));
+    test(
+      'passes through all sessions when none are ended and all in future',
+      () async {
+        final models = [
+          _model(id: 's1', status: 'scheduled'),
+          _model(id: 's2', status: 'scheduled'),
+        ];
+        when(
+          () => datasource.watchMemberSessionsForUpcoming('u1'),
+        ).thenAnswer((_) => Stream.value(models));
 
-      final entities = await repo.watchUpcomingSessions('u1').first;
+        final entities = await repo.watchUpcomingSessions('u1').first;
 
-      expect(entities.length, 2);
-    });
+        expect(entities.length, 2);
+      },
+    );
 
     test('filters out sessions past their scheduled end time', () async {
       final models = [
         _model(id: 's1', status: 'scheduled', scheduledEndAt: _future),
         _model(id: 's2', status: 'scheduled', scheduledEndAt: _past),
       ];
-      when(() => datasource.watchMemberSessionsForUpcoming('u1'))
-          .thenAnswer((_) => Stream.value(models));
+      when(
+        () => datasource.watchMemberSessionsForUpcoming('u1'),
+      ).thenAnswer((_) => Stream.value(models));
 
       final entities = await repo.watchUpcomingSessions('u1').first;
 
@@ -113,18 +119,19 @@ void main() {
       expect(entities.first.sessionId, 's1');
     });
 
-    test('keeps session with null scheduledEndAt and non-ended status',
-        () async {
-      final models = [
-        _model(id: 's1', status: 'scheduled'),
-      ];
-      when(() => datasource.watchMemberSessionsForUpcoming('u1'))
-          .thenAnswer((_) => Stream.value(models));
+    test(
+      'keeps session with null scheduledEndAt and non-ended status',
+      () async {
+        final models = [_model(id: 's1', status: 'scheduled')];
+        when(
+          () => datasource.watchMemberSessionsForUpcoming('u1'),
+        ).thenAnswer((_) => Stream.value(models));
 
-      final entities = await repo.watchUpcomingSessions('u1').first;
+        final entities = await repo.watchUpcomingSessions('u1').first;
 
-      expect(entities.length, 1);
-    });
+        expect(entities.length, 1);
+      },
+    );
 
     test('excludes private session hosted by the caller', () async {
       final models = [
@@ -136,8 +143,9 @@ void main() {
           visibility: 'private',
         ),
       ];
-      when(() => datasource.watchMemberSessionsForUpcoming('u1'))
-          .thenAnswer((_) => Stream.value(models));
+      when(
+        () => datasource.watchMemberSessionsForUpcoming('u1'),
+      ).thenAnswer((_) => Stream.value(models));
 
       final entities = await repo.watchUpcomingSessions('u1').first;
 
@@ -154,8 +162,9 @@ void main() {
           visibility: 'private',
         ),
       ];
-      when(() => datasource.watchMemberSessionsForUpcoming('u1'))
-          .thenAnswer((_) => Stream.value(models));
+      when(
+        () => datasource.watchMemberSessionsForUpcoming('u1'),
+      ).thenAnswer((_) => Stream.value(models));
 
       final entities = await repo.watchUpcomingSessions('u1').first;
 
@@ -166,9 +175,12 @@ void main() {
 
   group('watchCompletedSessions', () {
     test('includes session with status ended', () async {
-      final models = [_model(id: 's1', status: 'ended', scheduledEndAt: _future)];
-      when(() => datasource.watchMemberSessionsForUpcoming('u1'))
-          .thenAnswer((_) => Stream.value(models));
+      final models = [
+        _model(id: 's1', status: 'ended', scheduledEndAt: _future),
+      ];
+      when(
+        () => datasource.watchMemberSessionsForUpcoming('u1'),
+      ).thenAnswer((_) => Stream.value(models));
 
       final entities = await repo.watchCompletedSessions('u1').first;
 
@@ -177,45 +189,52 @@ void main() {
       expect(entities.first.status, 'ended');
     });
 
-    test('includes session past scheduledEndAt even if not explicitly ended',
-        () async {
-      final models = [
-        _model(id: 's1', status: 'scheduled', scheduledEndAt: _past),
-      ];
-      when(() => datasource.watchMemberSessionsForUpcoming('u1'))
-          .thenAnswer((_) => Stream.value(models));
+    test(
+      'includes session past scheduledEndAt even if not explicitly ended',
+      () async {
+        final models = [
+          _model(id: 's1', status: 'scheduled', scheduledEndAt: _past),
+        ];
+        when(
+          () => datasource.watchMemberSessionsForUpcoming('u1'),
+        ).thenAnswer((_) => Stream.value(models));
 
-      final entities = await repo.watchCompletedSessions('u1').first;
+        final entities = await repo.watchCompletedSessions('u1').first;
 
-      expect(entities.length, 1);
-      expect(entities.first.sessionId, 's1');
-    });
+        expect(entities.length, 1);
+        expect(entities.first.sessionId, 's1');
+      },
+    );
 
-    test('excludes session with future scheduledEndAt and non-ended status',
-        () async {
-      final models = [
-        _model(id: 's1', status: 'scheduled', scheduledEndAt: _future),
-      ];
-      when(() => datasource.watchMemberSessionsForUpcoming('u1'))
-          .thenAnswer((_) => Stream.value(models));
+    test(
+      'excludes session with future scheduledEndAt and non-ended status',
+      () async {
+        final models = [
+          _model(id: 's1', status: 'scheduled', scheduledEndAt: _future),
+        ];
+        when(
+          () => datasource.watchMemberSessionsForUpcoming('u1'),
+        ).thenAnswer((_) => Stream.value(models));
 
-      final entities = await repo.watchCompletedSessions('u1').first;
+        final entities = await repo.watchCompletedSessions('u1').first;
 
-      expect(entities, isEmpty);
-    });
+        expect(entities, isEmpty);
+      },
+    );
 
-    test('excludes session with null scheduledEndAt and non-ended status',
-        () async {
-      final models = [
-        _model(id: 's1', status: 'scheduled'),
-      ];
-      when(() => datasource.watchMemberSessionsForUpcoming('u1'))
-          .thenAnswer((_) => Stream.value(models));
+    test(
+      'excludes session with null scheduledEndAt and non-ended status',
+      () async {
+        final models = [_model(id: 's1', status: 'scheduled')];
+        when(
+          () => datasource.watchMemberSessionsForUpcoming('u1'),
+        ).thenAnswer((_) => Stream.value(models));
 
-      final entities = await repo.watchCompletedSessions('u1').first;
+        final entities = await repo.watchCompletedSessions('u1').first;
 
-      expect(entities, isEmpty);
-    });
+        expect(entities, isEmpty);
+      },
+    );
 
     test('excludes private session hosted by the caller', () async {
       final models = [
@@ -228,8 +247,9 @@ void main() {
           visibility: 'private',
         ),
       ];
-      when(() => datasource.watchMemberSessionsForUpcoming('u1'))
-          .thenAnswer((_) => Stream.value(models));
+      when(
+        () => datasource.watchMemberSessionsForUpcoming('u1'),
+      ).thenAnswer((_) => Stream.value(models));
 
       final entities = await repo.watchCompletedSessions('u1').first;
 
@@ -247,8 +267,9 @@ void main() {
           visibility: 'private',
         ),
       ];
-      when(() => datasource.watchMemberSessionsForUpcoming('u1'))
-          .thenAnswer((_) => Stream.value(models));
+      when(
+        () => datasource.watchMemberSessionsForUpcoming('u1'),
+      ).thenAnswer((_) => Stream.value(models));
 
       final entities = await repo.watchCompletedSessions('u1').first;
 
@@ -263,8 +284,9 @@ void main() {
         _model(id: 's1', status: 'scheduled'),
         _model(id: 's2', status: 'ended'),
       ];
-      when(() => datasource.watchHostedSessions('u1'))
-          .thenAnswer((_) => Stream.value(models));
+      when(
+        () => datasource.watchHostedSessions('u1'),
+      ).thenAnswer((_) => Stream.value(models));
 
       final entities = await repo.watchHostedSessions('u1').first;
 

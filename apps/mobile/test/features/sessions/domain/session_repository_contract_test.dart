@@ -54,16 +54,16 @@ SessionEntity _stub({
 }
 
 UserEntity _userStub(String uid) => UserEntity(
-      uid: uid,
-      displayName: 'User $uid',
-      fullName: 'Full Name $uid',
-      email: '$uid@mail.kmutt.ac.th',
-      hasHostedBefore: false,
-      studentYear: 1,
-      academicLevel: 'undergraduate',
-      faculty: 'Engineering',
-      profileScore: 0.0,
-    );
+  uid: uid,
+  displayName: 'User $uid',
+  fullName: 'Full Name $uid',
+  email: '$uid@mail.kmutt.ac.th',
+  hasHostedBefore: false,
+  studentYear: 1,
+  academicLevel: 'undergraduate',
+  faculty: 'Engineering',
+  profileScore: 0.0,
+);
 
 void main() {
   late _MockSessionRepository repo;
@@ -76,16 +76,17 @@ void main() {
   group('watchSession', () {
     test('emits session entity when document exists', () {
       final session = _stub();
-      when(() => repo.watchSession('sess-1')).thenAnswer(
-        (_) => Stream.value(session),
-      );
+      when(
+        () => repo.watchSession('sess-1'),
+      ).thenAnswer((_) => Stream.value(session));
 
       expect(repo.watchSession('sess-1'), emits(session));
     });
 
     test('emits null when document does not exist', () {
-      when(() => repo.watchSession('missing'))
-          .thenAnswer((_) => Stream.value(null));
+      when(
+        () => repo.watchSession('missing'),
+      ).thenAnswer((_) => Stream.value(null));
 
       expect(repo.watchSession('missing'), emits(null));
     });
@@ -94,15 +95,17 @@ void main() {
   group('watchPublicSessions', () {
     test('emits list of sessions', () {
       final sessions = [_stub(), _stub(id: 'sess-2')];
-      when(() => repo.watchPublicSessions())
-          .thenAnswer((_) => Stream.value(sessions));
+      when(
+        () => repo.watchPublicSessions(),
+      ).thenAnswer((_) => Stream.value(sessions));
 
       expect(repo.watchPublicSessions(), emits(sessions));
     });
 
     test('emits empty list when no public sessions exist', () {
-      when(() => repo.watchPublicSessions())
-          .thenAnswer((_) => Stream.value(const []));
+      when(
+        () => repo.watchPublicSessions(),
+      ).thenAnswer((_) => Stream.value(const []));
 
       expect(repo.watchPublicSessions(), emits(isEmpty));
     });
@@ -111,8 +114,9 @@ void main() {
   group('watchMembers', () {
     test('emits list of user entities', () {
       final members = [_userStub('u1'), _userStub('u2')];
-      when(() => repo.watchMembers('sess-1'))
-          .thenAnswer((_) => Stream.value(members));
+      when(
+        () => repo.watchMembers('sess-1'),
+      ).thenAnswer((_) => Stream.value(members));
 
       expect(repo.watchMembers('sess-1'), emits(members));
     });
@@ -128,39 +132,38 @@ void main() {
       verify(() => repo.createSession(session)).called(1);
     });
 
-    test('delegates to repository with plainTextPin for private session',
-        () async {
-      final session = _stub(visibility: 'private');
-      when(
-        () => repo.createSession(any(), plainTextPin: any(named: 'plainTextPin')),
-      ).thenAnswer((_) async {});
+    test(
+      'delegates to repository with plainTextPin for private session',
+      () async {
+        final session = _stub(visibility: 'private');
+        when(
+          () => repo.createSession(
+            any(),
+            plainTextPin: any(named: 'plainTextPin'),
+          ),
+        ).thenAnswer((_) async {});
 
-      await repo.createSession(session, plainTextPin: 'abcd1234');
+        await repo.createSession(session, plainTextPin: 'abcd1234');
 
-      verify(
-        () => repo.createSession(session, plainTextPin: 'abcd1234'),
-      ).called(1);
-    });
+        verify(
+          () => repo.createSession(session, plainTextPin: 'abcd1234'),
+        ).called(1);
+      },
+    );
 
     test('propagates DataException on Firestore failure', () async {
-      when(() => repo.createSession(any()))
-          .thenThrow(const DataException('write failed'));
+      when(
+        () => repo.createSession(any()),
+      ).thenThrow(const DataException('write failed'));
 
-      expect(
-        () => repo.createSession(_stub()),
-        throwsA(isA<DataException>()),
-      );
+      expect(() => repo.createSession(_stub()), throwsA(isA<DataException>()));
     });
   });
 
   group('editSession', () {
     test('delegates correct args to repository', () async {
       when(
-        () => repo.editSession(
-          any(),
-          any(),
-          any(),
-        ),
+        () => repo.editSession(any(), any(), any()),
       ).thenAnswer((_) async {});
 
       await repo.editSession('sess-1', 'host-1', {'title': 'New Title'});
@@ -192,8 +195,9 @@ void main() {
     });
 
     test('propagates AuthorisationException when not host', () async {
-      when(() => repo.deleteSession(any(), any()))
-          .thenThrow(const AuthorisationException('not host'));
+      when(
+        () => repo.deleteSession(any(), any()),
+      ).thenThrow(const AuthorisationException('not host'));
 
       expect(
         () => repo.deleteSession('sess-1', 'other-uid'),
@@ -212,8 +216,9 @@ void main() {
     });
 
     test('propagates error on failure', () async {
-      when(() => repo.endSession(any(), any()))
-          .thenThrow(const DataException('Firestore error'));
+      when(
+        () => repo.endSession(any(), any()),
+      ).thenThrow(const DataException('Firestore error'));
 
       expect(
         () => repo.endSession('sess-1', 'host-1'),
@@ -231,15 +236,19 @@ void main() {
       verify(() => repo.leaveSession('sess-1', 'member-uid')).called(1);
     });
 
-    test('throws AuthorisationException when the host tries to leave', () async {
-      when(() => repo.leaveSession(any(), any()))
-          .thenThrow(const AuthorisationException('Host cannot leave'));
+    test(
+      'throws AuthorisationException when the host tries to leave',
+      () async {
+        when(
+          () => repo.leaveSession(any(), any()),
+        ).thenThrow(const AuthorisationException('Host cannot leave'));
 
-      expect(
-        () => repo.leaveSession('sess-1', 'host-uid'),
-        throwsA(isA<AuthorisationException>()),
-      );
-    });
+        expect(
+          () => repo.leaveSession('sess-1', 'host-uid'),
+          throwsA(isA<AuthorisationException>()),
+        );
+      },
+    );
   });
 
   group('fetchPin', () {
@@ -260,8 +269,9 @@ void main() {
     });
 
     test('throws AuthorisationException when caller is not the host', () async {
-      when(() => repo.fetchPin(any(), any()))
-          .thenThrow(const AuthorisationException('Only the host may view the PIN.'));
+      when(() => repo.fetchPin(any(), any())).thenThrow(
+        const AuthorisationException('Only the host may view the PIN.'),
+      );
 
       expect(
         () => repo.fetchPin('sess-1', 'non-host'),

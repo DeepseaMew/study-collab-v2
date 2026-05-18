@@ -48,9 +48,7 @@ class JoinRequestRepositoryImpl implements JoinRequestRepository {
       throw const NotFoundException('Session not found.');
     }
     if (session.hostUid != callerUid) {
-      throw const AuthorisationException(
-        'Only the host may approve requests.',
-      );
+      throw const AuthorisationException('Only the host may approve requests.');
     }
     await _datasource.approveRequest(sessionId, requestUid);
   }
@@ -66,9 +64,7 @@ class JoinRequestRepositoryImpl implements JoinRequestRepository {
       throw const NotFoundException('Session not found.');
     }
     if (session.hostUid != callerUid) {
-      throw const AuthorisationException(
-        'Only the host may decline requests.',
-      );
+      throw const AuthorisationException('Only the host may decline requests.');
     }
     await _datasource.declineRequest(sessionId, requestUid);
   }

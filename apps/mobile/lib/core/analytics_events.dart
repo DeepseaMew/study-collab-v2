@@ -22,7 +22,8 @@ abstract final class AnalyticsEvents {
   static const String authVerifyEmailResend = 'auth_verify_email_resend';
 
   /// User completed the profile-setup screen.
-  static const String authProfileSetupCompleted = 'auth_profile_setup_completed';
+  static const String authProfileSetupCompleted =
+      'auth_profile_setup_completed';
 
   /// Client-side KMUTT domain regex rejected a non-KMUTT email.
   /// Payload must carry NO email value.

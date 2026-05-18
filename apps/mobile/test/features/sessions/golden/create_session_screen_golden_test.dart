@@ -43,8 +43,9 @@ Widget _buildScreen(double textScale) {
     ),
   );
 
-  when(() => repo.createSession(any(), plainTextPin: any(named: 'plainTextPin')))
-      .thenAnswer((_) async {});
+  when(
+    () => repo.createSession(any(), plainTextPin: any(named: 'plainTextPin')),
+  ).thenAnswer((_) async {});
 
   const fakeUser = UserEntity(
     uid: 'u1',
@@ -60,9 +61,7 @@ Widget _buildScreen(double textScale) {
 
   return ProviderScope(
     overrides: [
-      currentUserProvider.overrideWith(
-        (_) => Stream.value(fakeUser),
-      ),
+      currentUserProvider.overrideWith((_) => Stream.value(fakeUser)),
       sessionRepositoryProvider.overrideWithValue(repo),
     ],
     child: MaterialApp(

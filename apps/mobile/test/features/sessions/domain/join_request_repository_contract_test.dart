@@ -31,15 +31,17 @@ void main() {
   group('watchRequests', () {
     test('emits list of requests', () {
       final requests = [_req(uid: 'u1'), _req(uid: 'u2')];
-      when(() => repo.watchRequests('sess-1'))
-          .thenAnswer((_) => Stream.value(requests));
+      when(
+        () => repo.watchRequests('sess-1'),
+      ).thenAnswer((_) => Stream.value(requests));
 
       expect(repo.watchRequests('sess-1'), emits(requests));
     });
 
     test('emits empty list when no pending requests', () {
-      when(() => repo.watchRequests('sess-1'))
-          .thenAnswer((_) => Stream.value(const []));
+      when(
+        () => repo.watchRequests('sess-1'),
+      ).thenAnswer((_) => Stream.value(const []));
 
       expect(repo.watchRequests('sess-1'), emits(isEmpty));
     });
@@ -56,8 +58,9 @@ void main() {
     });
 
     test('propagates DataException on Firestore failure', () async {
-      when(() => repo.submitRequest(any(), any()))
-          .thenThrow(const DataException('write failed'));
+      when(
+        () => repo.submitRequest(any(), any()),
+      ).thenThrow(const DataException('write failed'));
 
       expect(
         () => repo.submitRequest('sess-1', _req()),
@@ -68,8 +71,9 @@ void main() {
 
   group('approveRequest', () {
     test('delegates correct args to repository', () async {
-      when(() => repo.approveRequest(any(), any(), any()))
-          .thenAnswer((_) async {});
+      when(
+        () => repo.approveRequest(any(), any(), any()),
+      ).thenAnswer((_) async {});
 
       await repo.approveRequest('sess-1', 'host-1', 'user-1');
 
@@ -77,8 +81,9 @@ void main() {
     });
 
     test('propagates AuthorisationException when caller is not host', () async {
-      when(() => repo.approveRequest(any(), any(), any()))
-          .thenThrow(const AuthorisationException('not host'));
+      when(
+        () => repo.approveRequest(any(), any(), any()),
+      ).thenThrow(const AuthorisationException('not host'));
 
       expect(
         () => repo.approveRequest('sess-1', 'not-host', 'user-1'),
@@ -89,8 +94,9 @@ void main() {
 
   group('declineRequest', () {
     test('delegates correct args to repository', () async {
-      when(() => repo.declineRequest(any(), any(), any()))
-          .thenAnswer((_) async {});
+      when(
+        () => repo.declineRequest(any(), any(), any()),
+      ).thenAnswer((_) async {});
 
       await repo.declineRequest('sess-1', 'host-1', 'user-1');
 
@@ -98,8 +104,9 @@ void main() {
     });
 
     test('propagates AuthorisationException when caller is not host', () async {
-      when(() => repo.declineRequest(any(), any(), any()))
-          .thenThrow(const AuthorisationException('not host'));
+      when(
+        () => repo.declineRequest(any(), any(), any()),
+      ).thenThrow(const AuthorisationException('not host'));
 
       expect(
         () => repo.declineRequest('sess-1', 'not-host', 'user-1'),
@@ -118,8 +125,9 @@ void main() {
     });
 
     test('propagates NotFoundException when request does not exist', () async {
-      when(() => repo.withdrawRequest(any(), any()))
-          .thenThrow(const NotFoundException('request not found'));
+      when(
+        () => repo.withdrawRequest(any(), any()),
+      ).thenThrow(const NotFoundException('request not found'));
 
       expect(
         () => repo.withdrawRequest('sess-1', 'user-1'),
@@ -130,8 +138,9 @@ void main() {
 
   group('joinWithPin', () {
     test('delegates correct args to repository', () async {
-      when(() => repo.joinWithPin(any(), any(), any()))
-          .thenAnswer((_) async {});
+      when(
+        () => repo.joinWithPin(any(), any(), any()),
+      ).thenAnswer((_) async {});
 
       await repo.joinWithPin('sess-1', _req(), 'abcd');
 
@@ -139,8 +148,9 @@ void main() {
     });
 
     test('throws InvalidPinException when PIN is wrong', () async {
-      when(() => repo.joinWithPin(any(), any(), any()))
-          .thenThrow(const InvalidPinException('Incorrect PIN'));
+      when(
+        () => repo.joinWithPin(any(), any(), any()),
+      ).thenThrow(const InvalidPinException('Incorrect PIN'));
 
       expect(
         () => repo.joinWithPin('sess-1', _req(), 'wrong'),
@@ -149,8 +159,9 @@ void main() {
     });
 
     test('throws DataException when Firestore write fails', () async {
-      when(() => repo.joinWithPin(any(), any(), any()))
-          .thenThrow(const DataException('network error'));
+      when(
+        () => repo.joinWithPin(any(), any(), any()),
+      ).thenThrow(const DataException('network error'));
 
       expect(
         () => repo.joinWithPin('sess-1', _req(), 'abcd'),

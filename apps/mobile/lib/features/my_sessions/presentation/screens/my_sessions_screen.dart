@@ -261,12 +261,12 @@ class _SessionList extends ConsumerWidget {
         final filtered = query.isEmpty
             ? sessions
             : sessions
-                .where(
-                  (s) =>
-                      s.title.toLowerCase().contains(query) ||
-                      s.hashtags.any((h) => h.contains(query)),
-                )
-                .toList();
+                  .where(
+                    (s) =>
+                        s.title.toLowerCase().contains(query) ||
+                        s.hashtags.any((h) => h.contains(query)),
+                  )
+                  .toList();
 
         if (filtered.isEmpty) {
           return Center(
@@ -283,10 +283,7 @@ class _SessionList extends ConsumerWidget {
                   const SizedBox(height: 12),
                   Text(
                     emptyMessage,
-                    style: const TextStyle(
-                      color: AppColors.hint,
-                      fontSize: 14,
-                    ),
+                    style: const TextStyle(color: AppColors.hint, fontSize: 14),
                     textAlign: TextAlign.center,
                   ),
                 ],

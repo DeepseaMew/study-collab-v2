@@ -39,16 +39,16 @@ SessionEntity _session({String status = 'scheduled'}) {
 }
 
 UserEntity _user(String uid) => UserEntity(
-      uid: uid,
-      displayName: 'User $uid',
-      fullName: 'Full Name',
-      email: '$uid@mail.kmutt.ac.th',
-      hasHostedBefore: false,
-      studentYear: 2,
-      academicLevel: 'undergraduate',
-      faculty: 'Engineering',
-      profileScore: 0.0,
-    );
+  uid: uid,
+  displayName: 'User $uid',
+  fullName: 'Full Name',
+  email: '$uid@mail.kmutt.ac.th',
+  hasHostedBefore: false,
+  studentYear: 2,
+  academicLevel: 'undergraduate',
+  faculty: 'Engineering',
+  profileScore: 0.0,
+);
 
 Widget _buildScreen({
   AsyncValue<SessionEntity?> sessionState = const AsyncValue.loading(),
@@ -63,9 +63,9 @@ Widget _buildScreen({
           data: (s) => Stream.value(s),
         ),
       ),
-      sessionMembersProvider('sess-1').overrideWith(
-        (_) => Stream.value(const <UserEntity>[]),
-      ),
+      sessionMembersProvider(
+        'sess-1',
+      ).overrideWith((_) => Stream.value(const <UserEntity>[])),
       currentUserProvider.overrideWith(
         (_) => Stream.value(currentUser ?? _user('member-1')),
       ),
@@ -78,15 +78,16 @@ Widget _buildScreen({
 
 void main() {
   testWidgets(
-      'MemberSessionDetailScreen smoke test — loading state renders spinner',
-      (tester) async {
-    await mockNetworkImagesFor(() async {
-      await tester.pumpWidget(_buildScreen());
-      await tester.pump(const Duration(milliseconds: 100));
+    'MemberSessionDetailScreen smoke test — loading state renders spinner',
+    (tester) async {
+      await mockNetworkImagesFor(() async {
+        await tester.pumpWidget(_buildScreen());
+        await tester.pump(const Duration(milliseconds: 100));
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    });
-  });
+        expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      });
+    },
+  );
 
   testWidgets('MemberSessionDetailScreen — data state renders title', (
     tester,
@@ -101,8 +102,9 @@ void main() {
     });
   });
 
-  testWidgets('MemberSessionDetailScreen — two tabs rendered: Members, Notes',
-      (tester) async {
+  testWidgets('MemberSessionDetailScreen — two tabs rendered: Members, Notes', (
+    tester,
+  ) async {
     await mockNetworkImagesFor(() async {
       await tester.pumpWidget(
         _buildScreen(sessionState: AsyncValue.data(_session())),
@@ -114,8 +116,9 @@ void main() {
     });
   });
 
-  testWidgets('MemberSessionDetailScreen — "Joined" status badge is visible',
-      (tester) async {
+  testWidgets('MemberSessionDetailScreen — "Joined" status badge is visible', (
+    tester,
+  ) async {
     await mockNetworkImagesFor(() async {
       await tester.pumpWidget(
         _buildScreen(sessionState: AsyncValue.data(_session())),
@@ -126,8 +129,9 @@ void main() {
     });
   });
 
-  testWidgets('MemberSessionDetailScreen — error state renders error message',
-      (tester) async {
+  testWidgets('MemberSessionDetailScreen — error state renders error message', (
+    tester,
+  ) async {
     await mockNetworkImagesFor(() async {
       await tester.pumpWidget(
         _buildScreen(
@@ -147,15 +151,16 @@ void main() {
   });
 
   testWidgets(
-      'MemberSessionDetailScreen — null session renders not-found message',
-      (tester) async {
-    await mockNetworkImagesFor(() async {
-      await tester.pumpWidget(
-        _buildScreen(sessionState: const AsyncValue.data(null)),
-      );
-      await tester.pumpAndSettle(const Duration(seconds: 3));
+    'MemberSessionDetailScreen — null session renders not-found message',
+    (tester) async {
+      await mockNetworkImagesFor(() async {
+        await tester.pumpWidget(
+          _buildScreen(sessionState: const AsyncValue.data(null)),
+        );
+        await tester.pumpAndSettle(const Duration(seconds: 3));
 
-      expect(find.text('Session not found.'), findsOneWidget);
-    });
-  });
+        expect(find.text('Session not found.'), findsOneWidget);
+      });
+    },
+  );
 }

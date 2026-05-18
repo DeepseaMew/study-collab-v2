@@ -53,10 +53,12 @@ Widget _buildScreen(double textScale) {
   final sessionRepo = _MockSessionRepository();
   final requestRepo = _MockJoinRequestRepository();
 
-  when(() => requestRepo.watchRequests(any()))
-      .thenAnswer((_) => Stream.value(const <JoinRequestEntity>[]));
-  when(() => sessionRepo.watchMembers(any()))
-      .thenAnswer((_) => Stream.value(const <UserEntity>[]));
+  when(
+    () => requestRepo.watchRequests(any()),
+  ).thenAnswer((_) => Stream.value(const <JoinRequestEntity>[]));
+  when(
+    () => sessionRepo.watchMembers(any()),
+  ).thenAnswer((_) => Stream.value(const <UserEntity>[]));
 
   const fakeUser = UserEntity(
     uid: 'viewer-1',
@@ -72,18 +74,16 @@ Widget _buildScreen(double textScale) {
 
   return ProviderScope(
     overrides: [
-      sessionStreamProvider('sess-golden').overrideWith(
-        (_) => Stream.value(_session()),
-      ),
-      sessionMembersProvider('sess-golden').overrideWith(
-        (_) => Stream.value(const <UserEntity>[]),
-      ),
-      joinRequestsProvider('sess-golden').overrideWith(
-        (_) => Stream.value(const <JoinRequestEntity>[]),
-      ),
-      currentUserProvider.overrideWith(
-        (_) => Stream.value(fakeUser),
-      ),
+      sessionStreamProvider(
+        'sess-golden',
+      ).overrideWith((_) => Stream.value(_session())),
+      sessionMembersProvider(
+        'sess-golden',
+      ).overrideWith((_) => Stream.value(const <UserEntity>[])),
+      joinRequestsProvider(
+        'sess-golden',
+      ).overrideWith((_) => Stream.value(const <JoinRequestEntity>[])),
+      currentUserProvider.overrideWith((_) => Stream.value(fakeUser)),
       sessionRepositoryProvider.overrideWithValue(sessionRepo),
       joinRequestRepositoryProvider.overrideWithValue(requestRepo),
     ],

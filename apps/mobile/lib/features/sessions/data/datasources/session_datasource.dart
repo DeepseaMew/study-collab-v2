@@ -47,18 +47,21 @@ class SessionDatasource {
         .orderBy('scheduledAt')
         .snapshots()
         .map(
-          (snap) => snap.docs.map((doc) {
-            try {
-              return SessionModel.fromJson(doc.data());
-            } catch (e, st) {
-              appLogger.error(
-                'Failed to parse public session document',
-                exception: e,
-                stackTrace: st,
-              );
-              return null;
-            }
-          }).whereType<SessionModel>().toList(),
+          (snap) => snap.docs
+              .map((doc) {
+                try {
+                  return SessionModel.fromJson(doc.data());
+                } catch (e, st) {
+                  appLogger.error(
+                    'Failed to parse public session document',
+                    exception: e,
+                    stackTrace: st,
+                  );
+                  return null;
+                }
+              })
+              .whereType<SessionModel>()
+              .toList(),
         );
   }
 
@@ -214,18 +217,21 @@ class SessionDatasource {
   List<SessionModel> _parseDocs(
     List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,
   ) {
-    return docs.map((doc) {
-      try {
-        return SessionModel.fromJson(doc.data());
-      } catch (e, st) {
-        appLogger.error(
-          'Failed to parse session document',
-          exception: e,
-          stackTrace: st,
-          extra: {'docId': doc.id},
-        );
-        return null;
-      }
-    }).whereType<SessionModel>().toList();
+    return docs
+        .map((doc) {
+          try {
+            return SessionModel.fromJson(doc.data());
+          } catch (e, st) {
+            appLogger.error(
+              'Failed to parse session document',
+              exception: e,
+              stackTrace: st,
+              extra: {'docId': doc.id},
+            );
+            return null;
+          }
+        })
+        .whereType<SessionModel>()
+        .toList();
   }
 }

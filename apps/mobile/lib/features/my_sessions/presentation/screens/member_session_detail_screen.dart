@@ -228,10 +228,7 @@ class _MemberSessionDetailScreenState
                     if (action == 'leave') _showLeaveDialog(me?.uid ?? '');
                   },
                   itemBuilder: (_) => const [
-                    PopupMenuItem(
-                      value: 'leave',
-                      child: Text('Leave Session'),
-                    ),
+                    PopupMenuItem(value: 'leave', child: Text('Leave Session')),
                   ],
                 ),
               ],
@@ -300,7 +297,10 @@ class _MemberSessionDetailScreenState
                   fontSize: 13,
                   fontWeight: FontWeight.w400,
                 ),
-                tabs: const [Tab(text: 'Members'), Tab(text: 'Notes')],
+                tabs: const [
+                  Tab(text: 'Members'),
+                  Tab(text: 'Notes'),
+                ],
               ),
               Expanded(
                 child: TabBarView(
@@ -368,8 +368,10 @@ class _SessionInfoCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.accent.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(20),
@@ -388,8 +390,10 @@ class _SessionInfoCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: badgeColor,
                   borderRadius: BorderRadius.circular(20),
@@ -455,7 +459,7 @@ class _SessionInfoCard extends StatelessWidget {
                 child: Text(
                   session.scheduledEndAt != null
                       ? '${DateFormatter.relativeDate(session.scheduledAt)}  '
-                          '${DateFormatter.timeRange(session.scheduledAt, session.scheduledEndAt!)}'
+                            '${DateFormatter.timeRange(session.scheduledAt, session.scheduledEndAt!)}'
                       : DateFormatter.relativeDate(session.scheduledAt),
                   style: const TextStyle(color: AppColors.hint, fontSize: 13),
                   overflow: TextOverflow.ellipsis,
@@ -484,11 +488,7 @@ class _SessionInfoCard extends StatelessWidget {
           const SizedBox(height: 6),
           Row(
             children: [
-              const Icon(
-                Icons.group_outlined,
-                size: 14,
-                color: AppColors.hint,
-              ),
+              const Icon(Icons.group_outlined, size: 14, color: AppColors.hint),
               const SizedBox(width: 6),
               Text(
                 '${session.participantCount}/${session.capacity} members',
@@ -529,10 +529,12 @@ class _MembersTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hostMember =
-        members.where((m) => m.uid == session.hostUid).firstOrNull;
-    final nonHostMembers =
-        members.where((m) => m.uid != session.hostUid).toList();
+    final hostMember = members
+        .where((m) => m.uid == session.hostUid)
+        .firstOrNull;
+    final nonHostMembers = members
+        .where((m) => m.uid != session.hostUid)
+        .toList();
     final previewMembers = nonHostMembers.take(5).toList();
 
     return SingleChildScrollView(
@@ -550,8 +552,7 @@ class _MembersTab extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           _HostRow(
-            displayName:
-                hostMember?.displayName ?? session.hostDisplayName,
+            displayName: hostMember?.displayName ?? session.hostDisplayName,
             photoUrl: hostMember?.photoUrl ?? session.hostPhotoUrl,
           ),
           const SizedBox(height: 20),
@@ -568,8 +569,10 @@ class _MembersTab extends StatelessWidget {
               ),
               TextButton(
                 onPressed: () => context.push(
-                  RouteConstants.sessionMembers
-                      .replaceFirst(':id', session.sessionId),
+                  RouteConstants.sessionMembers.replaceFirst(
+                    ':id',
+                    session.sessionId,
+                  ),
                 ),
                 child: const Text(
                   'View all',
@@ -622,10 +625,7 @@ class _MembersTab extends StatelessWidget {
 }
 
 class _HostRow extends StatelessWidget {
-  const _HostRow({
-    required this.displayName,
-    required this.photoUrl,
-  });
+  const _HostRow({required this.displayName, required this.photoUrl});
 
   final String displayName;
   final String? photoUrl;
@@ -762,20 +762,19 @@ class _RatingBottomSheetState extends State<_RatingBottomSheet> {
   String _searchQuery = '';
 
   List<UserEntity> get _sorted {
-    final host =
-        widget.members.where((m) => m.uid == widget.session.hostUid).toList();
+    final host = widget.members
+        .where((m) => m.uid == widget.session.hostUid)
+        .toList();
     final self = widget.members
         .where(
           (m) =>
-              m.uid == widget.currentUserId &&
-              m.uid != widget.session.hostUid,
+              m.uid == widget.currentUserId && m.uid != widget.session.hostUid,
         )
         .toList();
     final others = widget.members
         .where(
           (m) =>
-              m.uid != widget.session.hostUid &&
-              m.uid != widget.currentUserId,
+              m.uid != widget.session.hostUid && m.uid != widget.currentUserId,
         )
         .toList();
     return [...host, ...self, ...others];
@@ -875,8 +874,10 @@ class _RatingBottomSheetState extends State<_RatingBottomSheet> {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide:
-                        const BorderSide(color: AppColors.accent, width: 2),
+                    borderSide: const BorderSide(
+                      color: AppColors.accent,
+                      width: 2,
+                    ),
                   ),
                 ),
               ),
@@ -890,8 +891,7 @@ class _RatingBottomSheetState extends State<_RatingBottomSheet> {
                         padding: EdgeInsets.symmetric(vertical: 12),
                         child: Text(
                           'No participants found.',
-                          style:
-                              TextStyle(color: AppColors.hint, fontSize: 13),
+                          style: TextStyle(color: AppColors.hint, fontSize: 13),
                         ),
                       )
                     : ListView.builder(
@@ -1045,8 +1045,7 @@ class _Avatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final initial =
-        displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
+    final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
 
     if (photoUrl != null && photoUrl!.isNotEmpty) {
       return CircleAvatar(

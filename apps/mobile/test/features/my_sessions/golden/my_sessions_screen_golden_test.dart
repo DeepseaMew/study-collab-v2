@@ -54,18 +54,16 @@ SessionEntity _session(String id) {
 Widget _buildScreen(double textScale) {
   return ProviderScope(
     overrides: [
-      currentUserProvider.overrideWith(
-        (_) => Stream.value(_fakeUser),
-      ),
-      upcomingSessionsProvider('user-1').overrideWith(
-        (_) => Stream.value([_session('s1'), _session('s2')]),
-      ),
-      completedSessionsProvider('user-1').overrideWith(
-        (_) => Stream.value(const <SessionEntity>[]),
-      ),
-      hostedSessionsProvider('user-1').overrideWith(
-        (_) => Stream.value(const <SessionEntity>[]),
-      ),
+      currentUserProvider.overrideWith((_) => Stream.value(_fakeUser)),
+      upcomingSessionsProvider(
+        'user-1',
+      ).overrideWith((_) => Stream.value([_session('s1'), _session('s2')])),
+      completedSessionsProvider(
+        'user-1',
+      ).overrideWith((_) => Stream.value(const <SessionEntity>[])),
+      hostedSessionsProvider(
+        'user-1',
+      ).overrideWith((_) => Stream.value(const <SessionEntity>[])),
     ],
     child: MaterialApp(
       locale: const Locale('th'),

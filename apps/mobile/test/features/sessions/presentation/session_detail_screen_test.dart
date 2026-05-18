@@ -55,16 +55,16 @@ SessionEntity _session({
 }
 
 UserEntity _user(String uid) => UserEntity(
-      uid: uid,
-      displayName: 'User $uid',
-      fullName: 'Full Name',
-      email: '$uid@mail.kmutt.ac.th',
-      hasHostedBefore: false,
-      studentYear: 2,
-      academicLevel: 'undergraduate',
-      faculty: 'Engineering',
-      profileScore: 0.0,
-    );
+  uid: uid,
+  displayName: 'User $uid',
+  fullName: 'Full Name',
+  email: '$uid@mail.kmutt.ac.th',
+  hasHostedBefore: false,
+  studentYear: 2,
+  academicLevel: 'undergraduate',
+  faculty: 'Engineering',
+  profileScore: 0.0,
+);
 
 Widget _buildScreen({
   AsyncValue<SessionEntity?> sessionState = const AsyncValue.loading(),
@@ -74,10 +74,12 @@ Widget _buildScreen({
   final sessionRepo = _MockSessionRepository();
   final requestRepo = _MockJoinRequestRepository();
 
-  when(() => requestRepo.watchRequests(any()))
-      .thenAnswer((_) => Stream.value(const <JoinRequestEntity>[]));
-  when(() => sessionRepo.watchMembers(any()))
-      .thenAnswer((_) => Stream.value(const <UserEntity>[]));
+  when(
+    () => requestRepo.watchRequests(any()),
+  ).thenAnswer((_) => Stream.value(const <JoinRequestEntity>[]));
+  when(
+    () => sessionRepo.watchMembers(any()),
+  ).thenAnswer((_) => Stream.value(const <UserEntity>[]));
 
   return ProviderScope(
     overrides: [
@@ -88,35 +90,33 @@ Widget _buildScreen({
           data: (s) => Stream.value(s),
         ),
       ),
-      sessionMembersProvider(sessionId).overrideWith(
-        (_) => Stream.value(const <UserEntity>[]),
-      ),
-      joinRequestsProvider(sessionId).overrideWith(
-        (_) => Stream.value(const <JoinRequestEntity>[]),
-      ),
-      currentUserProvider.overrideWith(
-        (_) => Stream.value(currentUser),
-      ),
+      sessionMembersProvider(
+        sessionId,
+      ).overrideWith((_) => Stream.value(const <UserEntity>[])),
+      joinRequestsProvider(
+        sessionId,
+      ).overrideWith((_) => Stream.value(const <JoinRequestEntity>[])),
+      currentUserProvider.overrideWith((_) => Stream.value(currentUser)),
       sessionRepositoryProvider.overrideWithValue(sessionRepo),
       joinRequestRepositoryProvider.overrideWithValue(requestRepo),
     ],
-    child: MaterialApp(
-      home: SessionDetailScreen(sessionId: sessionId),
-    ),
+    child: MaterialApp(home: SessionDetailScreen(sessionId: sessionId)),
   );
 }
 
 void main() {
-  testWidgets('SessionDetailScreen smoke test — loading state renders spinner',
-      (tester) async {
-    await mockNetworkImagesFor(() async {
-      await tester.pumpWidget(_buildScreen());
-      // Do not pumpAndSettle — we want the loading state.
-      await tester.pump(const Duration(milliseconds: 100));
+  testWidgets(
+    'SessionDetailScreen smoke test — loading state renders spinner',
+    (tester) async {
+      await mockNetworkImagesFor(() async {
+        await tester.pumpWidget(_buildScreen());
+        // Do not pumpAndSettle — we want the loading state.
+        await tester.pump(const Duration(milliseconds: 100));
 
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    });
-  });
+        expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      });
+    },
+  );
 
   testWidgets('SessionDetailScreen — not-found state renders message', (
     tester,
@@ -148,20 +148,21 @@ void main() {
   });
 
   testWidgets(
-      'SessionDetailScreen — non-member sees "Request to Join" button for public session',
-      (tester) async {
-    await mockNetworkImagesFor(() async {
-      await tester.pumpWidget(
-        _buildScreen(
-          sessionState: AsyncValue.data(_session()),
-          currentUser: _user('other-user'),
-        ),
-      );
-      await tester.pumpAndSettle(const Duration(seconds: 3));
+    'SessionDetailScreen — non-member sees "Request to Join" button for public session',
+    (tester) async {
+      await mockNetworkImagesFor(() async {
+        await tester.pumpWidget(
+          _buildScreen(
+            sessionState: AsyncValue.data(_session()),
+            currentUser: _user('other-user'),
+          ),
+        );
+        await tester.pumpAndSettle(const Duration(seconds: 3));
 
-      expect(find.text('Request to Join'), findsOneWidget);
-    });
-  });
+        expect(find.text('Request to Join'), findsOneWidget);
+      });
+    },
+  );
 
   testWidgets('SessionDetailScreen — member sees "Joined" badge', (
     tester,
@@ -185,9 +186,7 @@ void main() {
     await mockNetworkImagesFor(() async {
       await tester.pumpWidget(
         _buildScreen(
-          sessionState: AsyncValue.data(
-            _session(),
-          ),
+          sessionState: AsyncValue.data(_session()),
           currentUser: _user('host-1'),
         ),
       );
@@ -198,24 +197,25 @@ void main() {
   });
 
   testWidgets(
-      'SessionDetailScreen — private session shows "Join with Password" button',
-      (tester) async {
-    await mockNetworkImagesFor(() async {
-      await tester.pumpWidget(
-        _buildScreen(
-          sessionState:
-              AsyncValue.data(_session(visibility: 'private')),
-          currentUser: _user('other-user'),
-        ),
-      );
-      await tester.pumpAndSettle(const Duration(seconds: 3));
+    'SessionDetailScreen — private session shows "Join with Password" button',
+    (tester) async {
+      await mockNetworkImagesFor(() async {
+        await tester.pumpWidget(
+          _buildScreen(
+            sessionState: AsyncValue.data(_session(visibility: 'private')),
+            currentUser: _user('other-user'),
+          ),
+        );
+        await tester.pumpAndSettle(const Duration(seconds: 3));
 
-      expect(find.text('Join with Password'), findsOneWidget);
-    });
-  });
+        expect(find.text('Join with Password'), findsOneWidget);
+      });
+    },
+  );
 
-  testWidgets(
-      'SessionDetailScreen — error state renders error scaffold', (tester) async {
+  testWidgets('SessionDetailScreen — error state renders error scaffold', (
+    tester,
+  ) async {
     await mockNetworkImagesFor(() async {
       await tester.pumpWidget(
         _buildScreen(
