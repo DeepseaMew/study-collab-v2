@@ -90,7 +90,12 @@ No PII beyond `displayName`, `fullName`, `email`, and `photoUrl` may be stored o
 | noteCount | int | Count of notes in the `notes` subcollection; incremented atomically in the same batch as note creation; used by the notes cap rule |
 | status | String | Enum: `scheduled`, `active`, or `ended`; one-way transitions |
 | scheduledAt | Timestamp | Set by host at creation; may be updated while `status == 'scheduled'` |
+| scheduledEndAt | Timestamp | Required; must be strictly after `scheduledAt`; set by host at creation; may be updated while `status == 'scheduled'` |
 | endedAt | Timestamp | Nullable; set when host ends session; immutable once set |
+| location | String | Required; non-empty; max 300 characters |
+| capacity | int | Required; ≥ 1; maximum number of participants |
+| hostDisplayName | String | Required; non-empty; denormalized from `users/{hostUid}.displayName` at session creation by `SessionRepositoryImpl`; immutable after creation |
+| hostPhotoUrl | String | Nullable; denormalized from `users/{hostUid}.photoUrl` at session creation; immutable after creation |
 | createdAt | Timestamp | Set once on creation; immutable |
 | updatedAt | Timestamp | Updated on every write |
 
@@ -193,6 +198,23 @@ The 50-note cap is enforced in rules by checking `sessions/{sessionId}.noteCount
 
 ---
 
+### `sessions/{sessionId}/requests/{uid}`
+
+Join requests submitted by users who want to join a session. Document ID is the requesting user's UID, enforcing one pending request per user per session. Immutable once created; the host deletes on approve or decline, and the requester may withdraw their own request.
+
+| Field | Type | Constraints / Notes |
+|---|---|---|
+| uid | String | Matches document ID; the requesting user's UID |
+| displayName | String | Required; non-empty; denormalized from `users/{uid}.displayName` at request creation |
+| photoUrl | String | Nullable; denormalized from `users/{uid}.photoUrl` at request creation |
+| requestedAt | Timestamp | Set via `request.time` on creation; immutable |
+
+**On approval:** the host's `WriteBatch` must atomically delete the request document and append the `uid` to `sessions/{sessionId}.memberUids`. The `sessions` update rule already permits `memberUids` in `affectedKeys`.
+
+**On decline:** the host deletes the request document. No write to `memberUids`.
+
+---
+
 ## Composite indexes
 
 All indexes must be declared in `firestore.indexes.json` before deployment.
@@ -207,6 +229,7 @@ All indexes must be declared in `firestore.indexes.json` before deployment.
 | 6 | `sessions/{sessionId}/ratings` | `rateeUid` asc, `ratedAt` desc | Profile score calculation across all sessions | **Yes** |
 | 7 | `sessions/{sessionId}/notes` | `uploadedAt` desc | Notes list in session detail | No |
 | 8 | `sessions` | `hostFaculty` asc, `status` asc, `scheduledAt` asc | Search — filter by faculty + status | No |
+| 9 | `sessions` | `hostUid` asc, `scheduledAt` desc | My Sessions tab — hosted sessions list | No |
 
 **Index 3 note:** Firestore requires a composite index when `array-contains` is combined with additional filters. Always include `hashtags` as the `array-contains` field when using this index.
 
@@ -308,17 +331,23 @@ match /sessions/{sessionId} {
     && request.resource.data.keys().hasAll([
          'sessionId', 'hostUid', 'hostFaculty', 'title', 'hashtags', 'academicLevel',
          'studentYear', 'visibility', 'memberUids', 'noteCount', 'status',
-         'scheduledAt', 'createdAt', 'updatedAt'
-       ]);
+         'scheduledAt', 'scheduledEndAt', 'location', 'capacity',
+         'hostDisplayName', 'createdAt', 'updatedAt'
+       ])
+    && request.resource.data.scheduledEndAt > request.resource.data.scheduledAt
+    && request.resource.data.capacity >= 1;
 
   allow update: if isHost(sessionId)
     && request.resource.data.diff(resource.data).affectedKeys()
          .hasOnly(['title', 'description', 'hashtags', 'academicLevel',
                    'studentYear', 'visibility', 'pin', 'memberUids',
-                   'noteCount', 'status', 'scheduledAt', 'endedAt', 'updatedAt'])
+                   'noteCount', 'status', 'scheduledAt', 'scheduledEndAt',
+                   'location', 'capacity', 'endedAt', 'updatedAt'])
     && request.resource.data.updatedAt == request.time
     && request.resource.data.hostUid == resource.data.hostUid
     && request.resource.data.hostFaculty == resource.data.hostFaculty
+    && request.resource.data.hostDisplayName == resource.data.hostDisplayName
+    && request.resource.data.hostPhotoUrl == resource.data.hostPhotoUrl
     && request.resource.data.createdAt == resource.data.createdAt;
 
   allow delete: if isHost(sessionId)
@@ -476,6 +505,33 @@ match /sessions/{sessionId}/notes/{noteId} {
 
 ---
 
+### `sessions/{sessionId}/requests/{uid}`
+
+```
+match /sessions/{sessionId}/requests/{uid} {
+  // Host reads all pending requests. Requester reads only their own (for pending-status display).
+  allow read: if isHost(sessionId)
+    || (isKmuttUser() && request.auth.uid == uid);
+
+  // Only the requester may submit; they must not already be a member.
+  allow create: if isKmuttUser()
+    && request.auth.uid == uid
+    && !(request.auth.uid in
+         get(/databases/$(database)/documents/sessions/$(sessionId)).data.memberUids)
+    && request.resource.data.uid == uid
+    && request.resource.data.requestedAt == request.time
+    && request.resource.data.keys().hasAll(['uid', 'displayName', 'requestedAt']);
+
+  allow update: if false;
+
+  // Host deletes on approve or decline. Requester may withdraw their own request.
+  allow delete: if isHost(sessionId)
+    || (isKmuttUser() && request.auth.uid == uid);
+}
+```
+
+---
+
 ## Denormalization summary
 
 | Field | Lives on | Updated by | Why |
@@ -483,6 +539,8 @@ match /sessions/{sessionId}/notes/{noteId} {
 | `memberUids` | `sessions/{sessionId}` | Any join/leave/approval write | Enables `array-contains` calendar queries and membership checks in rules without a subcollection query |
 | `profileScore` | `users/{uid}` | Same `WriteBatch` as each rating creation | Avoids expensive queries on every profile read. Formula: count(`ratings` where `rateeUid == uid`) ÷ count(`sessions` where `memberUids array-contains uid` and `status == 'ended'`). |
 | `hostFaculty` | `sessions/{sessionId}` | Set once at session creation; immutable | Enables Index 8 faculty filter without a `get()` on the user document inside rules |
+| `hostDisplayName` | `sessions/{sessionId}` | Set once at session creation; immutable | Enables session card to display host name without N+1 `users/` reads |
+| `hostPhotoUrl` | `sessions/{sessionId}` | Set once at session creation; immutable | Enables session card to display host avatar without N+1 `users/` reads; nullable pending photo upload feature |
 | `noteCount` | `sessions/{sessionId}` | Same `WriteBatch` as each note creation | Required for the 50-note cap check via `getAfter(...)` in rules |
 
 ---
@@ -490,12 +548,31 @@ match /sessions/{sessionId}/notes/{noteId} {
 ## Implementation checklist (Flutter Engineer)
 
 - [ ] `lib/core/firestore_paths.dart` — all path templates as string constants; no Firestore paths elsewhere in the codebase.
-- [ ] `firestore.indexes.json` — all 8 indexes declared before any feature goes to production.
+- [ ] `firestore.indexes.json` — all 9 indexes declared before any feature goes to production.
 - [ ] `firestore.rules` — implement helper functions and all rules exactly as sketched; security reviewer audits before first production deployment.
-- [ ] Seven datasource classes — one per path pattern: `users/{uid}`, `sessions/{sessionId}`, `sessions/{sessionId}/messages`, `dms/{dmId}/messages`, `users/{uid}/friends/{friendUid}`, `sessions/{sessionId}/ratings`, `sessions/{sessionId}/notes`.
+- [ ] Eight datasource classes — one per path pattern: `users/{uid}`, `sessions/{sessionId}`, `sessions/{sessionId}/messages`, `dms/{dmId}/messages`, `users/{uid}/friends/{friendUid}`, `sessions/{sessionId}/ratings`, `sessions/{sessionId}/notes`, `sessions/{sessionId}/requests`.
 - [ ] `WriteBatch` required for: friend request (both directions), rating + profileScore update, note create + `noteCount` increment.
 - [ ] `dmId` constructed in `dm_datasource.dart` or `dm_repository_impl.dart` only — never in the presentation layer.
 - [ ] `noteCount` incremented atomically with note creation; `sessions` update rule already permits `noteCount` in `hasOnly(...)`.
+- [ ] Join request approval must use `WriteBatch`: delete `sessions/{sessionId}/requests/{uid}` + `arrayUnion` uid to `sessions/{sessionId}.memberUids` atomically.
+- [ ] `hostDisplayName` and `hostPhotoUrl` read from `users/{hostUid}` once at session creation by `SessionRepositoryImpl`; never written again.
 
 ---
+
+## Amendments
+
+### Amendment 1 — Sessions schema additions and join-requests subcollection
+
+- Date: 2026-05-18
+- Author: claude-sonnet-4-6 (architect agent), per ADR 0003 Consequences
+- Trigger: ADR 0003 (Sessions Feature Architecture) identified five required fields missing from `sessions/{sessionId}` and specified a new `sessions/{sessionId}/requests/{uid}` subcollection for join requests.
+- Changes:
+  - Added five fields to `sessions/{sessionId}` schema: `location`, `scheduledEndAt`, `capacity`, `hostDisplayName`, `hostPhotoUrl`. Inserted after `scheduledAt` and before `endedAt` in the schema table.
+  - Added `sessions/{sessionId}/requests/{uid}` subcollection with schema and Firestore rules.
+  - Added Index 9 (`sessions: hostUid asc, scheduledAt desc`) to composite indexes table.
+  - Updated `sessions` create rule: `hasAll` extended with `scheduledEndAt`, `location`, `capacity`, `hostDisplayName`; ordering validation `scheduledEndAt > scheduledAt` added; capacity validation `capacity >= 1` added. Note: `hostPhotoUrl` is nullable and excluded from `hasAll` — its absence is valid.
+  - Updated `sessions` update rule: `affectedKeys hasOnly` extended with `location`, `scheduledEndAt`, `capacity`; immutability assertions added for `hostDisplayName` and `hostPhotoUrl` (mirroring existing `hostFaculty` immutability pattern).
+  - Updated denormalization summary: added `hostDisplayName` and `hostPhotoUrl` rows.
+  - Updated implementation checklist: index count 8 → 9; datasource count 7 → 8; added two new checklist items.
+- No changes to: Status, Decision paragraph, Constraints, schema for other collections, helper function definitions, or rules for other collections.
 

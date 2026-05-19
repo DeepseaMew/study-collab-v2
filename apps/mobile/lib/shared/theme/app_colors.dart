@@ -14,6 +14,10 @@ abstract final class AppColors {
   /// Card and surface background
   static const Color secondary = Color(0xFFEDE9FE);
 
+  /// Surface — card/tile backgrounds, bottom sheets, dialogs
+  /// Slightly off-white with a warm tint, pairs with secondary.
+  static const Color surface = Color(0xFFF8F7FF);
+
   /// Secondary hover state
   static const Color secondaryHover = Color(0xFFE3DCFF);
 
