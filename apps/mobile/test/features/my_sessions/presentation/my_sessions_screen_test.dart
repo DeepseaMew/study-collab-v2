@@ -2,11 +2,11 @@
 //
 // Smoke test: screen renders without exception and shows the three tabs.
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile/features/auth/domain/entities/user_entity.dart';
-import 'package:mobile/features/auth/presentation/providers/current_user_provider.dart';
+import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
 import 'package:mobile/features/my_sessions/presentation/providers/completed_sessions_provider.dart';
 import 'package:mobile/features/my_sessions/presentation/providers/hosted_sessions_provider.dart';
 import 'package:mobile/features/my_sessions/presentation/providers/upcoming_sessions_provider.dart';
@@ -14,17 +14,12 @@ import 'package:mobile/features/my_sessions/presentation/screens/my_sessions_scr
 import 'package:mobile/features/sessions/domain/entities/session_entity.dart';
 import 'package:network_image_mock/network_image_mock.dart';
 
-UserEntity _fakeUser() => const UserEntity(
-  uid: 'user-1',
-  displayName: 'Test User',
-  fullName: 'Test Full',
-  email: 'user1@mail.kmutt.ac.th',
-  hasHostedBefore: false,
-  studentYear: 2,
-  academicLevel: 'undergraduate',
-  faculty: 'Engineering',
-  profileScore: 0.0,
-);
+class _FakeFirebaseUser extends Fake implements User {
+  _FakeFirebaseUser(this._uid);
+  final String _uid;
+  @override
+  String get uid => _uid;
+}
 
 SessionEntity _session(String id, String status) {
   final now = DateTime(2026, 5, 18, 10);
@@ -60,12 +55,14 @@ Widget _buildScreen({
   AsyncValue<List<SessionEntity>> hosted = const AsyncValue.data(
     <SessionEntity>[],
   ),
-  UserEntity? user,
+  bool authenticated = true,
 }) {
   return ProviderScope(
     overrides: [
-      currentUserProvider.overrideWith(
-        (_) => Stream.value(user ?? _fakeUser()),
+      firebaseAuthStateProvider.overrideWith(
+        (_) => Stream.value(
+          authenticated ? _FakeFirebaseUser('user-1') : null,
+        ),
       ),
       upcomingSessionsProvider('user-1').overrideWith(
         (_) => upcoming.when(
@@ -171,12 +168,7 @@ void main() {
   ) async {
     await mockNetworkImagesFor(() async {
       await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            currentUserProvider.overrideWith((_) => Stream.value(null)),
-          ],
-          child: const MaterialApp(home: MySessionsScreen()),
-        ),
+        _buildScreen(authenticated: false),
       );
       await tester.pumpAndSettle(const Duration(seconds: 3));
 

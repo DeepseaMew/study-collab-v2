@@ -10,7 +10,8 @@ import 'package:mobile/core/logger.dart';
 import 'package:mobile/core/router/app_router.dart';
 import 'package:mobile/core/utils/date_formatter.dart';
 import 'package:mobile/features/auth/domain/entities/user_entity.dart';
-import 'package:mobile/features/auth/presentation/providers/current_user_provider.dart';
+import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
+import 'package:mobile/features/profile/presentation/providers/user_provider.dart';
 import 'package:mobile/features/sessions/domain/entities/join_request_entity.dart';
 import 'package:mobile/features/sessions/domain/entities/session_entity.dart';
 import 'package:mobile/features/sessions/presentation/providers/join_requests_provider.dart';
@@ -116,8 +117,8 @@ class _SessionDetailBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final membersAsync = ref.watch(sessionMembersProvider(session.sessionId));
-    final meAsync = ref.watch(currentUserProvider);
-    final me = meAsync.asData?.value;
+    final uid = ref.watch(firebaseAuthStateProvider).valueOrNull?.uid;
+    final me = uid != null ? ref.watch(userProvider(uid)).valueOrNull : null;
     final isHost = me != null && me.uid == session.hostUid;
 
     final members = membersAsync.asData?.value ?? [];
@@ -271,7 +272,7 @@ class _SessionDetailBody extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  _HostRow(session: session),
+                  _HostRow(session: session, currentUserId: uid),
                   const SizedBox(height: 16),
                   _InfoCard(
                     icon: Icons.calendar_today_outlined,
@@ -431,9 +432,10 @@ class _InfoChipsRow extends StatelessWidget {
 // ── Host row ──────────────────────────────────────────────────────────────────
 
 class _HostRow extends StatelessWidget {
-  const _HostRow({required this.session});
+  const _HostRow({required this.session, this.currentUserId});
 
   final SessionEntity session;
+  final String? currentUserId;
 
   @override
   Widget build(BuildContext context) {
@@ -441,7 +443,10 @@ class _HostRow extends StatelessWidget {
         ? session.hostDisplayName[0].toUpperCase()
         : '?';
 
-    return Row(
+    final canNavigate =
+        currentUserId != null && currentUserId != session.hostUid;
+
+    final row = Row(
       children: [
         CircleAvatar(
           radius: 18,
@@ -480,6 +485,13 @@ class _HostRow extends StatelessWidget {
           ],
         ),
       ],
+    );
+
+    if (!canNavigate) return row;
+
+    return GestureDetector(
+      onTap: () => context.push('/profile/${session.hostUid}'),
+      child: row,
     );
   }
 }
@@ -963,7 +975,21 @@ class _JoinActionRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (me == null) {
-      return _NotJoinedActions(session: session, me: me);
+      // SEC-009: Do not render tappable join buttons when auth has not resolved
+      // or the user is signed out. Show a sign-in prompt instead so the UI
+      // accurately reflects the unauthenticated state.
+      return OutlinedButton(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.accent,
+          side: const BorderSide(color: AppColors.accent),
+          minimumSize: const Size(double.infinity, 48),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+        onPressed: () => context.push(RouteConstants.signIn),
+        child: const Text('Sign in to join'),
+      );
     }
     if (session.hostUid == me!.uid) {
       // Host — show message group button.

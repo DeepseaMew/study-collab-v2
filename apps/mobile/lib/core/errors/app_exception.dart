@@ -40,3 +40,8 @@ final class InvalidPinException extends AppException {
 final class OfflineException extends AppException {
   const OfflineException(super.message);
 }
+
+/// A Firebase Storage upload failed (network, quota, or rules rejection).
+final class StorageUploadFailure extends AppException {
+  const StorageUploadFailure(super.message);
+}

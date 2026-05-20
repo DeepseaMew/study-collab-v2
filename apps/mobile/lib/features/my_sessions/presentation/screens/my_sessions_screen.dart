@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile/core/analytics_events.dart';
 import 'package:mobile/core/logger.dart';
 import 'package:mobile/core/router/app_router.dart';
-import 'package:mobile/features/auth/presentation/providers/current_user_provider.dart';
+import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
 import 'package:mobile/features/my_sessions/presentation/providers/completed_sessions_provider.dart';
 import 'package:mobile/features/my_sessions/presentation/providers/hosted_sessions_provider.dart';
 import 'package:mobile/features/my_sessions/presentation/providers/upcoming_sessions_provider.dart';
@@ -60,8 +60,7 @@ class _MySessionsScreenState extends ConsumerState<MySessionsScreen>
 
   @override
   Widget build(BuildContext context) {
-    final meAsync = ref.watch(currentUserProvider);
-    final me = meAsync.asData?.value;
+    final me = ref.watch(firebaseAuthStateProvider).valueOrNull;
 
     return Scaffold(
       backgroundColor: AppColors.background,

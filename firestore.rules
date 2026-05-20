@@ -66,6 +66,10 @@ service cloud.firestore {
       allow delete: if false;
 
       // ── users/{uid}/friends/{friendUid} ──────────────────────────────────
+      // SEC-002 fix: hasAll → hasOnly on create to block friendDisplayName/friendPhotoUrl injection.
+      // SEC-004 fix: initiatorUid == request.auth.uid enforced on create.
+      // SEC-003 fix: friendDisplayName/friendPhotoUrl added to update affectedKeys.
+      // High fix: friendUid/initiatorUid/createdAt immutability enforced on update.
 
       match /friends/{friendUid} {
         allow read: if isKmuttUser()
@@ -75,17 +79,21 @@ service cloud.firestore {
           && (request.auth.uid == uid || request.auth.uid == friendUid)
           && request.resource.data.friendUid == friendUid
           && request.resource.data.status == 'pending'
+          && request.resource.data.initiatorUid == request.auth.uid
           && request.resource.data.createdAt == request.time
           && request.resource.data.updatedAt == request.time
-          && request.resource.data.keys().hasAll([
+          && request.resource.data.keys().hasOnly([
                'friendUid', 'status', 'initiatorUid', 'createdAt', 'updatedAt'
              ]);
 
         allow update: if isKmuttUser()
           && (request.auth.uid == uid || request.auth.uid == friendUid)
           && request.resource.data.diff(resource.data).affectedKeys()
-               .hasOnly(['status', 'updatedAt'])
-          && request.resource.data.updatedAt == request.time;
+               .hasOnly(['status', 'friendDisplayName', 'friendPhotoUrl', 'updatedAt'])
+          && request.resource.data.updatedAt == request.time
+          && request.resource.data.friendUid == resource.data.friendUid
+          && request.resource.data.initiatorUid == resource.data.initiatorUid
+          && request.resource.data.createdAt == resource.data.createdAt;
 
         allow delete: if isKmuttUser()
           && (request.auth.uid == uid || request.auth.uid == friendUid);
@@ -93,6 +101,8 @@ service cloud.firestore {
     }
 
     // ── sessions/{sessionId} ────────────────────────────────────────────────
+    // SEC-001 fix: all subcollections (requests, messages, ratings, notes) are
+    // now correctly nested inside match /sessions/{sessionId}.
 
     match /sessions/{sessionId} {
       allow read: if isKmuttUser()
@@ -128,7 +138,8 @@ service cloud.firestore {
       allow delete: if isHost(sessionId)
         && resource.data.status == 'scheduled';
 
-     // ── sessions/{sessionId}/requests/{uid} ────────────────────────
+      // ── sessions/{sessionId}/requests/{uid} ──────────────────────────────
+
       match /requests/{uid} {
         allow read: if isHost(sessionId)
           || (isKmuttUser() && request.auth.uid == uid);
@@ -145,7 +156,6 @@ service cloud.firestore {
 
         allow update: if false;
       }
-    }
 
       // ── sessions/{sessionId}/messages/{messageId} ────────────────────────
 
@@ -251,3 +261,4 @@ service cloud.firestore {
     }
 
   }
+}

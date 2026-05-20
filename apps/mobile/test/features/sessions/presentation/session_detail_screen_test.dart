@@ -3,11 +3,13 @@
 // Smoke test: screen renders in loading, error, and data states.
 // Verifies public pre-join view elements per ADR 0003.
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/features/auth/domain/entities/user_entity.dart';
-import 'package:mobile/features/auth/presentation/providers/current_user_provider.dart';
+import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
+import 'package:mobile/features/profile/presentation/providers/user_provider.dart';
 import 'package:mobile/features/sessions/domain/entities/join_request_entity.dart';
 import 'package:mobile/features/sessions/domain/entities/session_entity.dart';
 import 'package:mobile/features/sessions/domain/repositories/join_request_repository.dart';
@@ -18,6 +20,13 @@ import 'package:mobile/features/sessions/presentation/providers/session_provider
 import 'package:mobile/features/sessions/presentation/screens/session_detail_screen.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:network_image_mock/network_image_mock.dart';
+
+class _FakeFirebaseUser extends Fake implements User {
+  _FakeFirebaseUser(this._uid);
+  final String _uid;
+  @override
+  String get uid => _uid;
+}
 
 class _MockSessionRepository extends Mock implements SessionRepository {}
 
@@ -81,25 +90,39 @@ Widget _buildScreen({
     () => sessionRepo.watchMembers(any()),
   ).thenAnswer((_) => Stream.value(const <UserEntity>[]));
 
-  return ProviderScope(
-    overrides: [
-      sessionStreamProvider(sessionId).overrideWith(
-        (_) => sessionState.when(
-          loading: () => const Stream.empty(),
-          error: (e, st) => Stream.error(e, st),
-          data: (s) => Stream.value(s),
-        ),
+  final overrides = <Override>[
+    sessionStreamProvider(sessionId).overrideWith(
+      (_) => sessionState.when(
+        loading: () => const Stream.empty(),
+        error: (e, st) => Stream.error(e, st),
+        data: (s) => Stream.value(s),
       ),
-      sessionMembersProvider(
-        sessionId,
-      ).overrideWith((_) => Stream.value(const <UserEntity>[])),
-      joinRequestsProvider(
-        sessionId,
-      ).overrideWith((_) => Stream.value(const <JoinRequestEntity>[])),
-      currentUserProvider.overrideWith((_) => Stream.value(currentUser)),
-      sessionRepositoryProvider.overrideWithValue(sessionRepo),
-      joinRequestRepositoryProvider.overrideWithValue(requestRepo),
-    ],
+    ),
+    sessionMembersProvider(
+      sessionId,
+    ).overrideWith((_) => Stream.value(const <UserEntity>[])),
+    joinRequestsProvider(
+      sessionId,
+    ).overrideWith((_) => Stream.value(const <JoinRequestEntity>[])),
+    firebaseAuthStateProvider.overrideWith(
+      (_) => Stream.value(
+        currentUser != null ? _FakeFirebaseUser(currentUser.uid) : null,
+      ),
+    ),
+    sessionRepositoryProvider.overrideWithValue(sessionRepo),
+    joinRequestRepositoryProvider.overrideWithValue(requestRepo),
+  ];
+
+  if (currentUser != null) {
+    overrides.add(
+      userProvider(currentUser.uid).overrideWith(
+        (_) => Stream.value(currentUser),
+      ),
+    );
+  }
+
+  return ProviderScope(
+    overrides: overrides,
     child: MaterialApp(home: SessionDetailScreen(sessionId: sessionId)),
   );
 }

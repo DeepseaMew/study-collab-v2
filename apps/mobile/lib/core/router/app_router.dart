@@ -3,21 +3,27 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/features/auth/domain/entities/auth_state.dart';
 import 'package:mobile/features/auth/presentation/providers/auth_state_notifier_provider.dart';
+import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
 import 'package:mobile/features/auth/presentation/screens/profile_setup_screen.dart';
 import 'package:mobile/features/auth/presentation/screens/sign_in_screen.dart';
 import 'package:mobile/features/auth/presentation/screens/sign_up_screen.dart';
 import 'package:mobile/features/auth/presentation/screens/verify_email_screen.dart';
+import 'package:mobile/features/friends/presentation/screens/friend_requests_screen.dart';
+import 'package:mobile/features/friends/presentation/screens/friends_screen.dart';
+import 'package:mobile/features/home/presentation/screens/home_screen.dart';
 import 'package:mobile/features/my_sessions/presentation/screens/host_session_detail_screen.dart';
 import 'package:mobile/features/my_sessions/presentation/screens/member_session_detail_screen.dart';
 import 'package:mobile/features/my_sessions/presentation/screens/my_sessions_screen.dart';
+import 'package:mobile/features/profile/presentation/screens/other_user_profile_screen.dart';
+import 'package:mobile/features/profile/presentation/screens/profile_screen.dart';
 import 'package:mobile/features/sessions/presentation/screens/create_session_screen.dart';
 import 'package:mobile/features/sessions/presentation/screens/edit_session_screen.dart';
 import 'package:mobile/features/sessions/presentation/screens/members_list_screen.dart';
 import 'package:mobile/features/sessions/presentation/screens/requests_screen.dart';
 import 'package:mobile/features/sessions/presentation/screens/session_detail_screen.dart';
-import 'package:mobile/shared/screens/home_placeholder_screen.dart';
 import 'package:mobile/shared/theme/app_colors.dart';
 import 'package:mobile/shared/theme/app_typography.dart';
+import 'package:mobile/shared/widgets/main_shell.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'app_router.g.dart';
@@ -42,6 +48,20 @@ abstract final class RouteConstants {
   static const String sessionEdit = '/sessions/:id/edit';
   static const String sessionMembers = '/sessions/:id/members';
   static const String sessionRequests = '/sessions/:id/requests';
+
+  // Friends routes
+  static const String friends = '/friends';
+  static const String friendRequests = '/friends/requests';
+
+  // Profile routes
+  static const String profile = '/profile';
+  static const String profileUser = '/profile/:userId';
+
+  // Settings
+  static const String settings = '/settings';
+
+  // Messages DM
+  static const String messagesDm = '/messages/dm/:id';
 }
 
 // ── Router change notifier ────────────────────────────────────────────────────
@@ -99,65 +119,6 @@ class _RouterNotifier extends ChangeNotifier {
   }
 }
 
-// ── Bottom navigation shell ───────────────────────────────────────────────────
-
-class _ShellScaffold extends StatelessWidget {
-  const _ShellScaffold({required this.navigationShell});
-  final StatefulNavigationShell navigationShell;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: navigationShell,
-      floatingActionButton: navigationShell.currentIndex == 3
-          ? FloatingActionButton(
-              heroTag: null,
-              onPressed: () => context.push(RouteConstants.sessionCreate),
-              backgroundColor: AppColors.accent,
-              foregroundColor: Colors.white,
-              shape: const CircleBorder(),
-              child: const Icon(Icons.add),
-            )
-          : null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: NavigationBar(
-        backgroundColor: AppColors.background,
-        indicatorColor: AppColors.secondary,
-        selectedIndex: navigationShell.currentIndex,
-        onDestinationSelected: navigationShell.goBranch,
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home_rounded, color: AppColors.accent),
-            label: 'Home',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.calendar_month_outlined),
-            selectedIcon: Icon(
-              Icons.calendar_month_rounded,
-              color: AppColors.accent,
-            ),
-            label: 'Calendar',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.chat_bubble_outline_rounded),
-            selectedIcon: Icon(
-              Icons.chat_bubble_rounded,
-              color: AppColors.accent,
-            ),
-            label: 'Messages',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.folder_outlined),
-            selectedIcon: Icon(Icons.folder_rounded, color: AppColors.accent),
-            label: 'My Sessions',
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 Widget _comingSoonScreen(String label) => Scaffold(
   body: Center(
     child: Text(
@@ -168,6 +129,25 @@ Widget _comingSoonScreen(String label) => Scaffold(
     ),
   ),
 );
+
+/// Thin ConsumerWidget wrapper so [FriendRequestsScreen] can read the current
+/// user's UID from Riverpod without requiring GoRouter builder callbacks to
+/// receive a BuildContext that is part of a ProviderScope descendant.
+///
+/// UID is sourced directly from [firebaseAuthStateProvider] per ADR 0006.
+/// No `userProvider` call is made here — only uid is required for this route.
+class _FriendRequestsRouteWrapper extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final uid = ref.watch(firebaseAuthStateProvider).valueOrNull?.uid;
+    if (uid == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+    return FriendRequestsScreen(currentUid: uid);
+  }
+}
 
 // ── Router provider ───────────────────────────────────────────────────────────
 
@@ -195,6 +175,46 @@ GoRouter router(RouterRef ref) {
       GoRoute(
         path: RouteConstants.profileSetup,
         builder: (_, __) => const ProfileSetupScreen(),
+      ),
+
+      // ── Profile routes (push over the shell) ────────────────────────────
+      GoRoute(
+        path: RouteConstants.profile,
+        builder: (_, __) => const ProfileScreen(),
+      ),
+      GoRoute(
+        path: '/profile/:userId',
+        builder: (_, state) => OtherUserProfileScreen(
+          userId: state.pathParameters['userId']!,
+        ),
+      ),
+
+      // ── Settings (stub) ─────────────────────────────────────────────────
+      GoRoute(
+        path: RouteConstants.settings,
+        builder: (_, __) => _comingSoonScreen('Settings'),
+      ),
+
+      // ── Messages DM stub ────────────────────────────────────────────────
+      GoRoute(
+        path: '/messages/dm/:id',
+        builder: (_, __) => _comingSoonScreen('Messages'),
+      ),
+
+      // ── Friends routes (push over the shell) ────────────────────────────
+      GoRoute(
+        path: RouteConstants.friends,
+        builder: (_, __) => const FriendsScreen(),
+        routes: [
+          GoRoute(
+            path: 'requests',
+            builder: (context, state) {
+              // UID is sourced from firebaseAuthStateProvider inside
+              // _FriendRequestsRouteWrapper (a ConsumerWidget) per ADR 0006.
+              return _FriendRequestsRouteWrapper();
+            },
+          ),
+        ],
       ),
 
       // ── Session routes (push over the shell) ────────────────────────────
@@ -226,13 +246,13 @@ GoRouter router(RouterRef ref) {
       ),
 
       StatefulShellRoute.indexedStack(
-        builder: (_, __, shell) => _ShellScaffold(navigationShell: shell),
+        builder: (_, __, shell) => MainShell(navigationShell: shell),
         branches: [
           StatefulShellBranch(
             routes: [
               GoRoute(
                 path: RouteConstants.home,
-                builder: (_, __) => const HomePlaceholderScreen(),
+                builder: (_, __) => const HomeScreen(),
               ),
             ],
           ),

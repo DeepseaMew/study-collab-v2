@@ -27,6 +27,11 @@ dependencies:
   cloud_firestore: ^5.5.1
   firebase_crashlytics: ^4.1.4
   firebase_remote_config: ^5.1.4
+  firebase_storage: ^12.3.7
+
+  # Media
+  image_picker: ^1.1.2
+  flutter_image_compress: ^2.3.0
 
   # Storage
   flutter_secure_storage: ^9.2.2

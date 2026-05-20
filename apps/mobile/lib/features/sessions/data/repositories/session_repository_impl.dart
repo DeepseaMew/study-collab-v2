@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mobile/core/errors/app_exception.dart';
 import 'package:mobile/core/logger.dart';
 import 'package:mobile/features/auth/domain/entities/user_entity.dart';
@@ -80,9 +79,9 @@ class SessionRepositoryImpl implements SessionRepository {
       'memberUids': [session.hostUid],
       'noteCount': 0,
       'status': 'scheduled',
-      'scheduledAt': Timestamp.fromDate(session.scheduledAt),
+      'scheduledAt': session.scheduledAt,
       if (session.scheduledEndAt != null)
-        'scheduledEndAt': Timestamp.fromDate(session.scheduledEndAt!),
+        'scheduledEndAt': session.scheduledEndAt,
       'location': session.location,
       'capacity': session.capacity,
       'hostDisplayName': hostDisplayName,
@@ -113,19 +112,7 @@ class SessionRepositoryImpl implements SessionRepository {
       );
     }
 
-    // Convert DateTime to Timestamp if present.
-    final firestoreUpdates = <String, dynamic>{};
-    for (final entry in updates.entries) {
-      if (entry.value is DateTime) {
-        firestoreUpdates[entry.key] = Timestamp.fromDate(
-          entry.value as DateTime,
-        );
-      } else {
-        firestoreUpdates[entry.key] = entry.value;
-      }
-    }
-
-    await _datasource.updateSession(sessionId, firestoreUpdates);
+    await _datasource.updateSession(sessionId, updates);
   }
 
   @override
@@ -156,10 +143,7 @@ class SessionRepositoryImpl implements SessionRepository {
     if (session.hostUid != callerUid) {
       throw const AuthorisationException('Only the host may end this session.');
     }
-    await _datasource.updateSession(sessionId, {
-      'status': 'ended',
-      'endedAt': FieldValue.serverTimestamp(),
-    });
+    await _datasource.endSession(sessionId);
   }
 
   @override
@@ -173,9 +157,7 @@ class SessionRepositoryImpl implements SessionRepository {
         'Host cannot leave their own session.',
       );
     }
-    await _datasource.updateSession(sessionId, {
-      'memberUids': FieldValue.arrayRemove([uid]),
-    });
+    await _datasource.removeMember(sessionId, uid);
   }
 
   @override
@@ -188,6 +170,19 @@ class SessionRepositoryImpl implements SessionRepository {
       throw const AuthorisationException('Only the host may view the PIN.');
     }
     return _datasource.fetchSessionPin(sessionId);
+  }
+
+  @override
+  Future<SessionEntity?> findSessionByPin(String pin) async {
+    final model = await _datasource.findSessionByPin(pin);
+    return model?.toEntity();
+  }
+
+  @override
+  Stream<List<SessionEntity>> watchSessionsByUser(String uid) {
+    return _datasource
+        .watchSessionsByUser(uid)
+        .map((models) => models.map((m) => m.toEntity()).toList());
   }
 
   // ── Private helpers ────────────────────────────────────────────────────────

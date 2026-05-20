@@ -1,11 +1,13 @@
 // Golden tests for CreateSessionScreen.
 // Two scales: 1.0 and 1.5. Fixed locale: th. Fixed theme.
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/features/auth/domain/entities/user_entity.dart';
-import 'package:mobile/features/auth/presentation/providers/current_user_provider.dart';
+import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
+import 'package:mobile/features/profile/presentation/providers/user_provider.dart';
 import 'package:mobile/features/sessions/domain/entities/session_entity.dart';
 import 'package:mobile/features/sessions/domain/repositories/session_repository.dart';
 import 'package:mobile/features/sessions/presentation/providers/session_provider.dart';
@@ -14,6 +16,13 @@ import 'package:mobile/shared/theme/app_colors.dart';
 import 'package:mobile/shared/theme/app_typography.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:network_image_mock/network_image_mock.dart';
+
+class _FakeFirebaseUser extends Fake implements User {
+  _FakeFirebaseUser(this._uid);
+  final String _uid;
+  @override
+  String get uid => _uid;
+}
 
 class _MockSessionRepository extends Mock implements SessionRepository {}
 
@@ -61,7 +70,10 @@ Widget _buildScreen(double textScale) {
 
   return ProviderScope(
     overrides: [
-      currentUserProvider.overrideWith((_) => Stream.value(fakeUser)),
+      firebaseAuthStateProvider.overrideWith(
+        (_) => Stream.value(_FakeFirebaseUser('u1')),
+      ),
+      userProvider('u1').overrideWith((_) => Stream.value(fakeUser)),
       sessionRepositoryProvider.overrideWithValue(repo),
     ],
     child: MaterialApp(

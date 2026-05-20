@@ -1,11 +1,12 @@
 // Golden tests for HostSessionDetailScreen.
 // Two scales: 1.0 and 1.5. Fixed locale: th. Fixed theme.
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/features/auth/domain/entities/user_entity.dart';
-import 'package:mobile/features/auth/presentation/providers/current_user_provider.dart';
+import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
 import 'package:mobile/features/my_sessions/presentation/screens/host_session_detail_screen.dart';
 import 'package:mobile/features/sessions/domain/entities/join_request_entity.dart';
 import 'package:mobile/features/sessions/domain/entities/session_entity.dart';
@@ -18,6 +19,13 @@ import 'package:mobile/shared/theme/app_colors.dart';
 import 'package:mobile/shared/theme/app_typography.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:network_image_mock/network_image_mock.dart';
+
+class _FakeFirebaseUser extends Fake implements User {
+  _FakeFirebaseUser(this._uid);
+  final String _uid;
+  @override
+  String get uid => _uid;
+}
 
 class _MockSessionRepository extends Mock implements SessionRepository {}
 
@@ -58,18 +66,6 @@ Widget _buildScreen(double textScale) {
   ).thenAnswer((_) => Stream.value(const <JoinRequestEntity>[]));
   when(() => sessionRepo.endSession(any(), any())).thenAnswer((_) async {});
 
-  const fakeUser = UserEntity(
-    uid: 'host-1',
-    displayName: 'Host User',
-    fullName: 'Host Full',
-    email: 'host@mail.kmutt.ac.th',
-    hasHostedBefore: true,
-    studentYear: 2,
-    academicLevel: 'undergraduate',
-    faculty: 'Engineering',
-    profileScore: 0.0,
-  );
-
   return ProviderScope(
     overrides: [
       sessionStreamProvider(
@@ -81,7 +77,9 @@ Widget _buildScreen(double textScale) {
       joinRequestsProvider(
         'sess-golden-host',
       ).overrideWith((_) => Stream.value(const <JoinRequestEntity>[])),
-      currentUserProvider.overrideWith((_) => Stream.value(fakeUser)),
+      firebaseAuthStateProvider.overrideWith(
+        (_) => Stream.value(_FakeFirebaseUser('host-1')),
+      ),
       sessionRepositoryProvider.overrideWithValue(sessionRepo),
       joinRequestRepositoryProvider.overrideWithValue(requestRepo),
     ],

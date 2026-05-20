@@ -1,11 +1,13 @@
 // Golden tests for SessionDetailScreen.
 // Two scales: 1.0 and 1.5. Fixed locale: th. Fixed theme.
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/features/auth/domain/entities/user_entity.dart';
-import 'package:mobile/features/auth/presentation/providers/current_user_provider.dart';
+import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
+import 'package:mobile/features/profile/presentation/providers/user_provider.dart';
 import 'package:mobile/features/sessions/domain/entities/join_request_entity.dart';
 import 'package:mobile/features/sessions/domain/entities/session_entity.dart';
 import 'package:mobile/features/sessions/domain/repositories/join_request_repository.dart';
@@ -18,6 +20,13 @@ import 'package:mobile/shared/theme/app_colors.dart';
 import 'package:mobile/shared/theme/app_typography.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:network_image_mock/network_image_mock.dart';
+
+class _FakeFirebaseUser extends Fake implements User {
+  _FakeFirebaseUser(this._uid);
+  final String _uid;
+  @override
+  String get uid => _uid;
+}
 
 class _MockSessionRepository extends Mock implements SessionRepository {}
 
@@ -83,7 +92,10 @@ Widget _buildScreen(double textScale) {
       joinRequestsProvider(
         'sess-golden',
       ).overrideWith((_) => Stream.value(const <JoinRequestEntity>[])),
-      currentUserProvider.overrideWith((_) => Stream.value(fakeUser)),
+      firebaseAuthStateProvider.overrideWith(
+        (_) => Stream.value(_FakeFirebaseUser('viewer-1')),
+      ),
+      userProvider('viewer-1').overrideWith((_) => Stream.value(fakeUser)),
       sessionRepositoryProvider.overrideWithValue(sessionRepo),
       joinRequestRepositoryProvider.overrideWithValue(requestRepo),
     ],

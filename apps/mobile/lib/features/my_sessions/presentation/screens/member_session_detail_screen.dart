@@ -7,7 +7,7 @@ import 'package:mobile/core/logger.dart';
 import 'package:mobile/core/router/app_router.dart';
 import 'package:mobile/core/utils/date_formatter.dart';
 import 'package:mobile/features/auth/domain/entities/user_entity.dart';
-import 'package:mobile/features/auth/presentation/providers/current_user_provider.dart';
+import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
 import 'package:mobile/features/sessions/domain/entities/session_entity.dart';
 import 'package:mobile/features/sessions/presentation/providers/session_members_provider.dart';
 import 'package:mobile/features/sessions/presentation/providers/session_provider.dart';
@@ -166,7 +166,7 @@ class _MemberSessionDetailScreenState
   Widget build(BuildContext context) {
     final sessionAsync = ref.watch(sessionStreamProvider(widget.sessionId));
     final membersAsync = ref.watch(sessionMembersProvider(widget.sessionId));
-    final me = ref.watch(currentUserProvider).asData?.value;
+    final me = ref.watch(firebaseAuthStateProvider).valueOrNull;
 
     ref.listen<AsyncValue<SessionEntity?>>(
       sessionStreamProvider(widget.sessionId),
@@ -222,15 +222,21 @@ class _MemberSessionDetailScreenState
         actions: widget.isCompleted
             ? null
             : [
-                PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert, color: Colors.white),
-                  onSelected: (action) {
-                    if (action == 'leave') _showLeaveDialog(me?.uid ?? '');
-                  },
-                  itemBuilder: (_) => const [
-                    PopupMenuItem(value: 'leave', child: Text('Leave Session')),
-                  ],
-                ),
+                // SEC-010: Only render the leave menu when me is non-null so
+                // that _showLeaveDialog is never called with an empty-string uid.
+                if (me != null)
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert, color: Colors.white),
+                    onSelected: (action) {
+                      if (action == 'leave') _showLeaveDialog(me.uid);
+                    },
+                    itemBuilder: (_) => const [
+                      PopupMenuItem(
+                        value: 'leave',
+                        child: Text('Leave Session'),
+                      ),
+                    ],
+                  ),
               ],
       ),
       body: sessionAsync.when(

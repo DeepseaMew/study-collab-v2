@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/core/enums/kmutt_faculty.dart';
 import 'package:mobile/core/errors/auth_failure.dart';
 import 'package:mobile/features/auth/presentation/providers/auth_state_notifier_provider.dart';
+import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
+import 'package:mobile/features/profile/presentation/providers/user_provider.dart';
 import 'package:mobile/shared/theme/app_colors.dart';
 import 'package:mobile/shared/theme/app_typography.dart';
 
@@ -32,20 +34,22 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
     super.didChangeDependencies();
     if (!_initialized) {
       _initialized = true;
-      // Pre-fill displayName and bio from Firestore via userProfileProvider.
-      // ProviderScope is available by this point because the widget tree has
-      // been fully mounted; ref.read is safe here.
-      final profileAsync = ref.read(userProfileProvider);
-      profileAsync.whenData((profile) {
-        final name = (profile['displayName'] as String?) ?? '';
-        final bio = (profile['bio'] as String?) ?? '';
-        if (name.isNotEmpty) {
-          _displayNameController.text = name;
-        }
-        if (bio.isNotEmpty) {
-          _bioController.text = bio;
-        }
-      });
+      // Pre-fill displayName and bio from the profile feature's user stream.
+      // uid is sourced from the already-permitted firebaseAuthStateProvider;
+      // no cloud_firestore import is needed here.
+      final uid = ref.read(firebaseAuthStateProvider).valueOrNull?.uid;
+      if (uid != null) {
+        ref.read(userProvider(uid).future).then((user) {
+          if (user != null && mounted) {
+            if (user.displayName.isNotEmpty) {
+              _displayNameController.text = user.displayName;
+            }
+            if ((user.bio ?? '').isNotEmpty) {
+              _bioController.text = user.bio!;
+            }
+          }
+        });
+      }
     }
   }
 

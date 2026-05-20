@@ -7,7 +7,8 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile/core/analytics_events.dart';
 import 'package:mobile/core/logger.dart';
 import 'package:mobile/core/utils/date_formatter.dart';
-import 'package:mobile/features/auth/presentation/providers/current_user_provider.dart';
+import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
+import 'package:mobile/features/profile/presentation/providers/user_provider.dart';
 import 'package:mobile/features/sessions/domain/entities/session_entity.dart';
 import 'package:mobile/features/sessions/presentation/providers/session_provider.dart';
 import 'package:mobile/shared/theme/app_colors.dart';
@@ -173,7 +174,8 @@ class _SessionFormState extends ConsumerState<SessionForm>
   Future<void> _submit() async {
     if (!_validate()) return;
 
-    final me = ref.read(currentUserProvider).asData?.value;
+    final uid = ref.read(firebaseAuthStateProvider).valueOrNull?.uid;
+    final me = uid != null ? ref.read(userProvider(uid)).valueOrNull : null;
     if (me == null) {
       _showError('You must be signed in.');
       return;
@@ -301,8 +303,9 @@ class _SessionFormState extends ConsumerState<SessionForm>
   // ── Build ─────────────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
-    // Warm-up currentUserProvider so canSubmit is ready on first build.
-    final me = ref.watch(currentUserProvider).asData?.value;
+    // Warm-up user provider so canSubmit is ready on first build.
+    final uid = ref.watch(firebaseAuthStateProvider).valueOrNull?.uid;
+    final me = uid != null ? ref.watch(userProvider(uid)).valueOrNull : null;
     final canSubmit = me != null;
 
     return Scaffold(

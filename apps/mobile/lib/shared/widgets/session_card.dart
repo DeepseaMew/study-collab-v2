@@ -25,6 +25,7 @@ class SessionCard extends StatelessWidget {
     required this.onTap,
     this.showJoinButton = false,
     this.onJoinTap,
+    this.isPending = false,
   });
 
   final SessionEntity session;
@@ -37,6 +38,9 @@ class SessionCard extends StatelessWidget {
 
   /// Called when the Join button is tapped. Required when [showJoinButton] is true.
   final VoidCallback? onJoinTap;
+
+  /// When `true`, the join button shows a "Pending..." disabled state.
+  final bool isPending;
 
   @override
   Widget build(BuildContext context) {
@@ -112,22 +116,27 @@ class SessionCard extends StatelessWidget {
                 const SizedBox(height: 6),
 
                 // ── Host name ─────────────────────────────────────────────────
-                Row(
-                  children: [
-                    _HostAvatar(
-                      displayName: session.hostDisplayName,
-                      photoUrl: session.hostPhotoUrl,
-                      radius: 10,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      session.hostDisplayName,
-                      style: const TextStyle(
-                        color: AppColors.hint,
-                        fontSize: 12,
+                GestureDetector(
+                  onTap: session.hostUid != currentUserId
+                      ? () => context.push('/profile/${session.hostUid}')
+                      : null,
+                  child: Row(
+                    children: [
+                      _HostAvatar(
+                        displayName: session.hostDisplayName,
+                        photoUrl: session.hostPhotoUrl,
+                        radius: 10,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 6),
+                      Text(
+                        session.hostDisplayName,
+                        style: const TextStyle(
+                          color: AppColors.hint,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 6),
 
@@ -238,17 +247,18 @@ class SessionCard extends StatelessWidget {
                     width: double.infinity,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.accent,
+                        backgroundColor:
+                            isPending ? AppColors.disabled : AppColors.accent,
                         foregroundColor: Colors.white,
                         minimumSize: const Size(double.infinity, 40),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      onPressed: onJoinTap,
-                      child: const Text(
-                        'Request to Join',
-                        style: TextStyle(fontSize: 13),
+                      onPressed: isPending ? null : onJoinTap,
+                      child: Text(
+                        isPending ? 'Pending...' : 'Request to Join',
+                        style: const TextStyle(fontSize: 13),
                       ),
                     ),
                   ),

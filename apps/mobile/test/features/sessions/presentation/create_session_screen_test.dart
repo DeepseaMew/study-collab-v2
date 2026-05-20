@@ -3,17 +3,26 @@
 // Smoke test: screen renders without exception and shows the session form.
 // Validates that all three step views are reachable.
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/features/auth/domain/entities/user_entity.dart';
-import 'package:mobile/features/auth/presentation/providers/current_user_provider.dart';
+import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
+import 'package:mobile/features/profile/presentation/providers/user_provider.dart';
 import 'package:mobile/features/sessions/domain/entities/session_entity.dart';
 import 'package:mobile/features/sessions/domain/repositories/session_repository.dart';
 import 'package:mobile/features/sessions/presentation/providers/session_provider.dart';
 import 'package:mobile/features/sessions/presentation/screens/create_session_screen.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:network_image_mock/network_image_mock.dart';
+
+class _FakeFirebaseUser extends Fake implements User {
+  _FakeFirebaseUser(this._uid);
+  final String _uid;
+  @override
+  String get uid => _uid;
+}
 
 class _MockSessionRepository extends Mock implements SessionRepository {}
 
@@ -31,6 +40,7 @@ UserEntity _fakeUser() => const UserEntity(
 
 Widget _buildScreen({UserEntity? user}) {
   final repo = _MockSessionRepository();
+  final resolvedUser = user ?? _fakeUser();
   registerFallbackValue(
     SessionEntity(
       sessionId: '',
@@ -59,8 +69,11 @@ Widget _buildScreen({UserEntity? user}) {
 
   return ProviderScope(
     overrides: [
-      currentUserProvider.overrideWith(
-        (_) => Stream.value(user ?? _fakeUser()),
+      firebaseAuthStateProvider.overrideWith(
+        (_) => Stream.value(_FakeFirebaseUser(resolvedUser.uid)),
+      ),
+      userProvider(resolvedUser.uid).overrideWith(
+        (_) => Stream.value(resolvedUser),
       ),
       sessionRepositoryProvider.overrideWithValue(repo),
     ],

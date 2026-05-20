@@ -7,7 +7,7 @@ import 'package:mobile/core/logger.dart';
 import 'package:mobile/core/router/app_router.dart';
 import 'package:mobile/core/utils/date_formatter.dart';
 import 'package:mobile/features/auth/domain/entities/user_entity.dart';
-import 'package:mobile/features/auth/presentation/providers/current_user_provider.dart';
+import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
 import 'package:mobile/features/sessions/domain/entities/join_request_entity.dart';
 import 'package:mobile/features/sessions/domain/entities/session_entity.dart';
 import 'package:mobile/features/sessions/presentation/providers/join_requests_provider.dart';
@@ -166,7 +166,7 @@ class _HostSessionDetailScreenState
     final sessionAsync = ref.watch(sessionStreamProvider(widget.sessionId));
     final membersAsync = ref.watch(sessionMembersProvider(widget.sessionId));
     final requestsAsync = ref.watch(joinRequestsProvider(widget.sessionId));
-    final me = ref.watch(currentUserProvider).asData?.value;
+    final me = ref.watch(firebaseAuthStateProvider).valueOrNull;
 
     final session = sessionAsync.asData?.value;
 
