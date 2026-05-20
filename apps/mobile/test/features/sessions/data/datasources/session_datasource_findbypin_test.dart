@@ -15,16 +15,16 @@ import 'package:mocktail/mocktail.dart';
 
 class _MockFirestore extends Mock implements FirebaseFirestore {}
 
+// ignore: subtype_of_sealed_class
 class _MockCollectionReference extends Mock
     implements CollectionReference<Map<String, dynamic>> {}
 
+// ignore: subtype_of_sealed_class
 class _MockQuery extends Mock implements Query<Map<String, dynamic>> {}
 
+// ignore: subtype_of_sealed_class
 class _MockQuerySnapshot extends Mock
     implements QuerySnapshot<Map<String, dynamic>> {}
-
-class _MockQueryDocumentSnapshot extends Mock
-    implements QueryDocumentSnapshot<Map<String, dynamic>> {}
 
 class _MockSessionRepository extends Mock implements SessionRepository {}
 
@@ -35,25 +35,25 @@ void main() {
 
   final now = DateTime(2026, 5, 20, 10);
 
-  SessionEntity _stubSession() => SessionEntity(
-        sessionId: 'session-pin-1',
-        hostUid: 'host-uid',
-        hostFaculty: 'Engineering',
-        title: 'Private Study Group',
-        hashtags: const ['math'],
-        academicLevel: 'undergraduate',
-        studentYear: 2,
-        visibility: 'private',
-        memberUids: const ['host-uid'],
-        noteCount: 0,
-        status: 'scheduled',
-        scheduledAt: now,
-        location: 'CB2101',
-        capacity: 5,
-        hostDisplayName: 'Host Name',
-        createdAt: now,
-        updatedAt: now,
-      );
+  SessionEntity stubSession() => SessionEntity(
+    sessionId: 'session-pin-1',
+    hostUid: 'host-uid',
+    hostFaculty: 'Engineering',
+    title: 'Private Study Group',
+    hashtags: const ['math'],
+    academicLevel: 'undergraduate',
+    studentYear: 2,
+    visibility: 'private',
+    memberUids: const ['host-uid'],
+    noteCount: 0,
+    status: 'scheduled',
+    scheduledAt: now,
+    location: 'CB2101',
+    capacity: 5,
+    hostDisplayName: 'Host Name',
+    createdAt: now,
+    updatedAt: now,
+  );
 
   setUp(() {
     mockRepo = _MockSessionRepository();
@@ -63,9 +63,10 @@ void main() {
     test(
       'returns SessionEntity when a matching private scheduled session exists',
       () async {
-        final session = _stubSession();
-        when(() => mockRepo.findSessionByPin('1234'))
-            .thenAnswer((_) async => session);
+        final session = stubSession();
+        when(
+          () => mockRepo.findSessionByPin('1234'),
+        ).thenAnswer((_) async => session);
 
         final result = await mockRepo.findSessionByPin('1234');
 
@@ -80,8 +81,9 @@ void main() {
     test(
       'returns null when Firestore returns empty results (no session with PIN)',
       () async {
-        when(() => mockRepo.findSessionByPin('9999'))
-            .thenAnswer((_) async => null);
+        when(
+          () => mockRepo.findSessionByPin('9999'),
+        ).thenAnswer((_) async => null);
 
         final result = await mockRepo.findSessionByPin('9999');
 
@@ -112,10 +114,12 @@ void main() {
       datasource = SessionDatasource(mockFirestore);
 
       when(() => mockFirestore.collection(any())).thenReturn(mockCollection);
-      when(() => mockCollection.where('pin', isEqualTo: any(named: 'isEqualTo')))
-          .thenReturn(mockQuery1);
       when(
-        () => mockQuery1.where('visibility', isEqualTo: any(named: 'isEqualTo')),
+        () => mockCollection.where('pin', isEqualTo: any(named: 'isEqualTo')),
+      ).thenReturn(mockQuery1);
+      when(
+        () =>
+            mockQuery1.where('visibility', isEqualTo: any(named: 'isEqualTo')),
       ).thenReturn(mockQuery2);
       when(
         () => mockQuery2.where('status', isEqualTo: any(named: 'isEqualTo')),

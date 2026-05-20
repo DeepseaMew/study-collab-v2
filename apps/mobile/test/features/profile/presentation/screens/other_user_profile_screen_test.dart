@@ -32,16 +32,16 @@ const _viewerUid = 'viewer-uid';
 const _targetUid = 'target-uid';
 
 UserEntity _makeUser(String uid) => UserEntity(
-      uid: uid,
-      displayName: 'Display $uid',
-      fullName: 'Full $uid',
-      email: '$uid@mail.kmutt.ac.th',
-      hasHostedBefore: false,
-      studentYear: 1,
-      academicLevel: 'undergraduate',
-      faculty: 'Science',
-      profileScore: 0.0,
-    );
+  uid: uid,
+  displayName: 'Display $uid',
+  fullName: 'Full $uid',
+  email: '$uid@mail.kmutt.ac.th',
+  hasHostedBefore: false,
+  studentYear: 1,
+  academicLevel: 'undergraduate',
+  faculty: 'Science',
+  profileScore: 0.0,
+);
 
 Widget _buildScreen({
   String viewerUid = _viewerUid,
@@ -53,26 +53,24 @@ Widget _buildScreen({
       firebaseAuthStateProvider.overrideWith(
         (_) => Stream.value(_FakeFirebaseUser(viewerUid)),
       ),
-      userProvider(targetUserId).overrideWith(
-        (_) => _asyncValueToStream(targetUserState),
-      ),
+      userProvider(
+        targetUserId,
+      ).overrideWith((_) => _asyncValueToStream(targetUserState)),
       // Also override the viewer's user for the currentUser lookup.
-      userProvider(viewerUid).overrideWith(
-        (_) => Stream.value(_makeUser(viewerUid)),
-      ),
-      friendsProvider(viewerUid).overrideWith(
-        (_) => Stream<List<FriendEntity>>.value(const []),
-      ),
-      incomingRequestsProvider(viewerUid).overrideWith(
-        (_) => Stream<List<FriendEntity>>.value(const []),
-      ),
-      outgoingRequestsProvider(viewerUid).overrideWith(
-        (_) => Stream<List<FriendEntity>>.value(const []),
-      ),
+      userProvider(
+        viewerUid,
+      ).overrideWith((_) => Stream.value(_makeUser(viewerUid))),
+      friendsProvider(
+        viewerUid,
+      ).overrideWith((_) => Stream<List<FriendEntity>>.value(const [])),
+      incomingRequestsProvider(
+        viewerUid,
+      ).overrideWith((_) => Stream<List<FriendEntity>>.value(const [])),
+      outgoingRequestsProvider(
+        viewerUid,
+      ).overrideWith((_) => Stream<List<FriendEntity>>.value(const [])),
     ],
-    child: MaterialApp(
-      home: OtherUserProfileScreen(userId: targetUserId),
-    ),
+    child: MaterialApp(home: OtherUserProfileScreen(userId: targetUserId)),
   );
 }
 
@@ -85,18 +83,17 @@ Stream<UserEntity?> _asyncValueToStream(AsyncValue<UserEntity?> value) {
 }
 
 void main() {
-  testWidgets(
-    'Loading state: CircularProgressIndicator present',
-    (tester) async {
-      await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(_buildScreen());
-        // Do not pumpAndSettle — we want the loading state.
-        await tester.pump(const Duration(milliseconds: 50));
+  testWidgets('Loading state: CircularProgressIndicator present', (
+    tester,
+  ) async {
+    await mockNetworkImagesFor(() async {
+      await tester.pumpWidget(_buildScreen());
+      // Do not pumpAndSettle — we want the loading state.
+      await tester.pump(const Duration(milliseconds: 50));
 
-        expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      });
-    },
-  );
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    });
+  });
 
   testWidgets(
     'Error state: error text present when userProvider emits an error',
@@ -122,9 +119,7 @@ void main() {
     (tester) async {
       await mockNetworkImagesFor(() async {
         await tester.pumpWidget(
-          _buildScreen(
-            targetUserState: const AsyncValue.data(null),
-          ),
+          _buildScreen(targetUserState: const AsyncValue.data(null)),
         );
         await tester.pumpAndSettle(const Duration(seconds: 3));
 
@@ -139,9 +134,7 @@ void main() {
       await mockNetworkImagesFor(() async {
         final targetUser = _makeUser(_targetUid);
         await tester.pumpWidget(
-          _buildScreen(
-            targetUserState: AsyncValue.data(targetUser),
-          ),
+          _buildScreen(targetUserState: AsyncValue.data(targetUser)),
         );
         await tester.pumpAndSettle(const Duration(seconds: 3));
 
@@ -164,20 +157,18 @@ void main() {
               firebaseAuthStateProvider.overrideWith(
                 (_) => Stream.value(_FakeFirebaseUser(sameUid)),
               ),
-              userProvider(sameUid).overrideWith(
-                (_) => Stream.value(sameUser),
-              ),
-              friendsProvider(sameUid).overrideWith(
-                (_) => Stream<List<FriendEntity>>.value(const []),
-              ),
-              incomingRequestsProvider(sameUid).overrideWith(
-                (_) => Stream<List<FriendEntity>>.value(const []),
-              ),
-              outgoingRequestsProvider(sameUid).overrideWith(
-                (_) => Stream<List<FriendEntity>>.value(const []),
-              ),
+              userProvider(sameUid).overrideWith((_) => Stream.value(sameUser)),
+              friendsProvider(
+                sameUid,
+              ).overrideWith((_) => Stream<List<FriendEntity>>.value(const [])),
+              incomingRequestsProvider(
+                sameUid,
+              ).overrideWith((_) => Stream<List<FriendEntity>>.value(const [])),
+              outgoingRequestsProvider(
+                sameUid,
+              ).overrideWith((_) => Stream<List<FriendEntity>>.value(const [])),
             ],
-            child: MaterialApp(
+            child: const MaterialApp(
               home: OtherUserProfileScreen(userId: sameUid),
             ),
           ),

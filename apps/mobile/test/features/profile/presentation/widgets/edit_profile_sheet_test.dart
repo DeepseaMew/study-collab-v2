@@ -56,7 +56,7 @@ Widget _buildSheet({UserRepository? mockRepo}) {
               context: ctx,
               isScrollControlled: true,
               backgroundColor: Colors.transparent,
-              builder: (_) => EditProfileSheet(user: _stubUser),
+              builder: (_) => const EditProfileSheet(user: _stubUser),
             ),
             child: const Text('Open Sheet'),
           ),
@@ -67,17 +67,14 @@ Widget _buildSheet({UserRepository? mockRepo}) {
 }
 
 void main() {
-  testWidgets(
-    'renders with pre-filled displayName field',
-    (tester) async {
-      await tester.pumpWidget(_buildSheet());
-      await tester.tap(find.text('Open Sheet'));
-      await tester.pumpAndSettle(const Duration(seconds: 1));
+  testWidgets('renders with pre-filled displayName field', (tester) async {
+    await tester.pumpWidget(_buildSheet());
+    await tester.tap(find.text('Open Sheet'));
+    await tester.pumpAndSettle(const Duration(seconds: 1));
 
-      // The displayName text field must be pre-filled with the user's name.
-      expect(find.widgetWithText(TextField, 'Alice Smith'), findsOneWidget);
-    },
-  );
+    // The displayName text field must be pre-filled with the user's name.
+    expect(find.widgetWithText(TextField, 'Alice Smith'), findsOneWidget);
+  });
 
   testWidgets(
     'Save button does not call repository when displayName field is cleared',
@@ -89,10 +86,7 @@ void main() {
       await tester.pumpAndSettle(const Duration(seconds: 1));
 
       // Clear the name field.
-      await tester.enterText(
-        find.widgetWithText(TextField, 'Alice Smith'),
-        '',
-      );
+      await tester.enterText(find.widgetWithText(TextField, 'Alice Smith'), '');
       await tester.pump(const Duration(milliseconds: 100));
 
       // Tap Save Changes.

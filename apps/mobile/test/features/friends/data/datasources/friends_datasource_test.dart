@@ -18,11 +18,13 @@ class _MockFirestore extends Mock implements FirebaseFirestore {}
 
 class _MockWriteBatch extends Mock implements WriteBatch {}
 
+// ignore: subtype_of_sealed_class
 class _MockDocumentReference extends Mock
     implements DocumentReference<Map<String, dynamic>> {}
 
 // ── Fallback fakes ────────────────────────────────────────────────────────────
 
+// ignore: subtype_of_sealed_class
 class _FakeDocumentReference extends Fake
     implements DocumentReference<Map<String, dynamic>> {}
 
@@ -30,10 +32,7 @@ class _FakeDocumentReference extends Fake
 
 /// Creates a [_MockDocumentReference] for path [path] that is registered on
 /// [mockFirestore].doc([path]).
-_MockDocumentReference _docRef(
-  _MockFirestore mockFirestore,
-  String path,
-) {
+_MockDocumentReference _docRef(_MockFirestore mockFirestore, String path) {
   final ref = _MockDocumentReference();
   when(() => mockFirestore.doc(path)).thenReturn(ref);
   return ref;
@@ -56,10 +55,8 @@ void main() {
   const friendUid = 'friend-uid';
 
   // Firestore paths used in assertions.
-  final currentTargetPath =
-      FirestorePaths.userFriendDoc(currentUid, targetUid);
-  final targetCurrentPath =
-      FirestorePaths.userFriendDoc(targetUid, currentUid);
+  final currentTargetPath = FirestorePaths.userFriendDoc(currentUid, targetUid);
+  final targetCurrentPath = FirestorePaths.userFriendDoc(targetUid, currentUid);
 
   setUp(() {
     mockFirestore = _MockFirestore();
@@ -72,10 +69,28 @@ void main() {
     // Accept any set/update/delete calls on the batch — we will verify paths
     // via verify() in each test.
     // Note: WriteBatch.set has an optional SetOptions parameter.
-    when(() => mockBatch.set(any(), any(), any())).thenReturn(mockBatch);
-    when(() => mockBatch.set(any(), any())).thenReturn(mockBatch);
-    when(() => mockBatch.update(any(), any())).thenReturn(mockBatch);
-    when(() => mockBatch.delete(any())).thenReturn(mockBatch);
+    when(
+      () => mockBatch.set(
+        any<DocumentReference<Map<String, dynamic>>>(),
+        any<Map<String, dynamic>>(),
+        any<SetOptions>(),
+      ),
+    ).thenAnswer((_) {});
+    when(
+      () => mockBatch.set(
+        any<DocumentReference<Map<String, dynamic>>>(),
+        any<Map<String, dynamic>>(),
+      ),
+    ).thenAnswer((_) {});
+    when(
+      () => mockBatch.update(
+        any<DocumentReference<Map<String, dynamic>>>(),
+        any<Map<String, dynamic>>(),
+      ),
+    ).thenAnswer((_) {});
+    when(
+      () => mockBatch.delete(any<DocumentReference<Map<String, dynamic>>>()),
+    ).thenAnswer((_) {});
   });
 
   // ── sendRequest ─────────────────────────────────────────────────────────────
@@ -84,8 +99,8 @@ void main() {
     test(
       'writes pending documents on both sides of the friendship atomically',
       () async {
-        final currentTargetRef = _docRef(mockFirestore, currentTargetPath);
-        final targetCurrentRef = _docRef(mockFirestore, targetCurrentPath);
+        _docRef(mockFirestore, currentTargetPath);
+        _docRef(mockFirestore, targetCurrentPath);
 
         await datasource.sendRequest(currentUid, targetUid);
 
@@ -97,20 +112,22 @@ void main() {
       },
     );
 
-    test('throws DataException when batch.commit() throws FirebaseException',
-        () async {
-      _docRef(mockFirestore, currentTargetPath);
-      _docRef(mockFirestore, targetCurrentPath);
+    test(
+      'throws DataException when batch.commit() throws FirebaseException',
+      () async {
+        _docRef(mockFirestore, currentTargetPath);
+        _docRef(mockFirestore, targetCurrentPath);
 
-      when(() => mockBatch.commit()).thenThrow(
-        FirebaseException(plugin: 'firestore', code: 'unavailable'),
-      );
+        when(() => mockBatch.commit()).thenThrow(
+          FirebaseException(plugin: 'firestore', code: 'unavailable'),
+        );
 
-      await expectLater(
-        datasource.sendRequest(currentUid, targetUid),
-        throwsA(isA<DataException>()),
-      );
-    });
+        await expectLater(
+          datasource.sendRequest(currentUid, targetUid),
+          throwsA(isA<DataException>()),
+        );
+      },
+    );
   });
 
   // ── acceptRequest ───────────────────────────────────────────────────────────
@@ -118,14 +135,20 @@ void main() {
   group('acceptRequest', () {
     const acceptorDisplayName = 'Alice';
     const initiatorDisplayName = 'Bob';
-    const acceptorPhotoUrl = 'https://example.com/alice.jpg?alt=media&token=x&v=1';
-    const initiatorPhotoUrl = 'https://example.com/bob.jpg?alt=media&token=y&v=1';
+    const acceptorPhotoUrl =
+        'https://example.com/alice.jpg?alt=media&token=x&v=1';
+    const initiatorPhotoUrl =
+        'https://example.com/bob.jpg?alt=media&token=y&v=1';
 
     // Accept: currentUid is acceptor, initiatorUid is the one who sent the request.
-    final initiatorAcceptorPath =
-        FirestorePaths.userFriendDoc(initiatorUid, currentUid);
-    final acceptorInitiatorPath =
-        FirestorePaths.userFriendDoc(currentUid, initiatorUid);
+    final initiatorAcceptorPath = FirestorePaths.userFriendDoc(
+      initiatorUid,
+      currentUid,
+    );
+    final acceptorInitiatorPath = FirestorePaths.userFriendDoc(
+      currentUid,
+      initiatorUid,
+    );
 
     test(
       'updates both documents to accepted with cross-populated display fields',
@@ -149,36 +172,40 @@ void main() {
       },
     );
 
-    test('throws DataException when batch.commit() throws FirebaseException',
-        () async {
-      _docRef(mockFirestore, initiatorAcceptorPath);
-      _docRef(mockFirestore, acceptorInitiatorPath);
+    test(
+      'throws DataException when batch.commit() throws FirebaseException',
+      () async {
+        _docRef(mockFirestore, initiatorAcceptorPath);
+        _docRef(mockFirestore, acceptorInitiatorPath);
 
-      when(() => mockBatch.commit()).thenThrow(
-        FirebaseException(plugin: 'firestore', code: 'permission-denied'),
-      );
+        when(() => mockBatch.commit()).thenThrow(
+          FirebaseException(plugin: 'firestore', code: 'permission-denied'),
+        );
 
-      await expectLater(
-        datasource.acceptRequest(
-          currentUid: currentUid,
-          initiatorUid: initiatorUid,
-          currentDisplayName: acceptorDisplayName,
-          currentPhotoUrl: null,
-          initiatorDisplayName: initiatorDisplayName,
-          initiatorPhotoUrl: null,
-        ),
-        throwsA(isA<DataException>()),
-      );
-    });
+        await expectLater(
+          datasource.acceptRequest(
+            currentUid: currentUid,
+            initiatorUid: initiatorUid,
+            currentDisplayName: acceptorDisplayName,
+            initiatorDisplayName: initiatorDisplayName,
+          ),
+          throwsA(isA<DataException>()),
+        );
+      },
+    );
   });
 
   // ── declineRequest ──────────────────────────────────────────────────────────
 
   group('declineRequest', () {
-    final currentInitiatorPath =
-        FirestorePaths.userFriendDoc(currentUid, initiatorUid);
-    final initiatorCurrentPath =
-        FirestorePaths.userFriendDoc(initiatorUid, currentUid);
+    final currentInitiatorPath = FirestorePaths.userFriendDoc(
+      currentUid,
+      initiatorUid,
+    );
+    final initiatorCurrentPath = FirestorePaths.userFriendDoc(
+      initiatorUid,
+      currentUid,
+    );
 
     test('deletes both pending documents atomically', () async {
       _docRef(mockFirestore, currentInitiatorPath);
@@ -195,9 +222,9 @@ void main() {
       _docRef(mockFirestore, currentInitiatorPath);
       _docRef(mockFirestore, initiatorCurrentPath);
 
-      when(() => mockBatch.commit()).thenThrow(
-        FirebaseException(plugin: 'firestore', code: 'unavailable'),
-      );
+      when(
+        () => mockBatch.commit(),
+      ).thenThrow(FirebaseException(plugin: 'firestore', code: 'unavailable'));
 
       await expectLater(
         datasource.declineRequest(currentUid, initiatorUid),
@@ -209,10 +236,14 @@ void main() {
   // ── withdrawRequest ─────────────────────────────────────────────────────────
 
   group('withdrawRequest', () {
-    final currentFriendPath =
-        FirestorePaths.userFriendDoc(currentUid, friendUid);
-    final friendCurrentPath =
-        FirestorePaths.userFriendDoc(friendUid, currentUid);
+    final currentFriendPath = FirestorePaths.userFriendDoc(
+      currentUid,
+      friendUid,
+    );
+    final friendCurrentPath = FirestorePaths.userFriendDoc(
+      friendUid,
+      currentUid,
+    );
 
     test('deletes both pending documents atomically', () async {
       _docRef(mockFirestore, currentFriendPath);
@@ -229,9 +260,9 @@ void main() {
       _docRef(mockFirestore, currentFriendPath);
       _docRef(mockFirestore, friendCurrentPath);
 
-      when(() => mockBatch.commit()).thenThrow(
-        FirebaseException(plugin: 'firestore', code: 'unavailable'),
-      );
+      when(
+        () => mockBatch.commit(),
+      ).thenThrow(FirebaseException(plugin: 'firestore', code: 'unavailable'));
 
       await expectLater(
         datasource.withdrawRequest(currentUid, friendUid),
@@ -247,10 +278,14 @@ void main() {
     const unfriendCurrentUid = 'unfriend-current-uid';
     const unfriendFriendUid = 'unfriend-friend-uid';
 
-    final currentFriendPath =
-        FirestorePaths.userFriendDoc(unfriendCurrentUid, unfriendFriendUid);
-    final friendCurrentPath =
-        FirestorePaths.userFriendDoc(unfriendFriendUid, unfriendCurrentUid);
+    final currentFriendPath = FirestorePaths.userFriendDoc(
+      unfriendCurrentUid,
+      unfriendFriendUid,
+    );
+    final friendCurrentPath = FirestorePaths.userFriendDoc(
+      unfriendFriendUid,
+      unfriendCurrentUid,
+    );
 
     test('deletes both accepted documents atomically', () async {
       _docRef(mockFirestore, currentFriendPath);
@@ -267,9 +302,9 @@ void main() {
       _docRef(mockFirestore, currentFriendPath);
       _docRef(mockFirestore, friendCurrentPath);
 
-      when(() => mockBatch.commit()).thenThrow(
-        FirebaseException(plugin: 'firestore', code: 'unavailable'),
-      );
+      when(
+        () => mockBatch.commit(),
+      ).thenThrow(FirebaseException(plugin: 'firestore', code: 'unavailable'));
 
       await expectLater(
         datasource.unfriend(unfriendCurrentUid, unfriendFriendUid),

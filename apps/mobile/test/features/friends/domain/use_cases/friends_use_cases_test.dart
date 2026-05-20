@@ -33,7 +33,6 @@ FriendEntity _stubFriend({
     createdAt: now,
     updatedAt: now,
     friendDisplayName: 'Alice',
-    friendPhotoUrl: null,
   );
 }
 
@@ -53,27 +52,27 @@ void main() {
       useCase = WatchFriendsUseCase(mockRepo);
     });
 
-    test('happy path — delegates to repository and emits friends list',
-        () async {
-      final friends = [_stubFriend()];
-      when(() => mockRepo.watchFriends('current-uid'))
-          .thenAnswer((_) => Stream.value(friends));
+    test(
+      'happy path — delegates to repository and emits friends list',
+      () async {
+        final friends = [_stubFriend()];
+        when(
+          () => mockRepo.watchFriends('current-uid'),
+        ).thenAnswer((_) => Stream.value(friends));
 
-      final result = await useCase.execute('current-uid').first;
+        final result = await useCase.execute('current-uid').first;
 
-      expect(result, friends);
-      verify(() => mockRepo.watchFriends('current-uid')).called(1);
-    });
+        expect(result, friends);
+        verify(() => mockRepo.watchFriends('current-uid')).called(1);
+      },
+    );
 
     test('failure path — propagates stream error from repository', () async {
       when(() => mockRepo.watchFriends('current-uid')).thenAnswer(
         (_) => Stream.error(const DataException('Firestore unavailable')),
       );
 
-      expect(
-        useCase.execute('current-uid'),
-        emitsError(isA<DataException>()),
-      );
+      expect(useCase.execute('current-uid'), emitsError(isA<DataException>()));
     });
   });
 
@@ -87,26 +86,23 @@ void main() {
     });
 
     test('happy path — delegates to repository.sendRequest', () async {
-      when(() => mockRepo.sendRequest('current-uid', 'target-uid'))
-          .thenAnswer((_) async {});
+      when(
+        () => mockRepo.sendRequest('current-uid', 'target-uid'),
+      ).thenAnswer((_) async {});
 
-      await useCase.execute(
-        currentUid: 'current-uid',
-        targetUid: 'target-uid',
-      );
+      await useCase.execute(currentUid: 'current-uid', targetUid: 'target-uid');
 
       verify(() => mockRepo.sendRequest('current-uid', 'target-uid')).called(1);
     });
 
     test('failure path — propagates DataException from repository', () {
-      when(() => mockRepo.sendRequest(any(), any()))
-          .thenThrow(const DataException('Batch write failed'));
+      when(
+        () => mockRepo.sendRequest(any(), any()),
+      ).thenThrow(const DataException('Batch write failed'));
 
       expect(
-        () => useCase.execute(
-          currentUid: 'current-uid',
-          targetUid: 'target-uid',
-        ),
+        () =>
+            useCase.execute(currentUid: 'current-uid', targetUid: 'target-uid'),
         throwsA(isA<DataException>()),
       );
     });
@@ -122,8 +118,9 @@ void main() {
     });
 
     test('happy path — delegates to repository.acceptRequest', () async {
-      when(() => mockRepo.acceptRequest('current-uid', 'initiator-uid'))
-          .thenAnswer((_) async {});
+      when(
+        () => mockRepo.acceptRequest('current-uid', 'initiator-uid'),
+      ).thenAnswer((_) async {});
 
       await useCase.execute(
         currentUid: 'current-uid',
@@ -136,8 +133,9 @@ void main() {
     });
 
     test('failure path — propagates DataException from repository', () {
-      when(() => mockRepo.acceptRequest(any(), any()))
-          .thenThrow(const DataException('Accept batch failed'));
+      when(
+        () => mockRepo.acceptRequest(any(), any()),
+      ).thenThrow(const DataException('Accept batch failed'));
 
       expect(
         () => useCase.execute(
@@ -159,8 +157,9 @@ void main() {
     });
 
     test('happy path — delegates to repository.declineRequest', () async {
-      when(() => mockRepo.declineRequest('current-uid', 'initiator-uid'))
-          .thenAnswer((_) async {});
+      when(
+        () => mockRepo.declineRequest('current-uid', 'initiator-uid'),
+      ).thenAnswer((_) async {});
 
       await useCase.execute(
         currentUid: 'current-uid',
@@ -173,8 +172,9 @@ void main() {
     });
 
     test('failure path — propagates DataException from repository', () {
-      when(() => mockRepo.declineRequest(any(), any()))
-          .thenThrow(const DataException('Decline batch failed'));
+      when(
+        () => mockRepo.declineRequest(any(), any()),
+      ).thenThrow(const DataException('Decline batch failed'));
 
       expect(
         () => useCase.execute(
@@ -196,13 +196,11 @@ void main() {
     });
 
     test('happy path — delegates to repository.withdrawRequest', () async {
-      when(() => mockRepo.withdrawRequest('current-uid', 'target-uid'))
-          .thenAnswer((_) async {});
+      when(
+        () => mockRepo.withdrawRequest('current-uid', 'target-uid'),
+      ).thenAnswer((_) async {});
 
-      await useCase.execute(
-        currentUid: 'current-uid',
-        targetUid: 'target-uid',
-      );
+      await useCase.execute(currentUid: 'current-uid', targetUid: 'target-uid');
 
       verify(
         () => mockRepo.withdrawRequest('current-uid', 'target-uid'),
@@ -210,14 +208,13 @@ void main() {
     });
 
     test('failure path — propagates DataException from repository', () {
-      when(() => mockRepo.withdrawRequest(any(), any()))
-          .thenThrow(const DataException('Withdraw batch failed'));
+      when(
+        () => mockRepo.withdrawRequest(any(), any()),
+      ).thenThrow(const DataException('Withdraw batch failed'));
 
       expect(
-        () => useCase.execute(
-          currentUid: 'current-uid',
-          targetUid: 'target-uid',
-        ),
+        () =>
+            useCase.execute(currentUid: 'current-uid', targetUid: 'target-uid'),
         throwsA(isA<DataException>()),
       );
     });
@@ -233,26 +230,23 @@ void main() {
     });
 
     test('happy path — delegates to repository.unfriend', () async {
-      when(() => mockRepo.unfriend('current-uid', 'friend-uid'))
-          .thenAnswer((_) async {});
+      when(
+        () => mockRepo.unfriend('current-uid', 'friend-uid'),
+      ).thenAnswer((_) async {});
 
-      await useCase.execute(
-        currentUid: 'current-uid',
-        friendUid: 'friend-uid',
-      );
+      await useCase.execute(currentUid: 'current-uid', friendUid: 'friend-uid');
 
       verify(() => mockRepo.unfriend('current-uid', 'friend-uid')).called(1);
     });
 
     test('failure path — propagates DataException from repository', () {
-      when(() => mockRepo.unfriend(any(), any()))
-          .thenThrow(const DataException('Unfriend batch failed'));
+      when(
+        () => mockRepo.unfriend(any(), any()),
+      ).thenThrow(const DataException('Unfriend batch failed'));
 
       expect(
-        () => useCase.execute(
-          currentUid: 'current-uid',
-          friendUid: 'friend-uid',
-        ),
+        () =>
+            useCase.execute(currentUid: 'current-uid', friendUid: 'friend-uid'),
         throwsA(isA<DataException>()),
       );
     });
@@ -267,23 +261,26 @@ void main() {
       useCase = WatchIncomingRequestsUseCase(mockRepo);
     });
 
-    test('happy path — delegates to repository and emits requests list',
-        () async {
-      final requests = [
-        _stubFriend(
-          friendUid: 'sender-uid',
-          status: 'pending',
-          initiatorUid: 'sender-uid',
-        ),
-      ];
-      when(() => mockRepo.watchIncomingRequests('current-uid'))
-          .thenAnswer((_) => Stream.value(requests));
+    test(
+      'happy path — delegates to repository and emits requests list',
+      () async {
+        final requests = [
+          _stubFriend(
+            friendUid: 'sender-uid',
+            status: 'pending',
+            initiatorUid: 'sender-uid',
+          ),
+        ];
+        when(
+          () => mockRepo.watchIncomingRequests('current-uid'),
+        ).thenAnswer((_) => Stream.value(requests));
 
-      final result = await useCase.execute('current-uid').first;
+        final result = await useCase.execute('current-uid').first;
 
-      expect(result, requests);
-      verify(() => mockRepo.watchIncomingRequests('current-uid')).called(1);
-    });
+        expect(result, requests);
+        verify(() => mockRepo.watchIncomingRequests('current-uid')).called(1);
+      },
+    );
 
     // Domain contract: when the stream emits a list where initiatorUid == uid,
     // that item must NOT appear. The filter runs in the datasource; this test
@@ -304,8 +301,9 @@ void main() {
           ),
         ];
 
-        when(() => mockRepo.watchIncomingRequests(uid))
-            .thenAnswer((_) => Stream.value(filteredList));
+        when(
+          () => mockRepo.watchIncomingRequests(uid),
+        ).thenAnswer((_) => Stream.value(filteredList));
 
         final result = await useCase.execute(uid).first;
 
@@ -320,14 +318,11 @@ void main() {
     );
 
     test('failure path — propagates stream error from repository', () async {
-      when(() => mockRepo.watchIncomingRequests('current-uid')).thenAnswer(
-        (_) => Stream.error(const DataException('Firestore error')),
-      );
+      when(
+        () => mockRepo.watchIncomingRequests('current-uid'),
+      ).thenAnswer((_) => Stream.error(const DataException('Firestore error')));
 
-      expect(
-        useCase.execute('current-uid'),
-        emitsError(isA<DataException>()),
-      );
+      expect(useCase.execute('current-uid'), emitsError(isA<DataException>()));
     });
   });
 }

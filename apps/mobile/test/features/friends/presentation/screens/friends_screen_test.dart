@@ -35,7 +35,6 @@ FriendEntity _stubFriend() {
     createdAt: now,
     updatedAt: now,
     friendDisplayName: 'Alice Smith',
-    friendPhotoUrl: null,
   );
 }
 
@@ -48,31 +47,30 @@ Widget _buildScreen({
       firebaseAuthStateProvider.overrideWith(
         (_) => Stream.value(_FakeFirebaseUser(_uid)),
       ),
-      friendsProvider(_uid).overrideWith(
-        (_) => Stream.value(friends),
-      ),
-      incomingRequestsProvider(_uid).overrideWith(
-        (_) => Stream.value(incomingRequests),
-      ),
+      friendsProvider(_uid).overrideWith((_) => Stream.value(friends)),
+      incomingRequestsProvider(
+        _uid,
+      ).overrideWith((_) => Stream.value(incomingRequests)),
     ],
     child: const MaterialApp(home: FriendsScreen()),
   );
 }
 
 void main() {
-  testWidgets(
-    'Friends tab shows empty state when friendsProvider returns []',
-    (tester) async {
-      await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(_buildScreen());
-        await tester.pumpAndSettle(const Duration(seconds: 3));
+  testWidgets('Friends tab shows empty state when friendsProvider returns []', (
+    tester,
+  ) async {
+    await mockNetworkImagesFor(() async {
+      await tester.pumpWidget(_buildScreen());
+      await tester.pumpAndSettle(const Duration(seconds: 3));
 
-        // Friends tab is selected by default (index 0).
-        expect(find.text('No friends yet. Search for peers to add!'),
-            findsOneWidget);
-      });
-    },
-  );
+      // Friends tab is selected by default (index 0).
+      expect(
+        find.text('No friends yet. Search for peers to add!'),
+        findsOneWidget,
+      );
+    });
+  });
 
   testWidgets(
     'Requests tab shows empty state when incomingRequestsProvider returns []',
@@ -94,9 +92,7 @@ void main() {
     'Friends tab shows a FriendListTile when friendsProvider returns one item',
     (tester) async {
       await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(
-          _buildScreen(friends: [_stubFriend()]),
-        );
+        await tester.pumpWidget(_buildScreen(friends: [_stubFriend()]));
         await tester.pumpAndSettle(const Duration(seconds: 3));
 
         // FriendListTile should be present.

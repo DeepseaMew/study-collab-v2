@@ -79,24 +79,14 @@ List<Override> _baseOverrides({
     firebaseAuthStateProvider.overrideWith(
       (_) => Stream.value(_FakeFirebaseUser(_uid)),
     ),
-    userProvider(_uid).overrideWith(
-      (_) => Stream.value(user),
-    ),
-    friendsProvider(_uid).overrideWith(
-      (_) => Stream.value(friends),
-    ),
-    upcomingSessionsProvider(_uid).overrideWith(
-      (_) => Stream.value(upcoming),
-    ),
-    completedSessionsProvider(_uid).overrideWith(
-      (_) => Stream.value(completed),
-    ),
-    avatarUploadProvider.overrideWith(
-      () => _FakeAvatarUpload(),
-    ),
-    localBytesStreamProvider(_uid).overrideWith(
-      (_) => Stream.value(null),
-    ),
+    userProvider(_uid).overrideWith((_) => Stream.value(user)),
+    friendsProvider(_uid).overrideWith((_) => Stream.value(friends)),
+    upcomingSessionsProvider(_uid).overrideWith((_) => Stream.value(upcoming)),
+    completedSessionsProvider(
+      _uid,
+    ).overrideWith((_) => Stream.value(completed)),
+    avatarUploadProvider.overrideWith(() => _FakeAvatarUpload()),
+    localBytesStreamProvider(_uid).overrideWith((_) => Stream.value(null)),
   ];
 }
 
@@ -111,43 +101,16 @@ class _FakeAvatarUpload extends AvatarUpload {
 /// The redirect intercepts any navigation to '/sign-in' and keeps the router
 /// at '/profile' so the test never leaves the profile screen.
 GoRouter _stubRouter() => GoRouter(
-      initialLocation: '/profile',
-      redirect: (_, state) {
-        if (state.uri.path == '/sign-in') return '/profile';
-        return null;
-      },
-      routes: [
-        GoRoute(
-          path: '/profile',
-          builder: (_, __) => const ProfileScreen(),
-        ),
-        GoRoute(path: '/sign-in', builder: (_, __) => const Scaffold()),
-      ],
-    );
-
-/// A GoRouter that starts at '/stub' and has '/stub/profile' as a push target.
-/// Using GoRouter.push preserves the Navigator back-stack, so
-/// Navigator.canPop returns true inside ProfileScreen.
-GoRouter _stubRouterWithBack() => GoRouter(
-      initialLocation: '/stub',
-      redirect: (_, state) {
-        if (state.uri.path == '/sign-in') return '/stub';
-        return null;
-      },
-      routes: [
-        GoRoute(
-          path: '/stub',
-          builder: (_, __) => const Scaffold(body: Text('stub')),
-          routes: [
-            GoRoute(
-              path: 'profile',
-              builder: (_, __) => const ProfileScreen(),
-            ),
-          ],
-        ),
-        GoRoute(path: '/sign-in', builder: (_, __) => const Scaffold()),
-      ],
-    );
+  initialLocation: '/profile',
+  redirect: (_, state) {
+    if (state.uri.path == '/sign-in') return '/profile';
+    return null;
+  },
+  routes: [
+    GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
+    GoRoute(path: '/sign-in', builder: (_, __) => const Scaffold()),
+  ],
+);
 
 Widget _buildRootScreen({List<Override>? overrides}) {
   return ProviderScope(
@@ -156,16 +119,10 @@ Widget _buildRootScreen({List<Override>? overrides}) {
   );
 }
 
-Widget _buildPushedScreen({List<Override>? overrides}) {
-  return ProviderScope(
-    overrides: overrides ?? _baseOverrides(),
-    child: MaterialApp.router(routerConfig: _stubRouterWithBack()),
-  );
-}
-
 void main() {
-  testWidgets('smoke test — pumps without exception for valid UserEntity',
-      (tester) async {
+  testWidgets('smoke test — pumps without exception for valid UserEntity', (
+    tester,
+  ) async {
     await mockNetworkImagesFor(() async {
       await tester.pumpWidget(_buildRootScreen());
       await tester.pumpAndSettle(const Duration(seconds: 3));
@@ -175,20 +132,16 @@ void main() {
     });
   });
 
-  testWidgets(
-    'back button hidden when ProfileScreen is the root route',
-    (tester) async {
-      await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(_buildRootScreen());
-        await tester.pumpAndSettle(const Duration(seconds: 3));
+  testWidgets('back button hidden when ProfileScreen is the root route', (
+    tester,
+  ) async {
+    await mockNetworkImagesFor(() async {
+      await tester.pumpWidget(_buildRootScreen());
+      await tester.pumpAndSettle(const Duration(seconds: 3));
 
-        expect(
-          find.byIcon(Icons.arrow_back_ios_new_rounded),
-          findsNothing,
-        );
-      });
-    },
-  );
+      expect(find.byIcon(Icons.arrow_back_ios_new_rounded), findsNothing);
+    });
+  });
 
   testWidgets(
     'back button visible when ProfileScreen is pushed on top of another route',
@@ -235,7 +188,10 @@ void main() {
                       ),
                     ),
                   ),
-                  GoRoute(path: '/sign-in', builder: (_, __) => const Scaffold()),
+                  GoRoute(
+                    path: '/sign-in',
+                    builder: (_, __) => const Scaffold(),
+                  ),
                 ],
               ),
             ),
@@ -247,10 +203,7 @@ void main() {
         await tester.tap(find.text('Push Profile'));
         await tester.pumpAndSettle(const Duration(seconds: 3));
 
-        expect(
-          find.byIcon(Icons.arrow_back_ios_new_rounded),
-          findsOneWidget,
-        );
+        expect(find.byIcon(Icons.arrow_back_ios_new_rounded), findsOneWidget);
       });
     },
   );
@@ -260,7 +213,9 @@ void main() {
     (tester) async {
       await mockNetworkImagesFor(() async {
         await tester.pumpWidget(
-          _buildRootScreen(overrides: _baseOverrides(upcoming: [_stubSession()])),
+          _buildRootScreen(
+            overrides: _baseOverrides(upcoming: [_stubSession()]),
+          ),
         );
         await tester.pumpAndSettle(const Duration(seconds: 3));
 
