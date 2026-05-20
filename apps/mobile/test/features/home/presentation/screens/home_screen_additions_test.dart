@@ -72,43 +72,40 @@ Widget _buildScreen({
   String sessionId = 'sess-1',
 }) {
   final mockSessionRepo = _MockSessionRepository();
-  when(() => mockSessionRepo.watchPublicSessions())
-      .thenAnswer((_) => Stream.value(sessions));
+  when(
+    () => mockSessionRepo.watchPublicSessions(),
+  ).thenAnswer((_) => Stream.value(sessions));
 
   return ProviderScope(
     overrides: [
       firebaseAuthStateProvider.overrideWith(
         (_) => Stream.value(_FakeFirebaseUser(_uid)),
       ),
-      userProvider(_uid).overrideWith(
-        (_) => Stream.value(_stubUser),
-      ),
-      publicSessionsStreamProvider.overrideWith(
-        (_) => Stream.value(sessions),
-      ),
+      userProvider(_uid).overrideWith((_) => Stream.value(_stubUser)),
+      publicSessionsStreamProvider.overrideWith((_) => Stream.value(sessions)),
       sessionRepositoryProvider.overrideWithValue(mockSessionRepo),
       if (sessions.isNotEmpty)
-        myPendingRequestProvider(sessionId, _uid).overrideWith(
-          (_) => Stream.value(isPending),
-        ),
+        myPendingRequestProvider(
+          sessionId,
+          _uid,
+        ).overrideWith((_) => Stream.value(isPending)),
     ],
     child: const MaterialApp(home: HomeScreen()),
   );
 }
 
 void main() {
-  testWidgets(
-    '"Join with PIN" OutlinedButton is present in the widget tree',
-    (tester) async {
-      await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(_buildScreen());
-        await tester.pumpAndSettle(const Duration(seconds: 3));
+  testWidgets('"Join with PIN" OutlinedButton is present in the widget tree', (
+    tester,
+  ) async {
+    await mockNetworkImagesFor(() async {
+      await tester.pumpWidget(_buildScreen());
+      await tester.pumpAndSettle(const Duration(seconds: 3));
 
-        expect(find.text('Join with PIN'), findsOneWidget);
-        expect(find.byType(OutlinedButton), findsAtLeastNWidgets(1));
-      });
-    },
-  );
+      expect(find.text('Join with PIN'), findsOneWidget);
+      expect(find.byType(OutlinedButton), findsAtLeastNWidgets(1));
+    });
+  });
 
   testWidgets(
     'SessionCard renders "Pending..." text when myPendingRequestProvider returns true',

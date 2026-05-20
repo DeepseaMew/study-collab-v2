@@ -32,9 +32,7 @@ Widget _buildScreen() {
       firebaseAuthStateProvider.overrideWith(
         (_) => Stream.value(_FakeFirebaseUser('test-uid')),
       ),
-      userProvider('test-uid').overrideWith(
-        (_) => Stream.value(_stubUser),
-      ),
+      userProvider('test-uid').overrideWith((_) => Stream.value(_stubUser)),
     ],
     child: const MaterialApp(home: HomeScreen()),
   );

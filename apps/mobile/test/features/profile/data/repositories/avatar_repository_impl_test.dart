@@ -31,18 +31,20 @@ void main() {
     repo = AvatarRepositoryImpl(mockAvatarDs, mockProfileDs);
 
     // Default: streams return empty/null.
-    when(() => mockAvatarDs.watchLocalPreviewBytes(any()))
-        .thenAnswer((_) => Stream.value(null));
-    when(() => mockAvatarDs.watchUploadProgress(any()))
-        .thenAnswer((_) => Stream.value(null));
+    when(
+      () => mockAvatarDs.watchLocalPreviewBytes(any()),
+    ).thenAnswer((_) => Stream.value(null));
+    when(
+      () => mockAvatarDs.watchUploadProgress(any()),
+    ).thenAnswer((_) => Stream.value(null));
   });
 
   // ── happy path ────────────────────────────────────────────────────────────
 
   test('happy path — calls updateProfile with the cache-busted URL', () async {
-    when(() => mockAvatarDs.pickAndUpload(uid)).thenAnswer(
-      (_) async => (url: cacheBustedUrl, compressedSizeBytes: 1024),
-    );
+    when(
+      () => mockAvatarDs.pickAndUpload(uid),
+    ).thenAnswer((_) async => (url: cacheBustedUrl, compressedSizeBytes: 1024));
     when(
       () => mockProfileDs.updateProfile(
         uid,
@@ -77,13 +79,11 @@ void main() {
         (_) async => (url: cacheBustedUrl, compressedSizeBytes: 512),
       );
       // Both calls (initial + retry) throw DataException.
-      when(() => mockProfileDs.updateProfile(uid, any()))
-          .thenThrow(const DataException('Firestore write failed'));
+      when(
+        () => mockProfileDs.updateProfile(uid, any()),
+      ).thenThrow(const DataException('Firestore write failed'));
 
-      await expectLater(
-        repo.pickAndUpload(uid),
-        throwsA(isA<DataException>()),
-      );
+      await expectLater(repo.pickAndUpload(uid), throwsA(isA<DataException>()));
 
       // updateProfile must have been called twice (initial + retry).
       verify(() => mockProfileDs.updateProfile(uid, any())).called(2);
@@ -111,8 +111,11 @@ void main() {
       // Must not throw.
       await expectLater(repo.pickAndUpload(uid), completes);
 
-      expect(callCount, 2,
-          reason: 'updateProfile must be called twice (initial + one retry)');
+      expect(
+        callCount,
+        2,
+        reason: 'updateProfile must be called twice (initial + one retry)',
+      );
     },
   );
 

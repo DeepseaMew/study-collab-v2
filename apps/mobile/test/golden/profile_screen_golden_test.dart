@@ -51,19 +51,16 @@ const _stubUser = UserEntity(
 );
 
 GoRouter _stubRouter() => GoRouter(
-      initialLocation: '/profile',
-      redirect: (_, state) {
-        if (state.uri.path == '/sign-in') return '/profile';
-        return null;
-      },
-      routes: [
-        GoRoute(
-          path: '/profile',
-          builder: (_, __) => const ProfileScreen(),
-        ),
-        GoRoute(path: '/sign-in', builder: (_, __) => const Scaffold()),
-      ],
-    );
+  initialLocation: '/profile',
+  redirect: (_, state) {
+    if (state.uri.path == '/sign-in') return '/profile';
+    return null;
+  },
+  routes: [
+    GoRoute(path: '/profile', builder: (_, __) => const ProfileScreen()),
+    GoRoute(path: '/sign-in', builder: (_, __) => const Scaffold()),
+  ],
+);
 
 Widget _buildScreen(double textScale) {
   return ProviderScope(
@@ -71,22 +68,20 @@ Widget _buildScreen(double textScale) {
       firebaseAuthStateProvider.overrideWith(
         (_) => Stream.value(_FakeFirebaseUser(_uid)),
       ),
-      userProvider(_uid).overrideWith(
-        (_) => Stream.value(_stubUser),
-      ),
-      friendsProvider(_uid).overrideWith(
-        (_) => Stream<List<FriendEntity>>.value(const []),
-      ),
-      upcomingSessionsProvider(_uid).overrideWith(
-        (_) => Stream<List<SessionEntity>>.value(const []),
-      ),
-      completedSessionsProvider(_uid).overrideWith(
-        (_) => Stream<List<SessionEntity>>.value(const []),
-      ),
+      userProvider(_uid).overrideWith((_) => Stream.value(_stubUser)),
+      friendsProvider(
+        _uid,
+      ).overrideWith((_) => Stream<List<FriendEntity>>.value(const [])),
+      upcomingSessionsProvider(
+        _uid,
+      ).overrideWith((_) => Stream<List<SessionEntity>>.value(const [])),
+      completedSessionsProvider(
+        _uid,
+      ).overrideWith((_) => Stream<List<SessionEntity>>.value(const [])),
       avatarUploadProvider.overrideWith(() => _FakeAvatarUpload()),
-      localBytesStreamProvider(_uid).overrideWith(
-        (_) => Stream<List<int>?>.value(null),
-      ),
+      localBytesStreamProvider(
+        _uid,
+      ).overrideWith((_) => Stream<List<int>?>.value(null)),
     ],
     child: MaterialApp.router(
       locale: const Locale('th'),
@@ -102,8 +97,9 @@ Widget _buildScreen(double textScale) {
       ),
       routerConfig: _stubRouter(),
       builder: (context, child) => MediaQuery(
-        data: MediaQuery.of(context)
-            .copyWith(textScaler: TextScaler.linear(textScale)),
+        data: MediaQuery.of(
+          context,
+        ).copyWith(textScaler: TextScaler.linear(textScale)),
         child: child!,
       ),
     ),
@@ -112,8 +108,9 @@ Widget _buildScreen(double textScale) {
 
 void main() {
   group('ProfileScreen golden', () {
-    testWidgets('scale 1.0 — th locale — own profile, no sessions',
-        (tester) async {
+    testWidgets('scale 1.0 — th locale — own profile, no sessions', (
+      tester,
+    ) async {
       await mockNetworkImagesFor(() async {
         await tester.pumpWidget(_buildScreen(1.0));
         await tester.pumpAndSettle(const Duration(seconds: 3));
@@ -124,8 +121,9 @@ void main() {
       });
     });
 
-    testWidgets('scale 1.5 — th locale — own profile, no sessions',
-        (tester) async {
+    testWidgets('scale 1.5 — th locale — own profile, no sessions', (
+      tester,
+    ) async {
       await mockNetworkImagesFor(() async {
         await tester.pumpWidget(_buildScreen(1.5));
         await tester.pumpAndSettle(const Duration(seconds: 3));

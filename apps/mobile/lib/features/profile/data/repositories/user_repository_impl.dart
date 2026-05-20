@@ -10,9 +10,7 @@ class UserRepositoryImpl implements UserRepository {
 
   @override
   Stream<UserEntity?> watchUser(String uid) {
-    return _datasource
-        .watchUser(uid)
-        .map((model) => model?.toEntity());
+    return _datasource.watchUser(uid).map((model) => model?.toEntity());
   }
 
   @override

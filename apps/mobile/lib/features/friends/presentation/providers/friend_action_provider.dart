@@ -46,7 +46,11 @@ class FriendActionNotifier extends _$FriendActionNotifier {
       );
       state = AsyncError(e, st);
     } catch (e, st) {
-      appLogger.error('sendRequest unexpected error', exception: e, stackTrace: st);
+      appLogger.error(
+        'sendRequest unexpected error',
+        exception: e,
+        stackTrace: st,
+      );
       state = AsyncError(e, st);
     }
   }
@@ -72,7 +76,11 @@ class FriendActionNotifier extends _$FriendActionNotifier {
       );
       state = AsyncError(e, st);
     } catch (e, st) {
-      appLogger.error('acceptRequest unexpected error', exception: e, stackTrace: st);
+      appLogger.error(
+        'acceptRequest unexpected error',
+        exception: e,
+        stackTrace: st,
+      );
       state = AsyncError(e, st);
     }
   }
@@ -98,7 +106,11 @@ class FriendActionNotifier extends _$FriendActionNotifier {
       );
       state = AsyncError(e, st);
     } catch (e, st) {
-      appLogger.error('declineRequest unexpected error', exception: e, stackTrace: st);
+      appLogger.error(
+        'declineRequest unexpected error',
+        exception: e,
+        stackTrace: st,
+      );
       state = AsyncError(e, st);
     }
   }
@@ -124,7 +136,11 @@ class FriendActionNotifier extends _$FriendActionNotifier {
       );
       state = AsyncError(e, st);
     } catch (e, st) {
-      appLogger.error('withdrawRequest unexpected error', exception: e, stackTrace: st);
+      appLogger.error(
+        'withdrawRequest unexpected error',
+        exception: e,
+        stackTrace: st,
+      );
       state = AsyncError(e, st);
     }
   }
@@ -150,7 +166,11 @@ class FriendActionNotifier extends _$FriendActionNotifier {
       );
       state = AsyncError(e, st);
     } catch (e, st) {
-      appLogger.error('unfriend unexpected error', exception: e, stackTrace: st);
+      appLogger.error(
+        'unfriend unexpected error',
+        exception: e,
+        stackTrace: st,
+      );
       state = AsyncError(e, st);
     }
   }

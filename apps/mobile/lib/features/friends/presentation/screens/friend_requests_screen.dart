@@ -36,8 +36,7 @@ class FriendRequestsScreen extends ConsumerWidget {
         children: [
           const _SectionHeader(title: 'Incoming'),
           incomingAsync.when(
-            loading: () =>
-                const Center(child: CircularProgressIndicator()),
+            loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, st) {
               appLogger.error(
                 'FriendRequestsScreen incoming error',
@@ -64,8 +63,7 @@ class FriendRequestsScreen extends ConsumerWidget {
           const Divider(thickness: 1, color: AppColors.border),
           const _SectionHeader(title: 'Sent'),
           outgoingAsync.when(
-            loading: () =>
-                const Center(child: CircularProgressIndicator()),
+            loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, st) {
               appLogger.error(
                 'FriendRequestsScreen outgoing error',
@@ -100,10 +98,7 @@ class FriendRequestsScreen extends ConsumerWidget {
   ) async {
     await ref
         .read(friendActionNotifierProvider.notifier)
-        .acceptRequest(
-          currentUid: currentUid,
-          initiatorUid: request.friendUid,
-        );
+        .acceptRequest(currentUid: currentUid, initiatorUid: request.friendUid);
     if (!context.mounted) return;
     _handleError(ref, context);
   }
@@ -130,10 +125,7 @@ class FriendRequestsScreen extends ConsumerWidget {
   ) async {
     await ref
         .read(friendActionNotifierProvider.notifier)
-        .withdrawRequest(
-          currentUid: currentUid,
-          targetUid: request.friendUid,
-        );
+        .withdrawRequest(currentUid: currentUid, targetUid: request.friendUid);
     if (!context.mounted) return;
     _handleError(ref, context);
   }

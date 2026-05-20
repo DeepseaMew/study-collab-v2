@@ -141,9 +141,7 @@ class _FriendRequestsRouteWrapper extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final uid = ref.watch(firebaseAuthStateProvider).valueOrNull?.uid;
     if (uid == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     return FriendRequestsScreen(currentUid: uid);
   }
@@ -184,9 +182,8 @@ GoRouter router(RouterRef ref) {
       ),
       GoRoute(
         path: '/profile/:userId',
-        builder: (_, state) => OtherUserProfileScreen(
-          userId: state.pathParameters['userId']!,
-        ),
+        builder: (_, state) =>
+            OtherUserProfileScreen(userId: state.pathParameters['userId']!),
       ),
 
       // ── Settings (stub) ─────────────────────────────────────────────────

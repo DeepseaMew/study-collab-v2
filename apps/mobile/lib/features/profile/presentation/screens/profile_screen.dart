@@ -37,9 +37,8 @@ class ProfileScreen extends ConsumerWidget {
     final userAsync = ref.watch(userProvider(uid));
 
     return userAsync.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (e, st) {
         appLogger.error(
           'ProfileScreen: failed to load current user',
@@ -89,8 +88,7 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
     }
 
     final friendsAsync = ref.watch(friendsProvider(user.uid));
-    final friendsCount =
-        friendsAsync.valueOrNull?.length.toString() ?? '0';
+    final friendsCount = friendsAsync.valueOrNull?.length.toString() ?? '0';
 
     final upcomingAsync = ref.watch(upcomingSessionsProvider(user.uid));
     final completedAsync = ref.watch(completedSessionsProvider(user.uid));
@@ -146,182 +144,182 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-          // Avatar + name + email + bio + faculty
-          Center(
-            child: Column(
-              children: [
-                // Avatar with tap-to-upload and camera badge.
-                GestureDetector(
-                  onTap: avatarUploadState.isLoading
-                      ? null
-                      : () => ref
-                            .read(avatarUploadProvider.notifier)
-                            .pickAndUpload(user.uid),
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      AvatarWidget(
-                        photoUrl: user.photoUrl,
-                        displayName: user.displayName,
-                        localBytes: localBytes,
-                        isLoading: avatarUploadState.isLoading,
-                      ),
-                      // Camera badge — bottom-right corner.
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: Semantics(
-                          label: 'Change avatar',
-                          button: true,
-                          child: Container(
-                            width: 26,
-                            height: 26,
-                            decoration: const BoxDecoration(
-                              color: AppColors.accent,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.camera_alt,
-                              size: 14,
-                              color: Colors.white,
+            // Avatar + name + email + bio + faculty
+            Center(
+              child: Column(
+                children: [
+                  // Avatar with tap-to-upload and camera badge.
+                  GestureDetector(
+                    onTap: avatarUploadState.isLoading
+                        ? null
+                        : () => ref
+                              .read(avatarUploadProvider.notifier)
+                              .pickAndUpload(user.uid),
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        AvatarWidget(
+                          photoUrl: user.photoUrl,
+                          displayName: user.displayName,
+                          localBytes: localBytes,
+                          isLoading: avatarUploadState.isLoading,
+                        ),
+                        // Camera badge — bottom-right corner.
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Semantics(
+                            label: 'Change avatar',
+                            button: true,
+                            child: Container(
+                              width: 26,
+                              height: 26,
+                              decoration: const BoxDecoration(
+                                color: AppColors.accent,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.camera_alt,
+                                size: 14,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
                         ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(user.displayName, style: tt.displayMedium),
+                  if (user.faculty.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      '${user.faculty} · Year ${user.studentYear} · '
+                      '${AcademicLevel.fromString(user.academicLevel).displayName}',
+                      style: tt.labelLarge?.copyWith(color: AppColors.hint),
+                    ),
+                  ],
+                  const SizedBox(height: 2),
+                  Text(
+                    user.email,
+                    style: tt.bodyMedium?.copyWith(color: AppColors.hint),
+                  ),
+                  if ((user.bio ?? '').isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      user.bio!,
+                      textAlign: TextAlign.center,
+                      style: tt.bodyMedium,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Stats row
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _StatItem(label: 'Sessions', value: sessionCount),
+                  Container(width: 1, height: 36, color: AppColors.border),
+                  Semantics(
+                    label: 'Friends count, tap to view friends list',
+                    button: true,
+                    child: GestureDetector(
+                      onTap: () => context.push(RouteConstants.friends),
+                      child: _StatItem(label: 'Friends', value: friendsCount),
+                    ),
+                  ),
+                  Container(width: 1, height: 36, color: AppColors.border),
+                  const _RatingStatItem(),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Edit profile button
+            OutlinedButton.icon(
+              onPressed: () => showModalBottomSheet<void>(
+                context: context,
+                isScrollControlled: true,
+                backgroundColor: Colors.transparent,
+                builder: (_) => EditProfileSheet(user: user),
+              ),
+              icon: const Icon(Icons.edit_outlined, size: 18),
+              label: const Text('Edit Profile'),
+            ),
+            const SizedBox(height: 28),
+
+            Text('Session History', style: tt.titleLarge),
+            const SizedBox(height: 12),
+
+            if (upcomingAsync.isLoading || completedAsync.isLoading)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 32),
+                  child: CircularProgressIndicator(),
+                ),
+              )
+            else if (allSessions.isEmpty)
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 32),
+                  child: Column(
+                    children: [
+                      const Icon(
+                        Icons.history_outlined,
+                        size: 48,
+                        color: AppColors.disabled,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'No session history yet',
+                        style: tt.bodyMedium?.copyWith(color: AppColors.hint),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 12),
-                Text(user.displayName, style: tt.displayMedium),
-                if (user.faculty.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    '${user.faculty} · Year ${user.studentYear} · '
-                    '${AcademicLevel.fromString(user.academicLevel).displayName}',
-                    style: tt.labelLarge?.copyWith(color: AppColors.hint),
+              )
+            else ...[
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: allSessions.length > 5 ? 5 : allSessions.length,
+                itemBuilder: (_, i) {
+                  final session = allSessions[i];
+                  return SessionCard(
+                    session: session,
+                    currentUserId: user.uid,
+                    onTap: () {
+                      final route = session.hostUid == user.uid
+                          ? RouteConstants.mySessionHost
+                          : RouteConstants.mySessionMember;
+                      context.push(
+                        route.replaceFirst(':id', session.sessionId),
+                      );
+                    },
+                  );
+                },
+              ),
+              if (allSessions.length > 5) ...[
+                const SizedBox(height: 4),
+                Center(
+                  child: TextButton(
+                    onPressed: () => context.push(RouteConstants.mySessions),
+                    child: const Text('See All'),
                   ),
-                ],
-                const SizedBox(height: 2),
-                Text(
-                  user.email,
-                  style: tt.bodyMedium?.copyWith(color: AppColors.hint),
                 ),
-                if ((user.bio ?? '').isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    user.bio!,
-                    textAlign: TextAlign.center,
-                    style: tt.bodyMedium,
-                  ),
-                ],
               ],
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          // Stats row
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppColors.border),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                _StatItem(label: 'Sessions', value: sessionCount),
-                Container(width: 1, height: 36, color: AppColors.border),
-                Semantics(
-                  label: 'Friends count, tap to view friends list',
-                  button: true,
-                  child: GestureDetector(
-                    onTap: () => context.push(RouteConstants.friends),
-                    child: _StatItem(label: 'Friends', value: friendsCount),
-                  ),
-                ),
-                Container(width: 1, height: 36, color: AppColors.border),
-                const _RatingStatItem(),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Edit profile button
-          OutlinedButton.icon(
-            onPressed: () => showModalBottomSheet<void>(
-              context: context,
-              isScrollControlled: true,
-              backgroundColor: Colors.transparent,
-              builder: (_) => EditProfileSheet(user: user),
-            ),
-            icon: const Icon(Icons.edit_outlined, size: 18),
-            label: const Text('Edit Profile'),
-          ),
-          const SizedBox(height: 28),
-
-          Text('Session History', style: tt.titleLarge),
-          const SizedBox(height: 12),
-
-          if (upcomingAsync.isLoading || completedAsync.isLoading)
-            const Center(
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 32),
-                child: CircularProgressIndicator(),
-              ),
-            )
-          else if (allSessions.isEmpty)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 32),
-                child: Column(
-                  children: [
-                    const Icon(
-                      Icons.history_outlined,
-                      size: 48,
-                      color: AppColors.disabled,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'No session history yet',
-                      style: tt.bodyMedium?.copyWith(color: AppColors.hint),
-                    ),
-                  ],
-                ),
-              ),
-            )
-          else ...[
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: allSessions.length > 5 ? 5 : allSessions.length,
-              itemBuilder: (_, i) {
-                final session = allSessions[i];
-                return SessionCard(
-                  session: session,
-                  currentUserId: user.uid,
-                  onTap: () {
-                    final route = session.hostUid == user.uid
-                        ? RouteConstants.mySessionHost
-                        : RouteConstants.mySessionMember;
-                    context.push(
-                      route.replaceFirst(':id', session.sessionId),
-                    );
-                  },
-                );
-              },
-            ),
-            if (allSessions.length > 5) ...[
-              const SizedBox(height: 4),
-              Center(
-                child: TextButton(
-                  onPressed: () => context.push(RouteConstants.mySessions),
-                  child: const Text('See All'),
-                ),
-              ),
             ],
           ],
-        ],
         ),
       ),
     );
@@ -342,15 +340,9 @@ class _StatItem extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          value,
-          style: tt.displayMedium?.copyWith(color: AppColors.accent),
-        ),
+        Text(value, style: tt.displayMedium?.copyWith(color: AppColors.accent)),
         const SizedBox(height: 2),
-        Text(
-          label,
-          style: tt.bodyMedium?.copyWith(color: AppColors.hint),
-        ),
+        Text(label, style: tt.bodyMedium?.copyWith(color: AppColors.hint)),
       ],
     );
   }

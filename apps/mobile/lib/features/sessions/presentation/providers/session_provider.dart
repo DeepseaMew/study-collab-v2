@@ -32,9 +32,6 @@ Stream<List<SessionEntity>> publicSessionsStream(PublicSessionsStreamRef ref) {
 /// Watches public sessions where [uid] is the host or a member,
 /// ordered by scheduledAt descending.
 @riverpod
-Stream<List<SessionEntity>> sessionsByUser(
-  SessionsByUserRef ref,
-  String uid,
-) {
+Stream<List<SessionEntity>> sessionsByUser(SessionsByUserRef ref, String uid) {
   return ref.watch(sessionRepositoryProvider).watchSessionsByUser(uid);
 }

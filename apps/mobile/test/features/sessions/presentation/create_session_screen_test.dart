@@ -72,9 +72,9 @@ Widget _buildScreen({UserEntity? user}) {
       firebaseAuthStateProvider.overrideWith(
         (_) => Stream.value(_FakeFirebaseUser(resolvedUser.uid)),
       ),
-      userProvider(resolvedUser.uid).overrideWith(
-        (_) => Stream.value(resolvedUser),
-      ),
+      userProvider(
+        resolvedUser.uid,
+      ).overrideWith((_) => Stream.value(resolvedUser)),
       sessionRepositoryProvider.overrideWithValue(repo),
     ],
     child: const MaterialApp(home: CreateSessionScreen()),

@@ -92,14 +92,10 @@ class AvatarWidget extends StatelessWidget {
             fit: BoxFit.cover,
           ),
         ),
-        placeholder: (_, __) => _InitialsAvatar(
-          displayName: displayName,
-          radius: radius,
-        ),
-        errorWidget: (_, __, ___) => _InitialsAvatar(
-          displayName: displayName,
-          radius: radius,
-        ),
+        placeholder: (_, __) =>
+            _InitialsAvatar(displayName: displayName, radius: radius),
+        errorWidget: (_, __, ___) =>
+            _InitialsAvatar(displayName: displayName, radius: radius),
       );
     }
 
@@ -116,8 +112,7 @@ class _InitialsAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final initial =
-        displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
+    final initial = displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
     return CircleAvatar(
       radius: radius,
       backgroundColor: AppColors.accent.withValues(alpha: 0.15),

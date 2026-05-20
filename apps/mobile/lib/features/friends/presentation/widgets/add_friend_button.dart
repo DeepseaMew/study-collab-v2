@@ -40,9 +40,7 @@ class AddFriendButton extends ConsumerWidget {
       FriendshipStatus.notFriends => _PrimaryButton(
         label: 'Add Friend',
         isLoading: isLoading,
-        onPressed: isLoading
-            ? null
-            : () => _sendRequest(ref, context),
+        onPressed: isLoading ? null : () => _sendRequest(ref, context),
       ),
       FriendshipStatus.requestSent => Semantics(
         label: 'Friend request sent, tap to withdraw',
@@ -50,24 +48,18 @@ class AddFriendButton extends ConsumerWidget {
         child: _OutlinedActionButton(
           label: 'Pending',
           isLoading: isLoading,
-          onPressed: isLoading
-              ? null
-              : () => _withdrawRequest(ref, context),
+          onPressed: isLoading ? null : () => _withdrawRequest(ref, context),
         ),
       ),
       FriendshipStatus.requestReceived => _PrimaryButton(
         label: 'Accept',
         isLoading: isLoading,
-        onPressed: isLoading
-            ? null
-            : () => _acceptRequest(ref, context),
+        onPressed: isLoading ? null : () => _acceptRequest(ref, context),
       ),
       FriendshipStatus.friends => _OutlinedActionButton(
         label: 'Friends',
         isLoading: isLoading,
-        onPressed: isLoading
-            ? null
-            : () => _confirmUnfriend(ref, context),
+        onPressed: isLoading ? null : () => _confirmUnfriend(ref, context),
       ),
       FriendshipStatus.self => const SizedBox.shrink(),
     };
@@ -130,10 +122,7 @@ class AddFriendButton extends ConsumerWidget {
   void _handleError(WidgetRef ref, BuildContext context) {
     final state = ref.read(friendActionNotifierProvider);
     if (state.hasError && context.mounted) {
-      appLogger.error(
-        'AddFriendButton action error',
-        exception: state.error,
-      );
+      appLogger.error('AddFriendButton action error', exception: state.error);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Something went wrong. Please try again.'),
@@ -161,10 +150,7 @@ class _PrimaryButton extends StatelessWidget {
       style: FilledButton.styleFrom(
         backgroundColor: AppColors.accent,
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        textStyle: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-        ),
+        textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
       ),
       onPressed: onPressed,
       child: isLoading
@@ -199,10 +185,7 @@ class _OutlinedActionButton extends StatelessWidget {
         foregroundColor: AppColors.accent,
         side: const BorderSide(color: AppColors.accent),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        textStyle: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-        ),
+        textStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
       ),
       onPressed: onPressed,
       child: isLoading

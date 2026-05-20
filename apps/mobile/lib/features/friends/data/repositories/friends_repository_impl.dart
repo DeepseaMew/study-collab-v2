@@ -51,8 +51,7 @@ class FriendsRepositoryImpl implements FriendsRepository {
     final currentData = await _datasource.readUserDoc(currentUid);
     final initiatorData = await _datasource.readUserDoc(initiatorUid);
 
-    final currentDisplayName =
-        (currentData['displayName'] as String?) ?? '';
+    final currentDisplayName = (currentData['displayName'] as String?) ?? '';
     final currentPhotoUrl = currentData['photoUrl'] as String?;
     final initiatorDisplayName =
         (initiatorData['displayName'] as String?) ?? '';

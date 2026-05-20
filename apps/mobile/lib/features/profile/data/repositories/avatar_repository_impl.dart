@@ -30,9 +30,7 @@ class AvatarRepositoryImpl implements AvatarRepository {
 
       // Write the cache-busted download URL to Firestore.
       try {
-        await _profileDatasource.updateProfile(uid, {
-          'photoUrl': result.url,
-        });
+        await _profileDatasource.updateProfile(uid, {'photoUrl': result.url});
       } on DataException catch (e) {
         appLogger.warning(
           'Avatar uploaded to Storage but Firestore update failed; '
@@ -41,9 +39,7 @@ class AvatarRepositoryImpl implements AvatarRepository {
         );
         // Retry once as prescribed by ADR 0005 error handling.
         try {
-          await _profileDatasource.updateProfile(uid, {
-            'photoUrl': result.url,
-          });
+          await _profileDatasource.updateProfile(uid, {'photoUrl': result.url});
         } catch (retryError, retrySt) {
           appLogger.warning(
             'Avatar uploaded to Storage but Firestore update failed after '

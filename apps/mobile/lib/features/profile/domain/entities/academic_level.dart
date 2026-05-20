@@ -7,15 +7,15 @@ enum AcademicLevel {
 
   /// Human-readable label shown in the UI.
   String get displayName => switch (this) {
-        AcademicLevel.undergraduate => 'Undergraduate',
-        AcademicLevel.graduate => 'Graduate',
-      };
+    AcademicLevel.undergraduate => 'Undergraduate',
+    AcademicLevel.graduate => 'Graduate',
+  };
 
   /// Maximum student year for this level.
   int get maxYear => switch (this) {
-        AcademicLevel.undergraduate => 4,
-        AcademicLevel.graduate => 2,
-      };
+    AcademicLevel.undergraduate => 4,
+    AcademicLevel.graduate => 2,
+  };
 
   /// Parses a raw Firestore string to [AcademicLevel].
   /// Falls back to [undergraduate] for unknown values.

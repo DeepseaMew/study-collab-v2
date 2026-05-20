@@ -115,9 +115,9 @@ Widget _buildScreen({
 
   if (currentUser != null) {
     overrides.add(
-      userProvider(currentUser.uid).overrideWith(
-        (_) => Stream.value(currentUser),
-      ),
+      userProvider(
+        currentUser.uid,
+      ).overrideWith((_) => Stream.value(currentUser)),
     );
   }
 

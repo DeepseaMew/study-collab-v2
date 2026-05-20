@@ -64,24 +64,20 @@ Widget _buildScreen(double textScale) {
       firebaseAuthStateProvider.overrideWith(
         (_) => Stream.value(_FakeFirebaseUser(_viewerUid)),
       ),
-      userProvider(_targetUid).overrideWith(
-        (_) => Stream.value(_targetUser),
-      ),
-      userProvider(_viewerUid).overrideWith(
-        (_) => Stream.value(_viewerUser),
-      ),
-      friendsProvider(_viewerUid).overrideWith(
-        (_) => Stream<List<FriendEntity>>.value(const []),
-      ),
-      incomingRequestsProvider(_viewerUid).overrideWith(
-        (_) => Stream<List<FriendEntity>>.value(const []),
-      ),
-      outgoingRequestsProvider(_viewerUid).overrideWith(
-        (_) => Stream<List<FriendEntity>>.value(const []),
-      ),
-      sessionsByUserProvider(_targetUid).overrideWith(
-        (_) => Stream<List<SessionEntity>>.value(const []),
-      ),
+      userProvider(_targetUid).overrideWith((_) => Stream.value(_targetUser)),
+      userProvider(_viewerUid).overrideWith((_) => Stream.value(_viewerUser)),
+      friendsProvider(
+        _viewerUid,
+      ).overrideWith((_) => Stream<List<FriendEntity>>.value(const [])),
+      incomingRequestsProvider(
+        _viewerUid,
+      ).overrideWith((_) => Stream<List<FriendEntity>>.value(const [])),
+      outgoingRequestsProvider(
+        _viewerUid,
+      ).overrideWith((_) => Stream<List<FriendEntity>>.value(const [])),
+      sessionsByUserProvider(
+        _targetUid,
+      ).overrideWith((_) => Stream<List<SessionEntity>>.value(const [])),
     ],
     child: MaterialApp(
       locale: const Locale('th'),

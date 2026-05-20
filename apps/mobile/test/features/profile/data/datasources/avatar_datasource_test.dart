@@ -37,22 +37,19 @@ void main() {
   // ── cache-bust URL format ─────────────────────────────────────────────────
 
   group('cache-bust URL format (ADR 0005 §step 7)', () {
-    test(
-      'appends "&v=<epoch>" (not "?v=") to a Firebase download URL',
-      () {
-        const baseUrl =
-            'https://firebasestorage.googleapis.com/v0/b/bucket/o/avatar.jpg?alt=media&token=abc123';
+    test('appends "&v=<epoch>" (not "?v=") to a Firebase download URL', () {
+      const baseUrl =
+          'https://firebasestorage.googleapis.com/v0/b/bucket/o/avatar.jpg?alt=media&token=abc123';
 
-        final result = _applyAdrCacheBust(baseUrl);
+      final result = _applyAdrCacheBust(baseUrl);
 
-        // Must contain &v= (the Firebase URL already has ?alt=media&token=).
-        expect(result, contains('&v='));
-        // Must NOT contain ?v= which would be a second query-string start.
-        expect(result, isNot(contains('?v=')));
-        // Must start with the original base URL.
-        expect(result, startsWith(baseUrl));
-      },
-    );
+      // Must contain &v= (the Firebase URL already has ?alt=media&token=).
+      expect(result, contains('&v='));
+      // Must NOT contain ?v= which would be a second query-string start.
+      expect(result, isNot(contains('?v=')));
+      // Must start with the original base URL.
+      expect(result, startsWith(baseUrl));
+    });
 
     test(
       'cache-bust epoch value changes between calls (non-deterministic, sanity check)',
@@ -84,10 +81,12 @@ void main() {
       mockProfileDs = _MockProfileDatasource();
       repo = AvatarRepositoryImpl(mockAvatarDs, mockProfileDs);
 
-      when(() => mockAvatarDs.watchLocalPreviewBytes(any()))
-          .thenAnswer((_) => Stream.value(null));
-      when(() => mockAvatarDs.watchUploadProgress(any()))
-          .thenAnswer((_) => Stream.value(null));
+      when(
+        () => mockAvatarDs.watchLocalPreviewBytes(any()),
+      ).thenAnswer((_) => Stream.value(null));
+      when(
+        () => mockAvatarDs.watchUploadProgress(any()),
+      ).thenAnswer((_) => Stream.value(null));
     });
 
     test(
@@ -107,8 +106,9 @@ void main() {
     test(
       'user cancels picker — datasource returns null — repository returns without calling updateProfile',
       () async {
-        when(() => mockAvatarDs.pickAndUpload(uid))
-            .thenAnswer((_) async => null);
+        when(
+          () => mockAvatarDs.pickAndUpload(uid),
+        ).thenAnswer((_) async => null);
 
         await repo.pickAndUpload(uid);
 

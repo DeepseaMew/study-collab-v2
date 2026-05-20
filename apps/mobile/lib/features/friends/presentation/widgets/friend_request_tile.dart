@@ -132,19 +132,15 @@ class _Avatar extends StatelessWidget {
       return ExcludeSemantics(
         child: CachedNetworkImage(
           imageUrl: url,
-          imageBuilder: (_, imageProvider) => CircleAvatar(
-            radius: 20,
-            backgroundImage: imageProvider,
-          ),
+          imageBuilder: (_, imageProvider) =>
+              CircleAvatar(radius: 20, backgroundImage: imageProvider),
           placeholder: (_, __) => _InitialsAvatar(displayName: displayName),
           errorWidget: (_, __, ___) =>
               _InitialsAvatar(displayName: displayName),
         ),
       );
     }
-    return ExcludeSemantics(
-      child: _InitialsAvatar(displayName: displayName),
-    );
+    return ExcludeSemantics(child: _InitialsAvatar(displayName: displayName));
   }
 }
 

@@ -31,16 +31,16 @@ abstract class UserModel with _$UserModel {
 
   /// Converts to the domain [UserEntity].
   UserEntity toEntity() => UserEntity(
-        uid: uid,
-        displayName: displayName,
-        fullName: fullName,
-        email: email,
-        photoUrl: photoUrl,
-        hasHostedBefore: hasHostedBefore,
-        studentYear: studentYear,
-        academicLevel: academicLevel,
-        faculty: faculty,
-        bio: bio,
-        profileScore: profileScore,
-      );
+    uid: uid,
+    displayName: displayName,
+    fullName: fullName,
+    email: email,
+    photoUrl: photoUrl,
+    hasHostedBefore: hasHostedBefore,
+    studentYear: studentYear,
+    academicLevel: academicLevel,
+    faculty: faculty,
+    bio: bio,
+    profileScore: profileScore,
+  );
 }

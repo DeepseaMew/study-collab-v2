@@ -247,8 +247,9 @@ class SessionCard extends StatelessWidget {
                     width: double.infinity,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            isPending ? AppColors.disabled : AppColors.accent,
+                        backgroundColor: isPending
+                            ? AppColors.disabled
+                            : AppColors.accent,
                         foregroundColor: Colors.white,
                         minimumSize: const Size(double.infinity, 40),
                         shape: RoundedRectangleBorder(

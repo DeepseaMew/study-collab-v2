@@ -34,8 +34,7 @@ void main() {
         'academicLevel': 'undergraduate',
       };
 
-      when(() => mockRepo.updateProfile(uid, updates))
-          .thenAnswer((_) async {});
+      when(() => mockRepo.updateProfile(uid, updates)).thenAnswer((_) async {});
 
       await mockRepo.updateProfile(uid, updates);
 
@@ -49,8 +48,9 @@ void main() {
       const uid = 'user-uid';
       final updates = {'displayName': 'New Name'};
 
-      when(() => mockRepo.updateProfile(uid, updates))
-          .thenAnswer((_) => Future.error(const DataException('Firestore update failed')));
+      when(() => mockRepo.updateProfile(uid, updates)).thenAnswer(
+        (_) => Future.error(const DataException('Firestore update failed')),
+      );
 
       await expectLater(
         mockRepo.updateProfile(uid, updates),

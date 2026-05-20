@@ -60,9 +60,7 @@ Widget _buildScreen({
   return ProviderScope(
     overrides: [
       firebaseAuthStateProvider.overrideWith(
-        (_) => Stream.value(
-          authenticated ? _FakeFirebaseUser('user-1') : null,
-        ),
+        (_) => Stream.value(authenticated ? _FakeFirebaseUser('user-1') : null),
       ),
       upcomingSessionsProvider('user-1').overrideWith(
         (_) => upcoming.when(
@@ -167,9 +165,7 @@ void main() {
     tester,
   ) async {
     await mockNetworkImagesFor(() async {
-      await tester.pumpWidget(
-        _buildScreen(authenticated: false),
-      );
+      await tester.pumpWidget(_buildScreen(authenticated: false));
       await tester.pumpAndSettle(const Duration(seconds: 3));
 
       expect(find.text('Sign in to see your sessions.'), findsOneWidget);

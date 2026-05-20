@@ -69,11 +69,7 @@ class _FriendsScreenState extends ConsumerState<FriendsScreen>
             fontWeight: FontWeight.w700,
           ),
         ),
-        actions: me == null
-            ? null
-            : [
-                _RequestsBadge(currentUid: me.uid),
-              ],
+        actions: me == null ? null : [_RequestsBadge(currentUid: me.uid)],
         bottom: TabBar(
           controller: _tab,
           indicatorColor: Colors.white,
@@ -227,11 +223,8 @@ class _RequestsTab extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           FilledButton(
-            style: FilledButton.styleFrom(
-              backgroundColor: AppColors.accent,
-            ),
-            onPressed: () =>
-                context.push(RouteConstants.friendRequests),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.accent),
+            onPressed: () => context.push(RouteConstants.friendRequests),
             child: const Text('View All Requests'),
           ),
         ],
@@ -259,8 +252,7 @@ class _RequestsBadge extends ConsumerWidget {
         backgroundColor: AppColors.error,
         child: IconButton(
           icon: const Icon(Icons.notifications_outlined, color: Colors.white),
-          onPressed: () =>
-              context.push(RouteConstants.friendRequests),
+          onPressed: () => context.push(RouteConstants.friendRequests),
           tooltip: 'Friend requests',
         ),
       ),

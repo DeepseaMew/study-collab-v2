@@ -57,9 +57,9 @@ class _HomeBodyState extends ConsumerState<_HomeBody> {
   Future<void> _onRefresh() async {}
 
   void _openSearch(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Search coming soon')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Search coming soon')));
   }
 
   Future<void> _joinWithPin(BuildContext context) async {
@@ -163,11 +163,7 @@ class _HomeBodyState extends ConsumerState<_HomeBody> {
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 child: Row(
                   children: [
-                    const Icon(
-                      Icons.search,
-                      color: AppColors.hint,
-                      size: 20,
-                    ),
+                    const Icon(Icons.search, color: AppColors.hint, size: 20),
                     const SizedBox(width: 8),
                     Flexible(
                       child: Text(
@@ -246,14 +242,15 @@ class _HomeBodyState extends ConsumerState<_HomeBody> {
                     itemCount: filtered.length,
                     itemBuilder: (_, i) {
                       final session = filtered[i];
-                      final isPending = ref
-                          .watch(
-                            myPendingRequestProvider(
-                              session.sessionId,
-                              widget.uid ?? '',
-                            ),
-                          )
-                          .valueOrNull ??
+                      final isPending =
+                          ref
+                              .watch(
+                                myPendingRequestProvider(
+                                  session.sessionId,
+                                  widget.uid ?? '',
+                                ),
+                              )
+                              .valueOrNull ??
                           false;
                       return SessionCard(
                         session: session,

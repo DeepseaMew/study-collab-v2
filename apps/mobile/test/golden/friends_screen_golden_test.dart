@@ -33,12 +33,12 @@ Widget _buildScreen(double textScale) {
       firebaseAuthStateProvider.overrideWith(
         (_) => Stream.value(_FakeFirebaseUser(_uid)),
       ),
-      friendsProvider(_uid).overrideWith(
-        (_) => Stream<List<FriendEntity>>.value(const []),
-      ),
-      incomingRequestsProvider(_uid).overrideWith(
-        (_) => Stream<List<FriendEntity>>.value(const []),
-      ),
+      friendsProvider(
+        _uid,
+      ).overrideWith((_) => Stream<List<FriendEntity>>.value(const [])),
+      incomingRequestsProvider(
+        _uid,
+      ).overrideWith((_) => Stream<List<FriendEntity>>.value(const [])),
     ],
     child: MaterialApp(
       locale: const Locale('th'),

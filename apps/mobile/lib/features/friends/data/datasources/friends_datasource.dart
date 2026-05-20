@@ -52,9 +52,9 @@ class FriendsDatasource {
         .where('status', isEqualTo: 'pending')
         .snapshots()
         .map(
-          (snap) => _parseDocs(snap.docs)
-              .where((m) => m.initiatorUid != uid)
-              .toList(),
+          (snap) => _parseDocs(
+            snap.docs,
+          ).where((m) => m.initiatorUid != uid).toList(),
         );
   }
 
@@ -64,9 +64,9 @@ class FriendsDatasource {
         .where('status', isEqualTo: 'pending')
         .snapshots()
         .map(
-          (snap) => _parseDocs(snap.docs)
-              .where((m) => m.initiatorUid == uid)
-              .toList(),
+          (snap) => _parseDocs(
+            snap.docs,
+          ).where((m) => m.initiatorUid == uid).toList(),
         );
   }
 

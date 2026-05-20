@@ -19,32 +19,29 @@ class ProfileDatasource {
   /// Streams the `users/{uid}` document as a [UserModel].
   /// Emits `null` when the document does not exist.
   Stream<UserModel?> watchUser(String uid) {
-    return _firestore
-        .doc(FirestorePaths.userDoc(uid))
-        .snapshots()
-        .map((snap) {
-          if (!snap.exists || snap.data() == null) return null;
-          try {
-            final data = Map<String, dynamic>.from(snap.data()!);
-            // Inject the document ID as uid since it is the canonical uid.
-            data['uid'] = uid;
-            return UserModel.fromJson(data);
-          } on FirebaseException catch (e, st) {
-            appLogger.error(
-              'ProfileDatasource.watchUser parse error',
-              exception: e,
-              stackTrace: st,
-            );
-            throw DataException('Failed to parse user document: ${e.code}');
-          } catch (e, st) {
-            appLogger.error(
-              'ProfileDatasource.watchUser unexpected error',
-              exception: e,
-              stackTrace: st,
-            );
-            throw const DataException('Failed to parse user document');
-          }
-        });
+    return _firestore.doc(FirestorePaths.userDoc(uid)).snapshots().map((snap) {
+      if (!snap.exists || snap.data() == null) return null;
+      try {
+        final data = Map<String, dynamic>.from(snap.data()!);
+        // Inject the document ID as uid since it is the canonical uid.
+        data['uid'] = uid;
+        return UserModel.fromJson(data);
+      } on FirebaseException catch (e, st) {
+        appLogger.error(
+          'ProfileDatasource.watchUser parse error',
+          exception: e,
+          stackTrace: st,
+        );
+        throw DataException('Failed to parse user document: ${e.code}');
+      } catch (e, st) {
+        appLogger.error(
+          'ProfileDatasource.watchUser unexpected error',
+          exception: e,
+          stackTrace: st,
+        );
+        throw const DataException('Failed to parse user document');
+      }
+    });
   }
 
   /// Merges [updates] into `users/{uid}`, appending a server-side timestamp.
