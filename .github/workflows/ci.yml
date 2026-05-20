@@ -141,7 +141,7 @@ jobs:
           api-level: 34
           arch: x86_64
           working-directory: ${{ github.workspace }}
-          script: firebase emulators:exec --project study-collab-4d0a0 --only auth,firestore "cd apps/mobile && flutter test integration_test/auth_happy_path_test.dart && flutter test integration_test/auth_flow_test.dart"
+          script: firebase emulators:exec --project study-collab-4d0a0 --only auth,firestore "cd apps/mobile && flutter test integration_test/auth_happy_path_test.dart --verbose && flutter test integration_test/auth_flow_test.dart --verbose"
 
   integration-test-web:
     name: Integration Tests (Web)
