@@ -15,7 +15,7 @@
 ### Critical (block merge)
 
 - **SEC-001 — Live Firebase API keys committed in `firebase_options.dart`**
-  `apps/mobile/lib/firebase_options.dart` lines 53, 62 contain two hardcoded Firebase API keys (`AIzaSyAURkDGolbdID4YNF37LddnRwnTN1F02Oc`, `AIzaSyCBhHGJrr7VdVtzCe80TFCzokPdTZzKp5A`). The file is tracked by git and is NOT excluded by `apps/mobile/.gitignore` (which correctly excludes `google-services.json` and `GoogleService-Info.plist` but not `firebase_options.dart`). The keys will propagate into develop branch history on merge. An attacker with repo read access can use them to enumerate Firebase project resources, abuse Firebase Auth quotas, or read accessible Firestore data.
+  `apps/mobile/lib/firebase_options.dart` lines 53, 62 contain two hardcoded Firebase API keys ([REDACTED], [REDACTED]). The file is tracked by git and is NOT excluded by `apps/mobile/.gitignore` (which correctly excludes `google-services.json` and `GoogleService-Info.plist` but not `firebase_options.dart`). The keys will propagate into develop branch history on merge. An attacker with repo read access can use them to enumerate Firebase project resources, abuse Firebase Auth quotas, or read accessible Firestore data.
   **Required fix:** (1) Add `**/lib/firebase_options.dart` to `apps/mobile/.gitignore`. (2) Rotate both API keys in the Firebase console immediately — keys already pushed to remote are compromised. (3) Inject `firebase_options.dart` at CI build time from secrets rather than committing it (release-engineer scope). This is a hard blocker for merge.
 
 - **SEC-002 — `firebase_auth` imported outside the designated datasource file (ADR 0002 boundary violation)**
@@ -216,7 +216,7 @@ BLOCKED — SEC-001 is PARTIAL: `firebase_options.dart` is now gitignored but st
 
 ### SEC-001 — Live Firebase API keys in `firebase_options.dart` — FIXED
 
-Neither `AIzaSyAURkDGolbdID4YNF37LddnRwnTN1F02Oc` nor `AIzaSyCBhHGJrr7VdVtzCe80TFCzokPdTZzKp5A` appears in the current `apps/mobile/lib/firebase_options.dart`. The file now contains regenerated keys (`AIzaSyCm1yV_blm4Z0Orpo7Z7zpxt6-xZ-4Rqn8` for web, `AIzaSyBFovVmNhlEOSXJCZ5x6t9GdeudL75hFgQ` for Android). `git ls-files apps/mobile/lib/firebase_options.dart` returned empty — the file is untracked. `apps/mobile/.gitignore` line 38 contains `**/lib/firebase_options.dart` — the file is excluded from future commits.
+Neither [REDACTED] nor [REDACTED] appears in the current `apps/mobile/lib/firebase_options.dart`. The file now contains regenerated keys (`AIzaSyCm1yV_blm4Z0Orpo7Z7zpxt6-xZ-4Rqn8` for web, `AIzaSyBFovVmNhlEOSXJCZ5x6t9GdeudL75hFgQ` for Android). `git ls-files apps/mobile/lib/firebase_options.dart` returned empty — the file is untracked. `apps/mobile/.gitignore` line 38 contains `**/lib/firebase_options.dart` — the file is excluded from future commits.
 
 ### Git history note — Informational
 
