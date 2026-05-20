@@ -141,7 +141,7 @@ jobs:
           api-level: 34
           arch: x86_64
           working-directory: ${{ github.workspace }}
-          script: firebase emulators:exec --only auth,firestore "cd apps/mobile && flutter test integration_test/auth_happy_path_test.dart && flutter test integration_test/auth_flow_test.dart"
+          script: firebase emulators:exec --project study-collab-4d0a0 --only auth,firestore "cd apps/mobile && flutter test integration_test/auth_happy_path_test.dart && flutter test integration_test/auth_flow_test.dart"
 
   integration-test-web:
     name: Integration Tests (Web)
@@ -195,7 +195,7 @@ jobs:
         run: |
           chromedriver --port=4444 &
           sleep 3
-          firebase emulators:exec --only auth,firestore \
+          firebase emulators:exec --project study-collab-4d0a0 --only auth,firestore \
             "cd apps/mobile && flutter drive \
               --driver=test_driver/integration_test.dart \
               --target=integration_test/auth_happy_path_test.dart \
@@ -251,5 +251,5 @@ jobs:
       - name: Run auth_happy_path_test against emulators
         working-directory: .
         run: |
-          firebase emulators:exec --only auth,firestore \
+          firebase emulators:exec --project study-collab-4d0a0 --only auth,firestore \
             "cd apps/mobile && dart run build_runner build --delete-conflicting-outputs && flutter test integration_test/auth_happy_path_test.dart -d linux --verbose 2>&1 | head -100"

@@ -12,6 +12,12 @@ import 'package:mobile/features/sessions/data/models/session_model.dart';
 class SessionDatasource {
   SessionDatasource(this._firestore);
 
+  /// Creates a [SessionDatasource] wired to the default [FirebaseFirestore]
+  /// instance. Use this factory from `@riverpod` repository providers so that
+  /// presentation-layer files do not need to import `cloud_firestore` directly.
+  factory SessionDatasource.withDefaultFirestore() =>
+      SessionDatasource(FirebaseFirestore.instance);
+
   final FirebaseFirestore _firestore;
 
   CollectionReference<Map<String, dynamic>> get _sessions =>
@@ -96,6 +102,31 @@ class SessionDatasource {
         .map((snap) => _parseDocs(snap.docs));
   }
 
+  /// Watches public sessions where [uid] is the host or a member,
+  /// ordered by scheduledAt descending.
+  ///
+  /// Firestore cannot do OR queries; querying `memberUids array-contains uid`
+  /// covers both host and member because the host is always added to memberUids
+  /// on session creation.
+  Stream<List<SessionModel>> watchSessionsByUser(String uid) {
+    try {
+      return _sessions
+          .where('memberUids', arrayContains: uid)
+          .where('visibility', isEqualTo: 'public')
+          .orderBy('scheduledAt', descending: true)
+          .snapshots()
+          .map((snap) => _parseDocs(snap.docs));
+    } on FirebaseException catch (e, st) {
+      appLogger.error(
+        'Firestore watchSessionsByUser failed',
+        exception: e,
+        stackTrace: st,
+        extra: {'code': e.code},
+      );
+      throw DataException('Could not watch sessions by user: ${e.message}');
+    }
+  }
+
   // ── Writes ─────────────────────────────────────────────────────────────────
 
   /// Creates a new session document.
@@ -106,7 +137,7 @@ class SessionDatasource {
       data['sessionId'] = sessionId;
       data['createdAt'] = FieldValue.serverTimestamp();
       data['updatedAt'] = FieldValue.serverTimestamp();
-      await ref.set(data);
+      await ref.set(_convertDateTimes(data));
       appLogger.info('Session created', extra: {'sessionId': sessionId});
     } on FirebaseException catch (e, st) {
       appLogger.error(
@@ -127,7 +158,7 @@ class SessionDatasource {
       data['sessionId'] = sessionId;
       data['createdAt'] = FieldValue.serverTimestamp();
       data['updatedAt'] = FieldValue.serverTimestamp();
-      await ref.set(data);
+      await ref.set(_convertDateTimes(data));
       appLogger.info('Session created', extra: {'sessionId': sessionId});
       return sessionId;
     } on FirebaseException catch (e, st) {
@@ -148,7 +179,7 @@ class SessionDatasource {
   ) async {
     try {
       updates['updatedAt'] = FieldValue.serverTimestamp();
-      await _sessionRef(sessionId).update(updates);
+      await _sessionRef(sessionId).update(_convertDateTimes(updates));
       appLogger.info('Session updated', extra: {'sessionId': sessionId});
     } on FirebaseException catch (e, st) {
       appLogger.error(
@@ -177,6 +208,21 @@ class SessionDatasource {
     }
   }
 
+  /// Marks a session as ended with a server-side timestamp.
+  Future<void> endSession(String sessionId) async {
+    await updateSession(sessionId, {
+      'status': 'ended',
+      'endedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
+  /// Removes a member UID from the `memberUids` array of a session.
+  Future<void> removeMember(String sessionId, String uid) async {
+    await updateSession(sessionId, {
+      'memberUids': FieldValue.arrayRemove([uid]),
+    });
+  }
+
   /// Reads only the `pin` field of a session document.
   ///
   /// Returns `null` when the session has no PIN (public session).
@@ -193,6 +239,29 @@ class SessionDatasource {
         extra: {'sessionId': sessionId, 'code': e.code},
       );
       throw DataException('Could not fetch session PIN: ${e.message}');
+    }
+  }
+
+  /// Queries sessions where pin == [pin], visibility == 'private', status == 'scheduled'.
+  /// Returns the first matching [SessionModel] or null.
+  Future<SessionModel?> findSessionByPin(String pin) async {
+    try {
+      final snap = await _sessions
+          .where('pin', isEqualTo: pin)
+          .where('visibility', isEqualTo: 'private')
+          .where('status', isEqualTo: 'scheduled')
+          .limit(1)
+          .get();
+      if (snap.docs.isEmpty) return null;
+      return SessionModel.fromJson(snap.docs.first.data());
+    } on FirebaseException catch (e, st) {
+      appLogger.error(
+        'Firestore findSessionByPin failed',
+        exception: e,
+        stackTrace: st,
+        extra: {'code': e.code},
+      );
+      throw DataException('Could not search for session: ${e.message}');
     }
   }
 
@@ -213,6 +282,18 @@ class SessionDatasource {
   }
 
   // ── Helpers ────────────────────────────────────────────────────────────────
+
+  /// Converts any [DateTime] values in [data] to [Timestamp] before writing to
+  /// Firestore. All other values are passed through unchanged, including
+  /// [FieldValue] sentinels such as [FieldValue.serverTimestamp()].
+  Map<String, dynamic> _convertDateTimes(Map<String, dynamic> data) {
+    return data.map((key, value) {
+      if (value is DateTime) {
+        return MapEntry(key, Timestamp.fromDate(value));
+      }
+      return MapEntry(key, value);
+    });
+  }
 
   List<SessionModel> _parseDocs(
     List<QueryDocumentSnapshot<Map<String, dynamic>>> docs,

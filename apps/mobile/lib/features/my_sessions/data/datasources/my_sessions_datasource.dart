@@ -10,6 +10,12 @@ import 'package:mobile/features/sessions/data/models/session_model.dart';
 class MySessionsDatasource {
   MySessionsDatasource(this._firestore);
 
+  /// Creates a [MySessionsDatasource] wired to the default [FirebaseFirestore]
+  /// instance. Use this factory from `@riverpod` repository providers so that
+  /// presentation-layer files do not need to import `cloud_firestore` directly.
+  factory MySessionsDatasource.withDefaultFirestore() =>
+      MySessionsDatasource(FirebaseFirestore.instance);
+
   final FirebaseFirestore _firestore;
 
   CollectionReference<Map<String, dynamic>> get _sessions =>

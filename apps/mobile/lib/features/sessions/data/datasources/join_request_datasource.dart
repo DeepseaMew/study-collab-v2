@@ -10,6 +10,12 @@ import 'package:mobile/features/sessions/data/models/join_request_model.dart';
 class JoinRequestDatasource {
   JoinRequestDatasource(this._firestore);
 
+  /// Creates a [JoinRequestDatasource] wired to the default [FirebaseFirestore]
+  /// instance. Use this factory from `@riverpod` repository providers so that
+  /// presentation-layer files do not need to import `cloud_firestore` directly.
+  factory JoinRequestDatasource.withDefaultFirestore() =>
+      JoinRequestDatasource(FirebaseFirestore.instance);
+
   final FirebaseFirestore _firestore;
 
   CollectionReference<Map<String, dynamic>> _requestsCollection(

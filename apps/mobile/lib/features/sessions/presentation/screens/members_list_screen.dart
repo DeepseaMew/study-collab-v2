@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/core/logger.dart';
 import 'package:mobile/features/auth/domain/entities/user_entity.dart';
-import 'package:mobile/features/auth/presentation/providers/current_user_provider.dart';
+import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
 import 'package:mobile/features/sessions/presentation/providers/session_members_provider.dart';
 import 'package:mobile/features/sessions/presentation/providers/session_provider.dart';
 import 'package:mobile/shared/theme/app_colors.dart';
@@ -21,17 +21,15 @@ class MembersListScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final membersAsync = ref.watch(sessionMembersProvider(sessionId));
     final sessionAsync = ref.watch(sessionStreamProvider(sessionId));
-    final currentUserAsync = ref.watch(currentUserProvider);
-    final currentUser = currentUserAsync.valueOrNull;
+    final currentUser = ref.watch(firebaseAuthStateProvider).valueOrNull;
     final hostUid = sessionAsync.valueOrNull?.hostUid;
     // Only true once both providers have resolved to non-null data — guards
     // against a race where sessionAsync is still loading and hostUid is null,
     // which would cause isViewerHost to be false for one or more frames.
     final isViewerHost =
         sessionAsync.hasValue &&
-        currentUserAsync.hasValue &&
-        hostUid != null &&
         currentUser != null &&
+        hostUid != null &&
         hostUid == currentUser.uid;
 
     return Scaffold(

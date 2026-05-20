@@ -66,4 +66,43 @@ abstract final class AnalyticsEvents {
 
   /// User submitted ratings after a session ended. Payload: thumbs_up_count (int).
   static const String sessionRatingSubmitted = 'session_rating_submitted';
+
+  // ── Friends ────────────────────────────────────────────────────────────────
+  /// Current user sent a friend request. No payload; no PII.
+  static const String friendRequestSent = 'friend_request_sent';
+
+  /// Current user accepted an incoming friend request. No payload; no PII.
+  static const String friendRequestAccepted = 'friend_request_accepted';
+
+  /// Current user declined an incoming friend request. No payload; no PII.
+  static const String friendRequestDeclined = 'friend_request_declined';
+
+  /// Current user withdrew their own outgoing friend request. No payload; no PII.
+  static const String friendRequestWithdrawn = 'friend_request_withdrawn';
+
+  /// Current user unfriended an existing friend. No payload; no PII.
+  static const String friendUnfriended = 'friend_unfriended';
+
+  // ── Profile ───────────────────────────────────────────────────────────────
+  /// Current user viewed their own profile screen.
+  static const String profileViewedOwn = 'profile_viewed_own';
+
+  /// Current user viewed another user's profile screen. No PII.
+  static const String profileViewedOther = 'profile_viewed_other';
+
+  /// Current user saved changes from the edit-profile sheet.
+  static const String profileEdited = 'profile_edited';
+
+  /// Current user confirmed image selection; fired before compression begins.
+  /// No payload; no PII.
+  static const String avatarUploadStarted = 'avatar_upload_started';
+
+  /// Firestore photoUrl write succeeded after avatar upload.
+  /// Payload: file_size_bytes (int). No PII.
+  static const String avatarUploadSucceeded = 'avatar_upload_succeeded';
+
+  /// Avatar upload failed at any step (compression, storage, or Firestore).
+  /// Payload: reason (String — 'compression_error' | 'storage_error' | 'firestore_error').
+  /// No PII.
+  static const String avatarUploadFailed = 'avatar_upload_failed';
 }

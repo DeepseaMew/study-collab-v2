@@ -1,11 +1,11 @@
 // Golden tests for MySessionsScreen.
 // Two scales: 1.0 and 1.5. Fixed locale: th. Fixed theme.
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile/features/auth/domain/entities/user_entity.dart';
-import 'package:mobile/features/auth/presentation/providers/current_user_provider.dart';
+import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
 import 'package:mobile/features/my_sessions/presentation/providers/completed_sessions_provider.dart';
 import 'package:mobile/features/my_sessions/presentation/providers/hosted_sessions_provider.dart';
 import 'package:mobile/features/my_sessions/presentation/providers/upcoming_sessions_provider.dart';
@@ -15,17 +15,12 @@ import 'package:mobile/shared/theme/app_colors.dart';
 import 'package:mobile/shared/theme/app_typography.dart';
 import 'package:network_image_mock/network_image_mock.dart';
 
-const _fakeUser = UserEntity(
-  uid: 'user-1',
-  displayName: 'Test User',
-  fullName: 'Test Full',
-  email: 'user1@mail.kmutt.ac.th',
-  hasHostedBefore: false,
-  studentYear: 2,
-  academicLevel: 'undergraduate',
-  faculty: 'Engineering',
-  profileScore: 0.0,
-);
+class _FakeFirebaseUser extends Fake implements User {
+  _FakeFirebaseUser(this._uid);
+  final String _uid;
+  @override
+  String get uid => _uid;
+}
 
 SessionEntity _session(String id) {
   final now = DateTime(2026, 5, 18, 10);
@@ -54,7 +49,9 @@ SessionEntity _session(String id) {
 Widget _buildScreen(double textScale) {
   return ProviderScope(
     overrides: [
-      currentUserProvider.overrideWith((_) => Stream.value(_fakeUser)),
+      firebaseAuthStateProvider.overrideWith(
+        (_) => Stream.value(_FakeFirebaseUser('user-1')),
+      ),
       upcomingSessionsProvider(
         'user-1',
       ).overrideWith((_) => Stream.value([_session('s1'), _session('s2')])),

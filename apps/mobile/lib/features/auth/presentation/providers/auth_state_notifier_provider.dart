@@ -27,17 +27,6 @@ AuthRepository authRepository(AuthRepositoryRef ref) {
   return AuthRepositoryImpl(ref.watch(_authDatasourceProvider));
 }
 
-// ── User profile provider ─────────────────────────────────────────────────────
-
-/// Fetches the stored Firestore profile fields for the currently signed-in user.
-/// Returns an empty map when no user is signed in or the document is absent.
-@riverpod
-Future<Map<String, dynamic>> userProfile(UserProfileRef ref) async {
-  final uid = ref.read(authRepositoryProvider).currentUser;
-  if (uid == null) return {};
-  return ref.read(authRepositoryProvider).getUserProfile(uid);
-}
-
 // ── Auth state notifier ───────────────────────────────────────────────────────
 
 @riverpod

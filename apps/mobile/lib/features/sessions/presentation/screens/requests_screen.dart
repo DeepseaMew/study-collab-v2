@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile/core/analytics_events.dart';
 import 'package:mobile/core/logger.dart';
 import 'package:mobile/core/utils/date_formatter.dart';
-import 'package:mobile/features/auth/presentation/providers/current_user_provider.dart';
+import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
 import 'package:mobile/features/sessions/domain/entities/join_request_entity.dart';
 import 'package:mobile/features/sessions/presentation/providers/join_requests_provider.dart';
 import 'package:mobile/shared/theme/app_colors.dart';
@@ -21,8 +21,7 @@ class RequestsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final requestsAsync = ref.watch(joinRequestsProvider(sessionId));
-    final meAsync = ref.watch(currentUserProvider);
-    final me = meAsync.asData?.value;
+    final me = ref.watch(firebaseAuthStateProvider).valueOrNull;
 
     return Scaffold(
       backgroundColor: AppColors.background,

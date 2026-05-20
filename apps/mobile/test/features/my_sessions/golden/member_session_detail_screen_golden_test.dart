@@ -1,11 +1,12 @@
 // Golden tests for MemberSessionDetailScreen.
 // Two scales: 1.0 and 1.5. Fixed locale: th. Fixed theme.
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/features/auth/domain/entities/user_entity.dart';
-import 'package:mobile/features/auth/presentation/providers/current_user_provider.dart';
+import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
 import 'package:mobile/features/my_sessions/presentation/screens/member_session_detail_screen.dart';
 import 'package:mobile/features/sessions/domain/entities/session_entity.dart';
 import 'package:mobile/features/sessions/presentation/providers/session_members_provider.dart';
@@ -13,6 +14,13 @@ import 'package:mobile/features/sessions/presentation/providers/session_provider
 import 'package:mobile/shared/theme/app_colors.dart';
 import 'package:mobile/shared/theme/app_typography.dart';
 import 'package:network_image_mock/network_image_mock.dart';
+
+class _FakeFirebaseUser extends Fake implements User {
+  _FakeFirebaseUser(this._uid);
+  final String _uid;
+  @override
+  String get uid => _uid;
+}
 
 SessionEntity _session() {
   final now = DateTime(2026, 5, 18, 10);
@@ -40,18 +48,6 @@ SessionEntity _session() {
 }
 
 Widget _buildScreen(double textScale) {
-  const fakeUser = UserEntity(
-    uid: 'member-1',
-    displayName: 'Member User',
-    fullName: 'Member Full',
-    email: 'member@mail.kmutt.ac.th',
-    hasHostedBefore: false,
-    studentYear: 2,
-    academicLevel: 'undergraduate',
-    faculty: 'Engineering',
-    profileScore: 0.0,
-  );
-
   return ProviderScope(
     overrides: [
       sessionStreamProvider(
@@ -60,7 +56,9 @@ Widget _buildScreen(double textScale) {
       sessionMembersProvider(
         'sess-golden-member',
       ).overrideWith((_) => Stream.value(const <UserEntity>[])),
-      currentUserProvider.overrideWith((_) => Stream.value(fakeUser)),
+      firebaseAuthStateProvider.overrideWith(
+        (_) => Stream.value(_FakeFirebaseUser('member-1')),
+      ),
     ],
     child: MaterialApp(
       locale: const Locale('th'),

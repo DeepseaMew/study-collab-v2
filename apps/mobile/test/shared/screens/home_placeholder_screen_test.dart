@@ -1,49 +1,58 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:mobile/features/auth/domain/entities/auth_state.dart';
-import 'package:mobile/features/auth/presentation/providers/auth_state_notifier_provider.dart';
-import 'package:mobile/shared/screens/home_placeholder_screen.dart';
+import 'package:mobile/features/auth/domain/entities/user_entity.dart';
+import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
+import 'package:mobile/features/home/presentation/screens/home_screen.dart';
+import 'package:mobile/features/profile/presentation/providers/user_provider.dart';
 
-// Minimal stub — holds state without real Firebase.
-class _StubNotifier extends AuthStateNotifier {
+class _FakeFirebaseUser extends Fake implements User {
+  _FakeFirebaseUser(this._uid);
+  final String _uid;
   @override
-  Future<AuthState> build() async {
-    state = const AsyncValue.data(AuthState.authenticated());
-    return const AuthState.authenticated();
-  }
-
-  @override
-  Future<void> signOut() async {
-    // no-op in widget tests
-  }
+  String get uid => _uid;
 }
+
+const _stubUser = UserEntity(
+  uid: 'test-uid',
+  displayName: 'Test Student',
+  fullName: 'Test Student',
+  email: 'test@mail.kmutt.ac.th',
+  hasHostedBefore: false,
+  studentYear: 1,
+  academicLevel: 'undergraduate',
+  faculty: 'Engineering',
+  profileScore: 0.0,
+);
 
 Widget _buildScreen() {
   return ProviderScope(
-    overrides: [authStateNotifierProvider.overrideWith(() => _StubNotifier())],
-    child: const MaterialApp(home: HomePlaceholderScreen()),
+    overrides: [
+      firebaseAuthStateProvider.overrideWith(
+        (_) => Stream.value(_FakeFirebaseUser('test-uid')),
+      ),
+      userProvider('test-uid').overrideWith((_) => Stream.value(_stubUser)),
+    ],
+    child: const MaterialApp(home: HomeScreen()),
   );
 }
 
 void main() {
-  testWidgets('renders Scaffold with Home title text', (tester) async {
+  testWidgets('HomeScreen renders Scaffold', (tester) async {
     await tester.pumpWidget(_buildScreen());
     await tester.pumpAndSettle(const Duration(seconds: 3));
 
     // Scaffold must be present.
     expect(find.byType(Scaffold), findsOneWidget);
-
-    // The body centre text 'Home' must be visible.
-    // There are two 'Home' text nodes (AppBar title + body centre);
-    // findsWidgets asserts at least one.
-    expect(find.text('Home'), findsWidgets);
   });
 
-  testWidgets('Sign out button is present', (tester) async {
+  testWidgets('HomeScreen shows greeting with user first name', (tester) async {
     await tester.pumpWidget(_buildScreen());
     await tester.pumpAndSettle(const Duration(seconds: 3));
 
-    expect(find.widgetWithText(TextButton, 'Sign out'), findsOneWidget);
+    // Greeting text contains first name from displayName.
+    // Match the appBar title text which is a greeting containing the name.
+    expect(find.textContaining('Test Student'.split(' ').first), findsWidgets);
   });
 }

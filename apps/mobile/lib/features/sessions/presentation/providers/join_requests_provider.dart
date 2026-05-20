@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:mobile/features/sessions/data/datasources/join_request_datasource.dart';
 import 'package:mobile/features/sessions/data/datasources/session_datasource.dart';
 import 'package:mobile/features/sessions/data/repositories/join_request_repository_impl.dart';
@@ -9,12 +8,15 @@ import 'package:riverpod_annotation/riverpod_annotation.dart';
 part 'join_requests_provider.g.dart';
 
 /// Provides the [JoinRequestRepository] implementation.
+///
+/// Both [JoinRequestDatasource.withDefaultFirestore] and
+/// [SessionDatasource.withDefaultFirestore] are called here — inside the
+/// `@riverpod` body — so no `cloud_firestore` import is needed in this file.
 @riverpod
 JoinRequestRepository joinRequestRepository(JoinRequestRepositoryRef ref) {
-  final firestore = FirebaseFirestore.instance;
   return JoinRequestRepositoryImpl(
-    JoinRequestDatasource(firestore),
-    SessionDatasource(firestore),
+    JoinRequestDatasource.withDefaultFirestore(),
+    SessionDatasource.withDefaultFirestore(),
   );
 }
 

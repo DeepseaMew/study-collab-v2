@@ -4,11 +4,12 @@
 // Verifies 3-tab layout (Members, Notes, Requests) and End Session button
 // per ADR 0003.
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/features/auth/domain/entities/user_entity.dart';
-import 'package:mobile/features/auth/presentation/providers/current_user_provider.dart';
+import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
 import 'package:mobile/features/my_sessions/presentation/screens/host_session_detail_screen.dart';
 import 'package:mobile/features/sessions/domain/entities/join_request_entity.dart';
 import 'package:mobile/features/sessions/domain/entities/session_entity.dart';
@@ -19,6 +20,13 @@ import 'package:mobile/features/sessions/presentation/providers/session_members_
 import 'package:mobile/features/sessions/presentation/providers/session_provider.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:network_image_mock/network_image_mock.dart';
+
+class _FakeFirebaseUser extends Fake implements User {
+  _FakeFirebaseUser(this._uid);
+  final String _uid;
+  @override
+  String get uid => _uid;
+}
 
 class _MockSessionRepository extends Mock implements SessionRepository {}
 
@@ -49,21 +57,9 @@ SessionEntity _session({String status = 'scheduled'}) {
   );
 }
 
-UserEntity _user(String uid) => UserEntity(
-  uid: uid,
-  displayName: 'User $uid',
-  fullName: 'Full Name',
-  email: '$uid@mail.kmutt.ac.th',
-  hasHostedBefore: true,
-  studentYear: 2,
-  academicLevel: 'undergraduate',
-  faculty: 'Engineering',
-  profileScore: 0.0,
-);
-
 Widget _buildScreen({
   AsyncValue<SessionEntity?> sessionState = const AsyncValue.loading(),
-  UserEntity? currentUser,
+  String currentUid = 'host-1',
   List<JoinRequestEntity> requests = const [],
 }) {
   final sessionRepo = _MockSessionRepository();
@@ -103,8 +99,8 @@ Widget _buildScreen({
       joinRequestsProvider(
         'sess-1',
       ).overrideWith((_) => Stream.value(requests)),
-      currentUserProvider.overrideWith(
-        (_) => Stream.value(currentUser ?? _user('host-1')),
+      firebaseAuthStateProvider.overrideWith(
+        (_) => Stream.value(_FakeFirebaseUser(currentUid)),
       ),
       sessionRepositoryProvider.overrideWithValue(sessionRepo),
       joinRequestRepositoryProvider.overrideWithValue(requestRepo),

@@ -3,16 +3,24 @@
 // Smoke test: screen renders loading, error, and data states.
 // Verifies 2-tab layout (Members, Notes) per ADR 0003.
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/features/auth/domain/entities/user_entity.dart';
-import 'package:mobile/features/auth/presentation/providers/current_user_provider.dart';
+import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
 import 'package:mobile/features/my_sessions/presentation/screens/member_session_detail_screen.dart';
 import 'package:mobile/features/sessions/domain/entities/session_entity.dart';
 import 'package:mobile/features/sessions/presentation/providers/session_members_provider.dart';
 import 'package:mobile/features/sessions/presentation/providers/session_provider.dart';
 import 'package:network_image_mock/network_image_mock.dart';
+
+class _FakeFirebaseUser extends Fake implements User {
+  _FakeFirebaseUser(this._uid);
+  final String _uid;
+  @override
+  String get uid => _uid;
+}
 
 SessionEntity _session({String status = 'scheduled'}) {
   final now = DateTime(2026, 5, 18, 10);
@@ -38,21 +46,9 @@ SessionEntity _session({String status = 'scheduled'}) {
   );
 }
 
-UserEntity _user(String uid) => UserEntity(
-  uid: uid,
-  displayName: 'User $uid',
-  fullName: 'Full Name',
-  email: '$uid@mail.kmutt.ac.th',
-  hasHostedBefore: false,
-  studentYear: 2,
-  academicLevel: 'undergraduate',
-  faculty: 'Engineering',
-  profileScore: 0.0,
-);
-
 Widget _buildScreen({
   AsyncValue<SessionEntity?> sessionState = const AsyncValue.loading(),
-  UserEntity? currentUser,
+  String currentUid = 'member-1',
 }) {
   return ProviderScope(
     overrides: [
@@ -66,8 +62,8 @@ Widget _buildScreen({
       sessionMembersProvider(
         'sess-1',
       ).overrideWith((_) => Stream.value(const <UserEntity>[])),
-      currentUserProvider.overrideWith(
-        (_) => Stream.value(currentUser ?? _user('member-1')),
+      firebaseAuthStateProvider.overrideWith(
+        (_) => Stream.value(_FakeFirebaseUser(currentUid)),
       ),
     ],
     child: const MaterialApp(

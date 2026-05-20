@@ -232,12 +232,16 @@ The auth and routing system uses a single `app_router.dart` with a `RouteConstan
 - `auth_profile_setup_completed`
 - `auth_kmutt_domain_rejected` — fired client-side when the regex rejects a non-KMUTT email; must carry no PII (no email value in the event payload).
 
-**Provider dependency graph (for Flutter Engineer reference):**
+**Provider dependency graph (for Flutter Engineer reference):** <!-- Amended by ADR 0006 -->
 
 ```
 firebaseAuthStateProvider (StreamProvider<User?>)
   └─ authStateNotifierProvider (AsyncNotifier<AuthState>)
        └─ GoRouter.redirect (reads via ref.watch)
+
+userProvider(uid) [profile feature] (StreamProvider<UserEntity?>)
+  └─ all screens needing the signed-in user's full UserEntity
+       (uid sourced from firebaseAuthStateProvider)
 ```
 
 **Bottom-nav structure (StatefulShellRoute branches):**
@@ -285,3 +289,14 @@ firebaseAuthStateProvider (StreamProvider<User?>)
   1. Remove `firebase_auth` import from `auth_repository_impl.dart`; move all `FirebaseAuthException` catching and translation into `AuthDatasource`.
   2. Remove `firebase_auth` import from `auth_state_notifier_provider.dart`; replace both `FirebaseAuth.instance.currentUser` call sites with `ref.read(authRepositoryProvider).currentUser`.
 - No changes to: Status, Decision paragraph, sub-decision sections 1–5, Reversal plan, Amendment 1.
+
+### Amendment 3 — Corrected provider dependency graph and `cloud_firestore` import prohibition
+
+- Date: 2026-05-20
+- Author: claude-sonnet-4-6 (architect agent), per ADR 0006 Consequences
+- Trigger: ADR 0006 (User Data Ownership) established that the profile feature's `user(uid)` provider is the single source of truth for `users/{uid}` streams. The original provider dependency graph in the Consequences section omitted this provider and implicitly left room for the auth feature to own a second Firestore listener on the same document.
+- Changes:
+  - Updated the "Provider dependency graph" block in the Consequences section: added the `userProvider(uid)` branch from the profile feature, with a note that the uid is sourced from `firebaseAuthStateProvider`. Added an HTML comment `<!-- Amended by ADR 0006 -->` on the section heading line.
+  - **Prohibited `cloud_firestore` import sites in presentation-layer providers.** No presentation-layer provider file (any file under `presentation/providers/`) may import `package:cloud_firestore/cloud_firestore.dart` or call `FirebaseFirestore.instance` directly. All Firestore access must flow through a datasource class under `data/datasources/`. This prohibition applies retroactively: `current_user_provider.dart` (which imported both `firebase_auth` and `cloud_firestore` directly in the presentation layer) is deleted as specified in ADR 0006 Consequences.
+  - **Deleted provider.** `apps/mobile/lib/features/auth/presentation/providers/current_user_provider.dart` is not a permitted file under this ADR or ADR 0006. The `userProfile` Future provider inside `auth_state_notifier_provider.dart` is likewise removed. Both are replaced by `ref.watch(userProvider(uid))` from the profile feature.
+- No changes to: Status, Decision paragraph, sub-decision sections 1–5, Reversal plan, Amendments 1–2.

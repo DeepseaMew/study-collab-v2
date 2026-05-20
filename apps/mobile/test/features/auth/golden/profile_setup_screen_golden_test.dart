@@ -30,8 +30,6 @@ Widget _buildScreen(double textScale) {
           const AsyncValue.data(AuthState.pendingProfileSetup()),
         ),
       ),
-      // Stub userProfileProvider to return an empty map (no pre-fill).
-      userProfileProvider.overrideWith((_) async => {}),
     ],
     child: MaterialApp(
       locale: const Locale('th'),

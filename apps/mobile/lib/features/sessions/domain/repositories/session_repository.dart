@@ -60,4 +60,15 @@ abstract interface class SessionRepository {
   /// Only the host identified by [callerUid] may call this method.
   /// Returns `null` when the session has no PIN (public session).
   Future<String?> fetchPin(String sessionId, String callerUid);
+
+  /// Finds a private scheduled session matching [pin].
+  /// Returns null when no session is found.
+  Future<SessionEntity?> findSessionByPin(String pin);
+
+  /// Watches public sessions where [uid] is the host or a member,
+  /// ordered by scheduledAt descending.
+  ///
+  /// The host is always included in `memberUids`, so querying
+  /// `memberUids array-contains uid` covers both roles.
+  Stream<List<SessionEntity>> watchSessionsByUser(String uid);
 }

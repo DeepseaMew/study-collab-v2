@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/core/logger.dart';
-import 'package:mobile/features/auth/presentation/providers/current_user_provider.dart';
+import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
 import 'package:mobile/features/sessions/presentation/providers/session_provider.dart';
 import 'package:mobile/features/sessions/presentation/widgets/session_form.dart';
 import 'package:mobile/shared/theme/app_colors.dart';
@@ -21,7 +21,7 @@ class EditSessionScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final sessionAsync = ref.watch(sessionStreamProvider(sessionId));
-    final meAsync = ref.watch(currentUserProvider);
+    final me = ref.watch(firebaseAuthStateProvider).valueOrNull;
 
     return sessionAsync.when(
       loading: () =>
@@ -40,7 +40,6 @@ class EditSessionScreen extends ConsumerWidget {
           return const _ErrorScaffold(message: 'Session not found.');
         }
 
-        final me = meAsync.asData?.value;
         if (me == null || me.uid != session.hostUid) {
           return Scaffold(
             appBar: AppBar(
@@ -124,7 +123,7 @@ class _DeleteDialogState extends ConsumerState<_DeleteDialog> {
   bool _deleting = false;
 
   Future<void> _delete() async {
-    final me = ref.read(currentUserProvider).asData?.value;
+    final me = ref.read(firebaseAuthStateProvider).valueOrNull;
     if (me == null) {
       Navigator.pop(context);
       return;

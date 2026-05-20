@@ -58,7 +58,7 @@ All timestamp fields are written server-side using `request.time` and must never
 | displayName | String | Required; non-empty; max 100 characters |
 | fullName | String | Required; non-empty; max 150 characters. **PII — never log, never use as Crashlytics key or analytics property.** |
 | email | String | Required; must match `@mail.kmutt.ac.th` or `@kmutt.ac.th` |
-| photoUrl | String | Nullable; Firebase Storage URL or external avatar URL |
+| photoUrl | String | Nullable; Firebase Storage download URL with `?v=<epoch-ms>` cache-bust suffix, written by the avatar upload flow. Null until first upload. <!-- Amended by ADR 0005 --> |
 | hasHostedBefore | bool | UI hint only; `false` by default; set to `true` when user creates their first session. Never used as a security gate. |
 | studentYear | int | Values 1–8 |
 | academicLevel | String | Enum: `undergraduate` or `graduate` |
@@ -155,6 +155,8 @@ Bidirectional friendship. Both documents written and deleted atomically via `Wri
 | initiatorUid | String | UID of the user who sent the request; used to determine who may withdraw a pending request |
 | createdAt | Timestamp | Set when request is sent; immutable |
 | updatedAt | Timestamp | Updated on status change |
+| friendDisplayName | String | Denormalized display name of the friend. Populated at acceptRequest time. Empty string on pending documents. <!-- Amended by ADR 0004 --> |
+| friendPhotoUrl | String? | Denormalized photo URL of the friend. Populated at acceptRequest time. Null on pending documents. <!-- Amended by ADR 0004 --> |
 
 A `status == 'pending'` document on `users/B/friends/A` (written by A's batch) signals an inbound request to B.
 
@@ -230,6 +232,7 @@ All indexes must be declared in `firestore.indexes.json` before deployment.
 | 7 | `sessions/{sessionId}/notes` | `uploadedAt` desc | Notes list in session detail | No |
 | 8 | `sessions` | `hostFaculty` asc, `status` asc, `scheduledAt` asc | Search — filter by faculty + status | No |
 | 9 | `sessions` | `hostUid` asc, `scheduledAt` desc | My Sessions tab — hosted sessions list | No |
+| 10 | `users/{uid}/friends` | `status` asc, `updatedAt` desc | Friends — `watchFriends` query (`status == 'accepted'` ordered by `updatedAt` desc) | No | <!-- Amended by ADR 0004 -->
 
 **Index 3 note:** Firestore requires a composite index when `array-contains` is combined with additional filters. Always include `hashtags` as the `array-contains` field when using this index.
 
@@ -426,6 +429,7 @@ match /dms/{dmId} {
 
 ### `users/{uid}/friends/{friendUid}`
 
+<!-- Amended by ADR 0004 -->
 ```
 match /users/{uid}/friends/{friendUid} {
   allow read: if isKmuttUser()
@@ -439,13 +443,19 @@ match /users/{uid}/friends/{friendUid} {
     && request.resource.data.updatedAt == request.time
     && request.resource.data.keys().hasAll([
          'friendUid', 'status', 'initiatorUid', 'createdAt', 'updatedAt'
+       ])
+    && request.resource.data.keys().hasOnly([
+         'friendUid', 'status', 'initiatorUid', 'createdAt', 'updatedAt'
        ]);
 
   allow update: if isKmuttUser()
     && (request.auth.uid == uid || request.auth.uid == friendUid)
     && request.resource.data.diff(resource.data).affectedKeys()
-         .hasOnly(['status', 'updatedAt'])
-    && request.resource.data.updatedAt == request.time;
+         .hasOnly(['status', 'updatedAt', 'friendDisplayName', 'friendPhotoUrl'])
+    && request.resource.data.updatedAt == request.time
+    && request.resource.data.friendUid == resource.data.friendUid
+    && request.resource.data.initiatorUid == resource.data.initiatorUid
+    && request.resource.data.createdAt == resource.data.createdAt;
 
   allow delete: if isKmuttUser()
     && (request.auth.uid == uid || request.auth.uid == friendUid);
@@ -540,7 +550,7 @@ match /sessions/{sessionId}/requests/{uid} {
 | `profileScore` | `users/{uid}` | Same `WriteBatch` as each rating creation | Avoids expensive queries on every profile read. Formula: count(`ratings` where `rateeUid == uid`) ÷ count(`sessions` where `memberUids array-contains uid` and `status == 'ended'`). |
 | `hostFaculty` | `sessions/{sessionId}` | Set once at session creation; immutable | Enables Index 8 faculty filter without a `get()` on the user document inside rules |
 | `hostDisplayName` | `sessions/{sessionId}` | Set once at session creation; immutable | Enables session card to display host name without N+1 `users/` reads |
-| `hostPhotoUrl` | `sessions/{sessionId}` | Set once at session creation; immutable | Enables session card to display host avatar without N+1 `users/` reads; nullable pending photo upload feature |
+| `hostPhotoUrl` | `sessions/{sessionId}` | Set once at session creation; immutable | Enables session card to display host avatar without N+1 `users/` reads; nullable; sourced from `users/{hostUid}.photoUrl` at session creation (ADR 0005). <!-- Amended by ADR 0005 --> |
 | `noteCount` | `sessions/{sessionId}` | Same `WriteBatch` as each note creation | Required for the 50-note cap check via `getAfter(...)` in rules |
 
 ---
@@ -548,8 +558,11 @@ match /sessions/{sessionId}/requests/{uid} {
 ## Implementation checklist (Flutter Engineer)
 
 - [ ] `lib/core/firestore_paths.dart` — all path templates as string constants; no Firestore paths elsewhere in the codebase.
-- [ ] `firestore.indexes.json` — all 9 indexes declared before any feature goes to production.
+- [ ] `firestore.indexes.json` — all 10 indexes declared before any feature goes to production. <!-- index count updated by ADR 0004 -->
 - [ ] `firestore.rules` — implement helper functions and all rules exactly as sketched; security reviewer audits before first production deployment.
+- [ ] `storage.rules` — implement avatar rules and note-path placeholder exactly as specified in ADR 0005; deploy before avatar upload feature goes to production. <!-- Amended by ADR 0005 -->
+- [ ] `lib/core/storage_paths.dart` — all Firebase Storage path constants; no Storage paths may appear elsewhere in the codebase. <!-- Amended by ADR 0005 -->
+- [ ] Add `firebase_storage`, `image_picker`, and `flutter_image_compress` to `apps/mobile/pubspec.yaml` before implementing avatar upload. <!-- Amended by ADR 0005 -->
 - [ ] Eight datasource classes — one per path pattern: `users/{uid}`, `sessions/{sessionId}`, `sessions/{sessionId}/messages`, `dms/{dmId}/messages`, `users/{uid}/friends/{friendUid}`, `sessions/{sessionId}/ratings`, `sessions/{sessionId}/notes`, `sessions/{sessionId}/requests`.
 - [ ] `WriteBatch` required for: friend request (both directions), rating + profileScore update, note create + `noteCount` increment.
 - [ ] `dmId` constructed in `dm_datasource.dart` or `dm_repository_impl.dart` only — never in the presentation layer.
@@ -576,3 +589,24 @@ match /sessions/{sessionId}/requests/{uid} {
   - Updated implementation checklist: index count 8 → 9; datasource count 7 → 8; added two new checklist items.
 - No changes to: Status, Decision paragraph, Constraints, schema for other collections, helper function definitions, or rules for other collections.
 
+### Amendment 2 — Friends schema display fields, rules tightening, and Index 10
+
+- Date: 2026-05-19
+- Author: claude-sonnet-4-6 (architect agent), per ADR 0004 Consequences
+- Trigger: ADR 0004 (Friends Feature Architecture) specified denormalized display fields on friend documents, tighter `create` rule semantics, extended `update` rule to cover accept-request writes, and a composite index for the `watchFriends` query.
+- Changes:
+  - Added two fields to `users/{uid}/friends/{friendUid}` schema table: `friendDisplayName` (String, empty string on pending documents, populated at acceptRequest time) and `friendPhotoUrl` (String?, null on pending documents, populated at acceptRequest time).
+  - Replaced the `users/{uid}/friends/{friendUid}` Firestore rules block: `create` rule now adds `keys().hasOnly(...)` to prohibit `friendDisplayName` and `friendPhotoUrl` at creation time (they must only arrive via the accept-request update batch); `update` rule extends `affectedKeys().hasOnly(...)` with `'friendDisplayName'` and `'friendPhotoUrl'` and adds immutability assertions for `friendUid`, `initiatorUid`, and `createdAt`.
+  - Added Index 10 (`users/{uid}/friends`: `status` ASC, `updatedAt` DESC) to the composite indexes table, required by the `watchFriends` query (`status == 'accepted'` ordered by `updatedAt` desc).
+- No changes to: Status, Decision paragraph, Constraints, schema for other collections, helper function definitions, rules for other collections, or the denormalization summary.
+
+### Amendment 3 — Avatar upload and Firebase Storage baseline
+
+- Date: 2026-05-19
+- Author: claude-sonnet-4-6 (architect agent), per ADR 0005 Consequences
+- Trigger: ADR 0005 (Avatar Upload and Firebase Storage Architecture) established the Storage rules baseline, the avatar path pattern, and the URL format for `photoUrl` fields across the schema.
+- Changes:
+  - Updated `users/{uid}.photoUrl` field note: was "Nullable; Firebase Storage URL or external avatar URL"; now specifies that the stored value is a Firebase Storage download URL with a `?v=<epoch-ms>` cache-bust suffix, written by the avatar upload flow, and null until the first upload.
+  - Updated denormalization summary `hostPhotoUrl` row: removed the stale "pending photo upload feature" qualifier; now references ADR 0005 as the source of the upload contract.
+  - Updated implementation checklist: index count corrected from 9 to 10 (gap left by Amendment 2 for ADR 0004); added three new checklist items — `storage.rules`, `lib/core/storage_paths.dart`, and the three new pubspec packages (`firebase_storage`, `image_picker`, `flutter_image_compress`).
+- No changes to: Status, Decision paragraph, Constraints, any rules block, composite indexes table, schema for other collections, helper functions, or the denormalization summary for other fields.
