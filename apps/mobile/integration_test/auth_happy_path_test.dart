@@ -58,7 +58,11 @@ class _TestApp extends ConsumerWidget {
   }
 }
 
-void main() {
+// Firebase emulator setup must happen before any auth state listener is
+// attached. Making main() async and configuring emulators here — before
+// testWidgets() is registered — ensures useAuthEmulator() is called before
+// the Flutter Firebase plugin attaches its internal state listener on Android.
+void main() async {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   // ── Emulator host selection ────────────────────────────────────────────────
@@ -69,18 +73,18 @@ void main() {
       ? '10.0.2.2'
       : 'localhost';
 
-  setUpAll(() async {
-    // On Android, Firebase is auto-initialized by the platform before main()
-    // runs. Calling initializeApp again throws "already exists". Guard here
-    // so the test works on both Android (auto-init) and other platforms (manual).
-    if (Firebase.apps.isEmpty) {
-      await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform,
-      );
-    }
-    await FirebaseAuth.instance.useAuthEmulator(emulatorHost, 9099);
-    FirebaseFirestore.instance.useFirestoreEmulator(emulatorHost, 8080);
-  });
+  // On Android, Firebase is auto-initialized by the platform before main()
+  // runs via google-services.json. Guard here so initializeApp is not called
+  // twice; on other platforms it is called manually.
+  if (Firebase.apps.isEmpty) {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  }
+  // Must be called before any Firebase Auth or Firestore operation,
+  // including the internal state listener the Flutter plugin attaches.
+  await FirebaseAuth.instance.useAuthEmulator(emulatorHost, 9099);
+  FirebaseFirestore.instance.useFirestoreEmulator(emulatorHost, 8080);
 
   // ── Helper: mark a Firebase Auth emulator account as email-verified ───────
   //
