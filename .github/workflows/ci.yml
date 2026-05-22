@@ -7,10 +7,12 @@ on:
     branches: [main, develop]
 
 # Required GitHub Actions secrets:
-# FIREBASE_OPTIONS_DART  — full contents of apps/mobile/lib/firebase_options.dart
-#                          Set in GitHub repo Settings → Secrets → Actions
-# GOOGLE_SERVICES_JSON   — full contents of apps/mobile/android/app/google-services.json
-#                          Set in GitHub repo Settings → Secrets → Actions
+# FIREBASE_OPTIONS_DART        — full contents of apps/mobile/lib/firebase_options.dart
+#                                Set in GitHub repo Settings → Secrets → Actions
+# GOOGLE_SERVICES_JSON         — full contents of apps/mobile/android/app/google-services.json
+#                                Set in GitHub repo Settings → Secrets → Actions
+# GOOGLE_SIGNIN_WEB_CLIENT_ID  — OAuth 2.0 Web client ID for Google Sign-In on Web (GCal OAuth)
+#                                Set in GitHub repo Settings → Secrets → Actions
 
 jobs:
   analyze-and-test:
@@ -189,6 +191,14 @@ jobs:
 
       - name: Install ChromeDriver
         uses: nanasess/setup-chromedriver@v2
+
+      - name: Inject Google Sign-In web client ID
+        if: ${{ env.GOOGLE_SIGNIN_WEB_CLIENT_ID != '' }}
+        working-directory: ${{ github.workspace }}
+        env:
+          GOOGLE_SIGNIN_WEB_CLIENT_ID: ${{ secrets.GOOGLE_SIGNIN_WEB_CLIENT_ID }}
+        run: |
+          sed -i 's|<!-- CI: inject google-signin-client_id meta tag here for GCal OAuth on Web -->|<meta name="google-signin-client_id" content="'"$GOOGLE_SIGNIN_WEB_CLIENT_ID"'">|' apps/mobile/web/index.html
 
       - name: Run integration tests (Web)
         working-directory: ${{ github.workspace }}

@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | Proposed |
+| Status | Accepted  |
 | Date | 2026-05-22 |
 | Architect session | claude-sonnet-4-6 / NichapaJongKmutt / 2026-05-22 |
 | Affects | Calendar feature (domain, data, presentation), core/analytics_events.dart, core/firestore_paths.dart, app_router.dart, RouteConstants, pubspec.yaml, no Firestore schema changes (reuses ADR 0001 indexes 1 and 2) |
@@ -11,8 +11,8 @@
 
 ## Team approval
 
-Approved by:
-Date:
+Approved by: Film
+Date: 2026-05-22
 Notes:
 
 ---

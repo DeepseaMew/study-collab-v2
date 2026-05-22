@@ -105,4 +105,28 @@ abstract final class AnalyticsEvents {
   /// Payload: reason (String — 'compression_error' | 'storage_error' | 'firestore_error').
   /// No PII.
   static const String avatarUploadFailed = 'avatar_upload_failed';
+
+  // ── Calendar ───────────────────────────────────────────────────────────────
+
+  /// User toggled the calendar view format (month ↔ week).
+  static const String calendarViewFormatToggled =
+      'calendar_view_format_toggled';
+
+  /// User tapped a day cell on the calendar.
+  static const String calendarDaySelected = 'calendar_day_selected';
+
+  /// User tapped a session card on the calendar.
+  static const String calendarSessionTapped = 'calendar_session_tapped';
+
+  /// User successfully connected Google Calendar sync.
+  static const String calendarSyncConnected = 'calendar_sync_connected';
+
+  /// User disconnected Google Calendar sync.
+  static const String calendarSyncDisconnected = 'calendar_sync_disconnected';
+
+  /// A GCal sync operation completed successfully.
+  static const String calendarSyncCompleted = 'calendar_sync_completed';
+
+  /// A GCal sync operation failed.
+  static const String calendarSyncFailed = 'calendar_sync_failed';
 }
