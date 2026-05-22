@@ -16,7 +16,6 @@
 
 # Dart
 **/.packages
-**/pubspec.lock
 
 # IDE
 .idea/
