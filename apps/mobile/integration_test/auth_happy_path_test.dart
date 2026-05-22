@@ -78,18 +78,25 @@ void main() {
       : 'localhost';
 
   setUpAll(() async {
-    // Auto-init is disabled in debug Android builds via the debug
-    // AndroidManifest (FirebaseInitProvider removed). On all platforms we
-    // therefore always call initializeApp() here — no apps.isEmpty guard
-    // needed or desired, because we need to be the first call to touch Auth.
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
+    try {
+      // Auto-init is disabled in debug Android builds via the debug
+      // AndroidManifest (FirebaseInitProvider removed). On all platforms we
+      // therefore always call initializeApp() here — no apps.isEmpty guard
+      // needed or desired, because we need to be the first call to touch Auth.
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
 
-    // Must be called immediately after initializeApp(), before any Firebase
-    // Auth operation or internal state listener is attached by the plugin.
-    await FirebaseAuth.instance.useAuthEmulator(emulatorHost, 9099);
-    FirebaseFirestore.instance.useFirestoreEmulator(emulatorHost, 8080);
+      // Must be called immediately after initializeApp(), before any Firebase
+      // Auth operation or internal state listener is attached by the plugin.
+      await FirebaseAuth.instance.useAuthEmulator(emulatorHost, 9099);
+      FirebaseFirestore.instance.useFirestoreEmulator(emulatorHost, 8080);
+    } catch (e, st) {
+      debugPrint('=== setUpAll FAILED ===');
+      debugPrint('Exception: $e');
+      debugPrint('Stack: $st');
+      fail('setUpAll threw: $e\n$st');
+    }
   });
 
   // ── Helper: mark a Firebase Auth emulator account as email-verified ───────
