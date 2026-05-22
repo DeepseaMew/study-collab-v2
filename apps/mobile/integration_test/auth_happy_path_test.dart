@@ -80,25 +80,21 @@ void main() {
   setUpAll(() async {
     try {
       // Auto-init is disabled in debug Android builds via the debug
-      // AndroidManifest (FirebaseInitProvider removed). Guard apps.isEmpty so
-      // the test is safe even if something else initialized Firebase first —
-      // the duplicate-app exception is masked but the emulator config below
-      // will still route calls to the local emulator.
-      if (Firebase.apps.isEmpty) {
-        await Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform,
-        );
-      }
+      // AndroidManifest (FirebaseInitProvider removed). On all platforms we
+      // therefore always call initializeApp() here — no apps.isEmpty guard
+      // needed or desired, because we need to be the first call to touch Auth.
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
 
       // Must be called immediately after initializeApp(), before any Firebase
       // Auth operation or internal state listener is attached by the plugin.
       await FirebaseAuth.instance.useAuthEmulator(emulatorHost, 9099);
       FirebaseFirestore.instance.useFirestoreEmulator(emulatorHost, 8080);
     } catch (e, st) {
-      // Use print (not debugPrint) so the message appears in `flutter test`
-      // host output and not only in ADB logcat.
-      // ignore: avoid_print
-      print('=== setUpAll FAILED: $e ===');
+      debugPrint('=== setUpAll FAILED ===');
+      debugPrint('Exception: $e');
+      debugPrint('Stack: $st');
       fail('setUpAll threw: $e\n$st');
     }
   });
