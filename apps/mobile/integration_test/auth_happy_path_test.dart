@@ -12,6 +12,14 @@
 // Host selection:
 //   Android emulator → 10.0.2.2 (loopback alias that reaches the host machine)
 //   All other platforms → localhost
+//
+// Android auto-init note:
+//   The debug AndroidManifest removes FirebaseInitProvider so that the
+//   Firebase SDK does not auto-initialize before Dart code runs. This allows
+//   setUpAll() to call Firebase.initializeApp() then useAuthEmulator() in the
+//   correct order without hitting IllegalStateException. Release builds are
+//   unaffected because they use the main AndroidManifest which retains the
+//   provider.
 
 import 'dart:convert';
 
@@ -58,11 +66,7 @@ class _TestApp extends ConsumerWidget {
   }
 }
 
-// Firebase emulator setup must happen before any auth state listener is
-// attached. Making main() async and configuring emulators here — before
-// testWidgets() is registered — ensures useAuthEmulator() is called before
-// the Flutter Firebase plugin attaches its internal state listener on Android.
-void main() async {
+void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
   // ── Emulator host selection ────────────────────────────────────────────────
@@ -73,18 +77,20 @@ void main() async {
       ? '10.0.2.2'
       : 'localhost';
 
-  // On Android, Firebase is auto-initialized by the platform before main()
-  // runs via google-services.json. Guard here so initializeApp is not called
-  // twice; on other platforms it is called manually.
-  if (Firebase.apps.isEmpty) {
+  setUpAll(() async {
+    // Auto-init is disabled in debug Android builds via the debug
+    // AndroidManifest (FirebaseInitProvider removed). On all platforms we
+    // therefore always call initializeApp() here — no apps.isEmpty guard
+    // needed or desired, because we need to be the first call to touch Auth.
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
     );
-  }
-  // Must be called before any Firebase Auth or Firestore operation,
-  // including the internal state listener the Flutter plugin attaches.
-  await FirebaseAuth.instance.useAuthEmulator(emulatorHost, 9099);
-  FirebaseFirestore.instance.useFirestoreEmulator(emulatorHost, 8080);
+
+    // Must be called immediately after initializeApp(), before any Firebase
+    // Auth operation or internal state listener is attached by the plugin.
+    await FirebaseAuth.instance.useAuthEmulator(emulatorHost, 9099);
+    FirebaseFirestore.instance.useFirestoreEmulator(emulatorHost, 8080);
+  });
 
   // ── Helper: mark a Firebase Auth emulator account as email-verified ───────
   //
