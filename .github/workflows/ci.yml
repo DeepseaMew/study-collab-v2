@@ -60,10 +60,10 @@ jobs:
         run: dart format --output=none --set-exit-if-changed .
 
       - name: Update golden images
-        run: flutter test --update-goldens test/
+        run: flutter test --update-goldens --dart-define=GOOGLE_SIGNIN_WEB_CLIENT_ID=${{ secrets.GOOGLE_SIGNIN_WEB_CLIENT_ID }} test/
 
       - name: Unit & widget tests
-        run: flutter test --coverage --test-randomize-ordering-seed random
+        run: flutter test --coverage --test-randomize-ordering-seed random --dart-define=GOOGLE_SIGNIN_WEB_CLIENT_ID=${{ secrets.GOOGLE_SIGNIN_WEB_CLIENT_ID }}
 
       - name: Upload golden images
         if: always()
@@ -153,7 +153,7 @@ jobs:
           api-level: 34
           arch: x86_64
           working-directory: ${{ github.workspace }}
-          script: firebase emulators:exec --project study-collab-4d0a0 --only auth,firestore "cd apps/mobile && flutter test integration_test/auth_happy_path_test.dart && flutter test integration_test/auth_flow_test.dart"
+          script: firebase emulators:exec --project study-collab-4d0a0 --only auth,firestore "cd apps/mobile && flutter test integration_test/auth_happy_path_test.dart --dart-define=GOOGLE_SIGNIN_WEB_CLIENT_ID=${{ secrets.GOOGLE_SIGNIN_WEB_CLIENT_ID }} && flutter test integration_test/auth_flow_test.dart --dart-define=GOOGLE_SIGNIN_WEB_CLIENT_ID=${{ secrets.GOOGLE_SIGNIN_WEB_CLIENT_ID }}"
 
       - name: Capture ADB logcat on failure
         if: failure()
@@ -230,6 +230,7 @@ jobs:
             "cd apps/mobile && flutter drive \
               --driver=test_driver/integration_test.dart \
               --target=integration_test/auth_happy_path_test.dart \
+              --dart-define=GOOGLE_SIGNIN_WEB_CLIENT_ID=${{ secrets.GOOGLE_SIGNIN_WEB_CLIENT_ID }} \
               -d web-server \
               --browser-name=chrome"
 
@@ -283,4 +284,4 @@ jobs:
         working-directory: .
         run: |
           firebase emulators:exec --project study-collab-4d0a0 --only auth,firestore \
-            "cd apps/mobile && dart run build_runner build --delete-conflicting-outputs && flutter test integration_test/auth_happy_path_test.dart -d linux --verbose 2>&1 | head -100"
+            "cd apps/mobile && dart run build_runner build --delete-conflicting-outputs && flutter test integration_test/auth_happy_path_test.dart --dart-define=GOOGLE_SIGNIN_WEB_CLIENT_ID=${{ secrets.GOOGLE_SIGNIN_WEB_CLIENT_ID }} -d linux --verbose 2>&1 | head -100"

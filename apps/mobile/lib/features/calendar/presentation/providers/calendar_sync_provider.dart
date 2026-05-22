@@ -15,7 +15,7 @@ import 'package:mobile/features/profile/data/datasources/profile_datasource.dart
 import 'package:mobile/features/profile/data/repositories/user_repository_impl.dart';
 import 'package:mobile/features/sessions/domain/entities/session_entity.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-
+import 'package:flutter/foundation.dart' show kIsWeb;
 part 'calendar_sync_provider.g.dart';
 
 /// Provides the [CalendarSyncRepository] wired to Google Sign-In.
@@ -25,9 +25,12 @@ CalendarSyncRepository calendarSyncRepository(CalendarSyncRepositoryRef ref) {
   if (uid == null) {
     throw StateError('calendarSyncRepository: no authenticated user');
   }
+  const webClientId = String.fromEnvironment('GOOGLE_SIGNIN_WEB_CLIENT_ID');
   return CalendarSyncRepositoryImpl(
     googleSignIn: GoogleSignIn(
-      scopes: ['https://www.googleapis.com/auth/calendar.events'],
+      clientId: kIsWeb ? webClientId : null,
+      serverClientId: kIsWeb ? null : webClientId,
+      scopes: const ['https://www.googleapis.com/auth/calendar.events'],
     ),
     secureStorage: const FlutterSecureStorage(),
     datasourceFactory: (CalendarApi api) => GcalDatasource(api),
