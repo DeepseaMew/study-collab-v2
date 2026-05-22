@@ -135,6 +135,15 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
+      - name: Debug — verify google-services.json
+        working-directory: ${{ github.workspace }}
+        run: |
+          echo "=== File exists check ==="
+          ls -la apps/mobile/android/app/google-services.json
+          echo "=== First 5 lines ==="
+          head -5 apps/mobile/android/app/google-services.json
+          echo "=== JSON validity check ==="
+          python3 -c "import json; json.load(open('apps/mobile/android/app/google-services.json')); print('VALID JSON')"
 
       - name: Run code generation
         run: dart run build_runner build --delete-conflicting-outputs
@@ -167,16 +176,7 @@ jobs:
         with:
           name: android-flutter-logcat
           path: /tmp/flutter_logcat.txt
-          
-      - name: Debug — verify google-services.json
-        working-directory: ${{ github.workspace }}
-        run: |
-          echo "=== File exists check ==="
-          ls -la apps/mobile/android/app/google-services.json
-          echo "=== First 5 lines ==="
-          head -5 apps/mobile/android/app/google-services.json
-          echo "=== JSON validity check ==="
-          python3 -c "import json; json.load(open('apps/mobile/android/app/google-services.json')); print('VALID JSON')"
+
 
   integration-test-web:
     name: Integration Tests (Web)
