@@ -7,12 +7,10 @@ on:
     branches: [main, develop]
 
 # Required GitHub Actions secrets:
-# FIREBASE_OPTIONS_DART        — full contents of apps/mobile/lib/firebase_options.dart
-#                                Set in GitHub repo Settings → Secrets → Actions
-# GOOGLE_SERVICES_JSON         — full contents of apps/mobile/android/app/google-services.json
-#                                Set in GitHub repo Settings → Secrets → Actions
-# GOOGLE_SIGNIN_WEB_CLIENT_ID  — OAuth 2.0 Web client ID for Google Sign-In on Web (GCal OAuth)
-#                                Set in GitHub repo Settings → Secrets → Actions
+# FIREBASE_OPTIONS_DART  — full contents of apps/mobile/lib/firebase_options.dart
+#                          Set in GitHub repo Settings → Secrets → Actions
+# GOOGLE_SERVICES_JSON   — full contents of apps/mobile/android/app/google-services.json
+#                          Set in GitHub repo Settings → Secrets → Actions
 
 jobs:
   analyze-and-test:
@@ -29,7 +27,6 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.44.0'
           channel: stable
           cache: true
 
@@ -61,10 +58,10 @@ jobs:
         run: dart format --output=none --set-exit-if-changed .
 
       - name: Update golden images
-        run: flutter test --update-goldens --dart-define=GOOGLE_SIGNIN_WEB_CLIENT_ID=${{ secrets.GOOGLE_SIGNIN_WEB_CLIENT_ID }} test/
+        run: flutter test --update-goldens test/
 
       - name: Unit & widget tests
-        run: flutter test --coverage --test-randomize-ordering-seed random --dart-define=GOOGLE_SIGNIN_WEB_CLIENT_ID=${{ secrets.GOOGLE_SIGNIN_WEB_CLIENT_ID }}
+        run: flutter test --coverage --test-randomize-ordering-seed random
 
       - name: Upload golden images
         if: always()
@@ -94,7 +91,6 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.41.9'
           channel: stable
           cache: true
 
@@ -103,10 +99,6 @@ jobs:
         run: echo "$FIREBASE_OPTIONS_DART" > apps/mobile/lib/firebase_options.dart
         env:
           FIREBASE_OPTIONS_DART: ${{ secrets.FIREBASE_OPTIONS_DART }}
-
-      - name: Format injected firebase_options.dart
-        working-directory: ${{ github.workspace }}
-        run: dart format apps/mobile/lib/firebase_options.dart
 
       - name: Inject google-services.json
         working-directory: ${{ github.workspace }}
@@ -127,23 +119,8 @@ jobs:
       - name: Install firebase-tools
         run: npm install -g firebase-tools
 
-      - name: Cache Firebase emulator binaries
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/firebase/emulators
-          key: firebase-emulators-${{ hashFiles('**/firebase.json') }}
-
       - name: Install dependencies
         run: flutter pub get
-      - name: Debug — verify google-services.json
-        working-directory: ${{ github.workspace }}
-        run: |
-          echo "=== File exists check ==="
-          ls -la apps/mobile/android/app/google-services.json
-          echo "=== First 5 lines ==="
-          head -5 apps/mobile/android/app/google-services.json
-          echo "=== JSON validity check ==="
-          python3 -c "import json; json.load(open('apps/mobile/android/app/google-services.json')); print('VALID JSON')"
 
       - name: Run code generation
         run: dart run build_runner build --delete-conflicting-outputs
@@ -161,22 +138,10 @@ jobs:
       - name: Run integration tests (Android emulator)
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 33
+          api-level: 34
           arch: x86_64
           working-directory: ${{ github.workspace }}
-          script: firebase emulators:exec --project study-collab-4d0a0 --only auth,firestore "cd apps/mobile && flutter test integration_test/auth_happy_path_test.dart --dart-define=GOOGLE_SIGNIN_WEB_CLIENT_ID=${{ secrets.GOOGLE_SIGNIN_WEB_CLIENT_ID }} && flutter test integration_test/auth_flow_test.dart --dart-define=GOOGLE_SIGNIN_WEB_CLIENT_ID=${{ secrets.GOOGLE_SIGNIN_WEB_CLIENT_ID }}"
-
-      - name: Capture ADB logcat on failure
-        if: failure()
-        run: adb logcat -d -s flutter:V > /tmp/flutter_logcat.txt 2>&1 || true
-
-      - name: Upload ADB logcat
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-flutter-logcat
-          path: /tmp/flutter_logcat.txt
-
+          script: firebase emulators:exec --project study-collab-4d0a0 --only auth,firestore "cd apps/mobile && flutter test integration_test/auth_happy_path_test.dart && flutter test integration_test/auth_flow_test.dart"
 
   integration-test-web:
     name: Integration Tests (Web)
@@ -193,7 +158,6 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.44.0'
           channel: stable
           cache: true
 
@@ -226,14 +190,6 @@ jobs:
       - name: Install ChromeDriver
         uses: nanasess/setup-chromedriver@v2
 
-      - name: Inject Google Sign-In web client ID
-        if: ${{ env.GOOGLE_SIGNIN_WEB_CLIENT_ID != '' }}
-        working-directory: ${{ github.workspace }}
-        env:
-          GOOGLE_SIGNIN_WEB_CLIENT_ID: ${{ secrets.GOOGLE_SIGNIN_WEB_CLIENT_ID }}
-        run: |
-          sed -i 's|<!-- CI: inject google-signin-client_id meta tag here for GCal OAuth on Web -->|<meta name="google-signin-client_id" content="'"$GOOGLE_SIGNIN_WEB_CLIENT_ID"'">|' apps/mobile/web/index.html
-
       - name: Run integration tests (Web)
         working-directory: ${{ github.workspace }}
         run: |
@@ -243,7 +199,6 @@ jobs:
             "cd apps/mobile && flutter drive \
               --driver=test_driver/integration_test.dart \
               --target=integration_test/auth_happy_path_test.dart \
-              --dart-define=GOOGLE_SIGNIN_WEB_CLIENT_ID=${{ secrets.GOOGLE_SIGNIN_WEB_CLIENT_ID }} \
               -d web-server \
               --browser-name=chrome"
 
@@ -270,7 +225,6 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.44.0'
           channel: stable
           cache: true
 
@@ -298,4 +252,4 @@ jobs:
         working-directory: .
         run: |
           firebase emulators:exec --project study-collab-4d0a0 --only auth,firestore \
-            "cd apps/mobile && dart run build_runner build --delete-conflicting-outputs && flutter test integration_test/auth_happy_path_test.dart --dart-define=GOOGLE_SIGNIN_WEB_CLIENT_ID=${{ secrets.GOOGLE_SIGNIN_WEB_CLIENT_ID }} -d linux --verbose 2>&1 | head -100"
+            "cd apps/mobile && dart run build_runner build --delete-conflicting-outputs && flutter test integration_test/auth_happy_path_test.dart -d linux --verbose 2>&1 | head -100"
