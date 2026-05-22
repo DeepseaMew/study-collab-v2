@@ -153,13 +153,7 @@ jobs:
           api-level: 34
           arch: x86_64
           working-directory: ${{ github.workspace }}
-          script: |
-            firebase emulators:exec --project study-collab-4d0a0 --only auth,firestore \
-              "adb shell 'curl -s http://10.0.2.2:9099/ && echo OK || echo AUTH_EMULATOR_NOT_REACHABLE'; \
-               adb shell 'curl -s http://10.0.2.2:8080/ && echo OK || echo FIRESTORE_EMULATOR_NOT_REACHABLE'; \
-               cd apps/mobile && \
-               flutter test --verbose -d emulator-5554 integration_test/auth_happy_path_test.dart && \
-               flutter test --verbose -d emulator-5554 integration_test/auth_flow_test.dart"
+          script: adb forward tcp:9099 tcp:9099 && adb forward tcp:8080 tcp:8080 && firebase emulators:exec --project study-collab-4d0a0 --only auth,firestore "cd apps/mobile && flutter test integration_test/auth_happy_path_test.dart && flutter test integration_test/auth_flow_test.dart"
 
       - name: Capture ADB logcat on failure
         if: failure()
