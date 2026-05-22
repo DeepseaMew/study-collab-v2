@@ -22,7 +22,9 @@ part 'calendar_sync_provider.g.dart';
 @riverpod
 CalendarSyncRepository calendarSyncRepository(CalendarSyncRepositoryRef ref) {
   final uid = FirebaseAuth.instance.currentUser?.uid;
-  if (uid == null) throw StateError('calendarSyncRepository: no authenticated user');
+  if (uid == null) {
+    throw StateError('calendarSyncRepository: no authenticated user');
+  }
   return CalendarSyncRepositoryImpl(
     googleSignIn: GoogleSignIn(
       scopes: ['https://www.googleapis.com/auth/calendar.events'],
@@ -45,13 +47,18 @@ class CalendarSyncNotifier extends _$CalendarSyncNotifier {
     state = const AsyncLoading();
     final uid = FirebaseAuth.instance.currentUser?.uid;
     if (uid == null) {
-      state = AsyncError(StateError('No authenticated user'), StackTrace.current);
+      state = AsyncError(
+        StateError('No authenticated user'),
+        StackTrace.current,
+      );
       return;
     }
     state = await AsyncValue.guard(() async {
       final usecase = ConnectGCalUseCase(
         syncRepository: ref.read(calendarSyncRepositoryProvider),
-        userRepository: UserRepositoryImpl(ProfileDatasource.withDefaultFirestore()),
+        userRepository: UserRepositoryImpl(
+          ProfileDatasource.withDefaultFirestore(),
+        ),
         uid: uid,
       );
       await usecase();
@@ -64,8 +71,9 @@ class CalendarSyncNotifier extends _$CalendarSyncNotifier {
   Future<void> disconnect() async {
     state = const AsyncLoading();
     state = await AsyncValue.guard(() async {
-      await DisconnectGCalUseCase(ref.read(calendarSyncRepositoryProvider))
-          .call();
+      await DisconnectGCalUseCase(
+        ref.read(calendarSyncRepositoryProvider),
+      ).call();
       appLogger.info('gcal_sync: disconnected');
       return null;
     });
@@ -76,8 +84,9 @@ class CalendarSyncNotifier extends _$CalendarSyncNotifier {
     if (!FeatureFlags.gcalSyncEnabled) return;
     state = const AsyncLoading();
     state = await AsyncValue.guard(
-      () => SyncGCalUseCase(ref.read(calendarSyncRepositoryProvider))
-          .call(sessions),
+      () => SyncGCalUseCase(
+        ref.read(calendarSyncRepositoryProvider),
+      ).call(sessions),
     );
   }
 }

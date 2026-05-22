@@ -44,9 +44,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   Widget build(BuildContext context) {
     final authUser = ref.watch(firebaseAuthStateProvider).valueOrNull;
     if (authUser == null) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     final uid = authUser.uid;
     final window = ref.watch(calendarWindowProvider);
@@ -148,9 +146,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               onFormatChanged: (f) => setState(() => _calendarFormat = f),
               onPageChanged: (f) {
                 setState(() => _focusedDay = f);
-                ref
-                    .read(calendarWindowProvider.notifier)
-                    .advanceToMonth(f);
+                ref.read(calendarWindowProvider.notifier).advanceToMonth(f);
               },
               headerStyle: const HeaderStyle(
                 formatButtonVisible: false,
@@ -178,8 +174,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   final hasPersonal = daySessions.isNotEmpty;
                   if (!hasPersonal) return null;
                   return Semantics(
-                    label:
-                        'Day ${day.day}, ${daySessions.length} session(s)',
+                    label: 'Day ${day.day}, ${daySessions.length} session(s)',
                     child: Container(
                       margin: const EdgeInsets.all(4),
                       decoration: const BoxDecoration(
@@ -219,8 +214,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                             (c) => Container(
                               width: 6,
                               height: 6,
-                              margin:
-                                  const EdgeInsets.symmetric(horizontal: 1),
+                              margin: const EdgeInsets.symmetric(horizontal: 1),
                               decoration: BoxDecoration(
                                 color: c,
                                 shape: BoxShape.circle,
@@ -239,12 +233,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             child: _selectedDay == null
                 ? const _NoDateSelected()
                 : selected.isEmpty
-                    ? _NoSessionsDay(date: _selectedDay!)
-                    : _DaySessionsPanel(
-                        date: _selectedDay!,
-                        sessions: selected,
-                        currentUid: uid,
-                      ),
+                ? _NoSessionsDay(date: _selectedDay!)
+                : _DaySessionsPanel(
+                    date: _selectedDay!,
+                    sessions: selected,
+                    currentUid: uid,
+                  ),
           ),
         ],
       ),
@@ -330,10 +324,7 @@ class _DaySessionsPanel extends StatelessWidget {
             ),
             child: Container(
               margin: const EdgeInsets.only(top: 4),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 10,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
                 color: const Color(0xFFF5F5F5),
                 borderRadius: BorderRadius.circular(8),
@@ -341,9 +332,7 @@ class _DaySessionsPanel extends StatelessWidget {
               alignment: Alignment.center,
               child: Text(
                 '+ ${n - 3} more sessions — see all',
-                style: tt.labelLarge?.copyWith(
-                  color: const Color(0xFF5186CD),
-                ),
+                style: tt.labelLarge?.copyWith(color: const Color(0xFF5186CD)),
               ),
             ),
           ),
@@ -352,11 +341,7 @@ class _DaySessionsPanel extends StatelessWidget {
     );
   }
 
-  void _onSessionTap(
-    BuildContext context,
-    SessionEntity session,
-    String uid,
-  ) {
+  void _onSessionTap(BuildContext context, SessionEntity session, String uid) {
     appLogger.debug(AnalyticsEvents.calendarSessionTapped);
     if (session.hostUid == uid) {
       context.push('/my-sessions/session/${session.sessionId}/host');
@@ -387,10 +372,9 @@ class _NoDateSelected extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             'Tap a day to see sessions',
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(color: AppColors.hint),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.hint),
           ),
         ],
       ),
@@ -419,10 +403,9 @@ class _NoSessionsDay extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             'No sessions on ${DateFormat('MMMM d').format(date)}',
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(color: AppColors.hint),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.hint),
           ),
         ],
       ),

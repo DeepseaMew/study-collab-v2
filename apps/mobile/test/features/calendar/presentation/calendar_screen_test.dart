@@ -123,8 +123,10 @@ Widget _buildCalendarScreen({
 /// 2026-05. Sessions in tests must use dates within April–June 2026.
 class _FixedWindowNotifier extends CalendarWindow {
   static final DateTime kStart = DateTime(2026, 4);
-  static final DateTime kEnd =
-      DateTime(2026, 7).subtract(const Duration(seconds: 1));
+  static final DateTime kEnd = DateTime(
+    2026,
+    7,
+  ).subtract(const Duration(seconds: 1));
 
   @override
   ({DateTime start, DateTime end}) build() => (start: kStart, end: kEnd);
@@ -152,7 +154,9 @@ void main() {
       });
     });
 
-    testWidgets('shows _NoDateSelected state on initial render', (tester) async {
+    testWidgets('shows _NoDateSelected state on initial render', (
+      tester,
+    ) async {
       await mockNetworkImagesFor(() async {
         await tester.pumpWidget(_buildCalendarScreen());
         await tester.pumpAndSettle(const Duration(seconds: 3));
@@ -170,8 +174,9 @@ void main() {
       });
     });
 
-    testWidgets('gcal sync icon is NOT visible when feature flag is off',
-        (tester) async {
+    testWidgets('gcal sync icon is NOT visible when feature flag is off', (
+      tester,
+    ) async {
       await mockNetworkImagesFor(() async {
         await tester.pumpWidget(_buildCalendarScreen());
         await tester.pumpAndSettle(const Duration(seconds: 3));
@@ -185,9 +190,7 @@ void main() {
         await tester.pumpWidget(
           ProviderScope(
             overrides: [
-              firebaseAuthStateProvider.overrideWith(
-                (_) => Stream.value(null),
-              ),
+              firebaseAuthStateProvider.overrideWith((_) => Stream.value(null)),
             ],
             child: const MaterialApp(home: CalendarScreen()),
           ),
@@ -205,8 +208,7 @@ void main() {
     // approach is to directly build the panel state we want by calling
     // CalendarScreen and confirming the panel is present after a tap.
 
-    testWidgets('shows overflow pill when n > 3',
-        (tester) async {
+    testWidgets('shows overflow pill when n > 3', (tester) async {
       // 5 sessions on May 15 2026. The calendar is fixed to show May 2026.
       final sessions = List.generate(
         5,
@@ -227,8 +229,10 @@ void main() {
         await tester.pumpAndSettle(const Duration(seconds: 3));
 
         // The panel header "MMMM d · N sessions" should appear.
-        final sessionLabelFound =
-            find.textContaining('5 sessions').evaluate().isNotEmpty;
+        final sessionLabelFound = find
+            .textContaining('5 sessions')
+            .evaluate()
+            .isNotEmpty;
 
         // Also look for the "See all →" TextButton which is gated on showOverflow.
         final seeAllButton = find
@@ -275,8 +279,9 @@ void main() {
       });
     });
 
-    testWidgets('shows "No sessions on" message when day has no sessions',
-        (tester) async {
+    testWidgets('shows "No sessions on" message when day has no sessions', (
+      tester,
+    ) async {
       await mockNetworkImagesFor(() async {
         await tester.pumpWidget(_buildCalendarScreen());
         await tester.pumpAndSettle(const Duration(seconds: 3));
@@ -292,10 +297,7 @@ void main() {
 
   group('_DaySessionsPanel — overflow pill formula', () {
     test('overflow pill text formula: n=5 → "+ 2 more sessions — see all"', () {
-      final sessions = List.generate(
-        5,
-        (i) => _session(id: 'sess-$i'),
-      );
+      final sessions = List.generate(5, (i) => _session(id: 'sess-$i'));
       final n = sessions.length;
       // The production code uses: '+ ${n - 3} more sessions — see all'
       expect(n - 3, 2);
@@ -305,8 +307,8 @@ void main() {
 
     test('overflow pill only shown when n > 3', () {
       expect(3 > 3, isFalse); // exactly 3 → no pill
-      expect(4 > 3, isTrue);  // 4 → pill shown
-      expect(5 > 3, isTrue);  // 5 → pill shown
+      expect(4 > 3, isTrue); // 4 → pill shown
+      expect(5 > 3, isTrue); // 5 → pill shown
     });
   });
 }

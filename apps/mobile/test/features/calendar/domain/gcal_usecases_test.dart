@@ -99,65 +99,61 @@ void main() {
       when(
         () => mockUserRepo.watchUser(uid),
       ).thenAnswer((_) => Stream.value(_user()));
-      when(
-        () => mockSyncRepo.connect(any()),
-      ).thenAnswer((_) async {});
+      when(() => mockSyncRepo.connect(any())).thenAnswer((_) async {});
 
       await makeConnectUseCase(uid: uid)();
 
       verify(() => mockUserRepo.watchUser(uid)).called(1);
     });
 
-    test('passes email from UserRepository to CalendarSyncRepository.connect',
-        () async {
-      const email = 'testuser@mail.kmutt.ac.th';
-      when(
-        () => mockUserRepo.watchUser(any()),
-      ).thenAnswer((_) => Stream.value(_user(email: email)));
-      when(
-        () => mockSyncRepo.connect(email),
-      ).thenAnswer((_) async {});
+    test(
+      'passes email from UserRepository to CalendarSyncRepository.connect',
+      () async {
+        const email = 'testuser@mail.kmutt.ac.th';
+        when(
+          () => mockUserRepo.watchUser(any()),
+        ).thenAnswer((_) => Stream.value(_user(email: email)));
+        when(() => mockSyncRepo.connect(email)).thenAnswer((_) async {});
 
-      await makeConnectUseCase()();
+        await makeConnectUseCase()();
 
-      verify(() => mockSyncRepo.connect(email)).called(1);
-    });
+        verify(() => mockSyncRepo.connect(email)).called(1);
+      },
+    );
 
     test('passes correct email when user has @kmutt.ac.th domain', () async {
       const email = 'staff@kmutt.ac.th';
       when(
         () => mockUserRepo.watchUser(any()),
       ).thenAnswer((_) => Stream.value(_user(email: email)));
-      when(
-        () => mockSyncRepo.connect(email),
-      ).thenAnswer((_) async {});
+      when(() => mockSyncRepo.connect(email)).thenAnswer((_) async {});
 
       await makeConnectUseCase()();
 
       verify(() => mockSyncRepo.connect(email)).called(1);
     });
 
-    test('throws StateError when UserRepository emits null (user not found)',
-        () async {
-      when(
-        () => mockUserRepo.watchUser(any()),
-      ).thenAnswer((_) => Stream.value(null));
+    test(
+      'throws StateError when UserRepository emits null (user not found)',
+      () async {
+        when(
+          () => mockUserRepo.watchUser(any()),
+        ).thenAnswer((_) => Stream.value(null));
 
-      await expectLater(
-        () => makeConnectUseCase()(),
-        throwsA(isA<StateError>()),
-      );
+        await expectLater(
+          () => makeConnectUseCase()(),
+          throwsA(isA<StateError>()),
+        );
 
-      verifyNever(() => mockSyncRepo.connect(any()));
-    });
+        verifyNever(() => mockSyncRepo.connect(any()));
+      },
+    );
 
     test('propagates EmailMismatchError from CalendarSyncRepository', () async {
       when(
         () => mockUserRepo.watchUser(any()),
       ).thenAnswer((_) => Stream.value(_user()));
-      when(
-        () => mockSyncRepo.connect(any()),
-      ).thenThrow(EmailMismatchError());
+      when(() => mockSyncRepo.connect(any())).thenThrow(EmailMismatchError());
 
       await expectLater(
         () => makeConnectUseCase()(),
@@ -169,9 +165,7 @@ void main() {
       when(
         () => mockUserRepo.watchUser(any()),
       ).thenAnswer((_) => Stream.value(_user()));
-      when(
-        () => mockSyncRepo.connect(any()),
-      ).thenThrow(CancelledError());
+      when(() => mockSyncRepo.connect(any())).thenThrow(CancelledError());
 
       await expectLater(
         () => makeConnectUseCase()(),
@@ -209,9 +203,7 @@ void main() {
 
     test('reads only the first emission from the user stream', () async {
       // Stream has multiple emissions; only the first should be consumed.
-      when(
-        () => mockUserRepo.watchUser(any()),
-      ).thenAnswer(
+      when(() => mockUserRepo.watchUser(any())).thenAnswer(
         (_) => Stream.fromIterable([_user(email: 'first@mail.kmutt.ac.th')]),
       );
       when(
@@ -286,9 +278,7 @@ void main() {
     });
 
     test('propagates CancelledError when no current session', () async {
-      when(
-        () => mockSyncRepo.syncSessions(any()),
-      ).thenThrow(CancelledError());
+      when(() => mockSyncRepo.syncSessions(any())).thenThrow(CancelledError());
 
       await expectLater(
         () => useCase([_session()]),
@@ -318,9 +308,7 @@ void main() {
     });
 
     test('delegates call() to CalendarSyncRepository.disconnect', () async {
-      when(
-        () => mockSyncRepo.disconnect(),
-      ).thenAnswer((_) async {});
+      when(() => mockSyncRepo.disconnect()).thenAnswer((_) async {});
 
       await useCase();
 
@@ -328,9 +316,7 @@ void main() {
     });
 
     test('calls disconnect exactly once per invocation', () async {
-      when(
-        () => mockSyncRepo.disconnect(),
-      ).thenAnswer((_) async {});
+      when(() => mockSyncRepo.disconnect()).thenAnswer((_) async {});
 
       await useCase();
 
@@ -342,24 +328,17 @@ void main() {
         () => mockSyncRepo.disconnect(),
       ).thenThrow(ApiFailureError('revoke failed'));
 
-      await expectLater(
-        () => useCase(),
-        throwsA(isA<ApiFailureError>()),
-      );
+      await expectLater(() => useCase(), throwsA(isA<ApiFailureError>()));
     });
 
     test('completes normally when disconnect() succeeds', () async {
-      when(
-        () => mockSyncRepo.disconnect(),
-      ).thenAnswer((_) async {});
+      when(() => mockSyncRepo.disconnect()).thenAnswer((_) async {});
 
       await expectLater(useCase(), completes);
     });
 
     test('does not call connect or syncSessions', () async {
-      when(
-        () => mockSyncRepo.disconnect(),
-      ).thenAnswer((_) async {});
+      when(() => mockSyncRepo.disconnect()).thenAnswer((_) async {});
 
       await useCase();
 

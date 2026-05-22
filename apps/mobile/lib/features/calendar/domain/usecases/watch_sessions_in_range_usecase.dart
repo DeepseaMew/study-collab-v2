@@ -10,10 +10,6 @@ class WatchSessionsInRangeUseCase {
 
   final CalendarRepository _repository;
 
-  Stream<List<SessionEntity>> call(
-    String uid,
-    DateTime start,
-    DateTime end,
-  ) =>
+  Stream<List<SessionEntity>> call(String uid, DateTime start, DateTime end) =>
       _repository.watchSessionsInRange(uid, start, end);
 }

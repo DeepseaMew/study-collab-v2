@@ -20,9 +20,7 @@ class CalendarSyncSettingsScreen extends ConsumerWidget {
     if (!FeatureFlags.gcalSyncEnabled) {
       return Scaffold(
         appBar: AppBar(title: const Text('Google Calendar Sync')),
-        body: const Center(
-          child: Text('Coming soon'),
-        ),
+        body: const Center(child: Text('Coming soon')),
       );
     }
 
@@ -80,9 +78,7 @@ class CalendarSyncSettingsScreen extends ConsumerWidget {
                   ? null
                   : () {
                       ref.read(calendarSyncNotifierProvider.notifier).connect();
-                      appLogger.info(
-                        'gcal_sync: connect button tapped',
-                      );
+                      appLogger.info('gcal_sync: connect button tapped');
                     },
             ),
           ),
@@ -138,10 +134,9 @@ class _ConnectionStatusTile extends StatelessWidget {
         const SizedBox(width: 8),
         Text(
           isLoading ? 'Syncing…' : 'Ready',
-          style: Theme.of(context)
-              .textTheme
-              .bodyMedium
-              ?.copyWith(color: AppColors.text),
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: AppColors.text),
         ),
       ],
     );
@@ -182,10 +177,9 @@ class _ErrorBanner extends StatelessWidget {
           Expanded(
             child: Text(
               message,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: AppColors.error),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: AppColors.error),
             ),
           ),
         ],

@@ -54,18 +54,21 @@ void main() {
   // ── connect() ──────────────────────────────────────────────────────────────
 
   group('connect()', () {
-    test('throws EmailMismatchError when account email does not match', () async {
-      when(() => mockSignIn.signIn()).thenAnswer((_) async => mockAccount);
-      when(() => mockAccount.email).thenReturn('other@mail.kmutt.ac.th');
-      when(() => mockSignIn.signOut()).thenAnswer((_) async => null);
+    test(
+      'throws EmailMismatchError when account email does not match',
+      () async {
+        when(() => mockSignIn.signIn()).thenAnswer((_) async => mockAccount);
+        when(() => mockAccount.email).thenReturn('other@mail.kmutt.ac.th');
+        when(() => mockSignIn.signOut()).thenAnswer((_) async => null);
 
-      final repo = _makeRepo(googleSignIn: mockSignIn);
+        final repo = _makeRepo(googleSignIn: mockSignIn);
 
-      await expectLater(
-        repo.connect('expected@mail.kmutt.ac.th'),
-        throwsA(isA<EmailMismatchError>()),
-      );
-    });
+        await expectLater(
+          repo.connect('expected@mail.kmutt.ac.th'),
+          throwsA(isA<EmailMismatchError>()),
+        );
+      },
+    );
 
     test('calls signOut() after email mismatch before throwing', () async {
       when(() => mockSignIn.signIn()).thenAnswer((_) async => mockAccount);
@@ -86,17 +89,12 @@ void main() {
       when(() => mockSignIn.signIn()).thenAnswer((_) async => mockAccount);
       // Google returns mixed-case; stored email is lowercase.
       when(() => mockAccount.email).thenReturn('Student@Mail.KMUTT.AC.TH');
-      when(
-        () => mockSignIn.requestScopes(any()),
-      ).thenAnswer((_) async => true);
+      when(() => mockSignIn.requestScopes(any())).thenAnswer((_) async => true);
 
       final repo = _makeRepo(googleSignIn: mockSignIn);
 
       // Should NOT throw EmailMismatchError when emails match case-insensitively.
-      await expectLater(
-        repo.connect('student@mail.kmutt.ac.th'),
-        completes,
-      );
+      await expectLater(repo.connect('student@mail.kmutt.ac.th'), completes);
     });
 
     test('throws CancelledError when requestScopes returns false', () async {
@@ -133,37 +131,43 @@ void main() {
     // HIGH-2 fix: GoogleSignIn.disconnect() revokes the server-side OAuth grant
     // AND clears the local session in one call. signOut() alone would leave the
     // grant alive on Google's servers.
-    test('calls GoogleSignIn.disconnect() to revoke server-side grant', () async {
-      when(() => mockSignIn.disconnect()).thenAnswer((_) async => null);
-      when(
-        () => mockStorage.delete(key: any(named: 'key')),
-      ).thenAnswer((_) async {});
+    test(
+      'calls GoogleSignIn.disconnect() to revoke server-side grant',
+      () async {
+        when(() => mockSignIn.disconnect()).thenAnswer((_) async => null);
+        when(
+          () => mockStorage.delete(key: any(named: 'key')),
+        ).thenAnswer((_) async {});
 
-      final repo = _makeRepo(
-        googleSignIn: mockSignIn,
-        secureStorage: mockStorage,
-      );
+        final repo = _makeRepo(
+          googleSignIn: mockSignIn,
+          secureStorage: mockStorage,
+        );
 
-      await repo.disconnect();
+        await repo.disconnect();
 
-      verify(() => mockSignIn.disconnect()).called(1);
-    });
+        verify(() => mockSignIn.disconnect()).called(1);
+      },
+    );
 
-    test('does NOT call signOut() separately — disconnect() handles it', () async {
-      when(() => mockSignIn.disconnect()).thenAnswer((_) async => null);
-      when(
-        () => mockStorage.delete(key: any(named: 'key')),
-      ).thenAnswer((_) async {});
+    test(
+      'does NOT call signOut() separately — disconnect() handles it',
+      () async {
+        when(() => mockSignIn.disconnect()).thenAnswer((_) async => null);
+        when(
+          () => mockStorage.delete(key: any(named: 'key')),
+        ).thenAnswer((_) async {});
 
-      final repo = _makeRepo(
-        googleSignIn: mockSignIn,
-        secureStorage: mockStorage,
-      );
+        final repo = _makeRepo(
+          googleSignIn: mockSignIn,
+          secureStorage: mockStorage,
+        );
 
-      await repo.disconnect();
+        await repo.disconnect();
 
-      verifyNever(() => mockSignIn.signOut());
-    });
+        verifyNever(() => mockSignIn.signOut());
+      },
+    );
 
     test("deletes 'gcal_last_sync_{uid}' key from secure storage", () async {
       when(() => mockSignIn.disconnect()).thenAnswer((_) async => null);
@@ -180,9 +184,7 @@ void main() {
 
       await repo.disconnect();
 
-      verify(
-        () => mockStorage.delete(key: 'gcal_last_sync_$uid'),
-      ).called(1);
+      verify(() => mockStorage.delete(key: 'gcal_last_sync_$uid')).called(1);
     });
   });
 }

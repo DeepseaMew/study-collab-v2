@@ -147,8 +147,9 @@ void main() {
     test('returns empty list when snapshot has no docs', () async {
       when(() => mockSnapshot.docs).thenReturn([]);
 
-      final result =
-          await datasource.watchSessionsInRange(uid, start, end).first;
+      final result = await datasource
+          .watchSessionsInRange(uid, start, end)
+          .first;
       expect(result, isEmpty);
     });
   });

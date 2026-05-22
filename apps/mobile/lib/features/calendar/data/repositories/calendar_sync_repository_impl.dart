@@ -16,10 +16,10 @@ class CalendarSyncRepositoryImpl implements CalendarSyncRepository {
     required FlutterSecureStorage secureStorage,
     required GcalDatasource Function(CalendarApi) datasourceFactory,
     required String uid,
-  })  : _googleSignIn = googleSignIn,
-        _secureStorage = secureStorage,
-        _datasourceFactory = datasourceFactory,
-        _uid = uid;
+  }) : _googleSignIn = googleSignIn,
+       _secureStorage = secureStorage,
+       _datasourceFactory = datasourceFactory,
+       _uid = uid;
 
   final GoogleSignIn _googleSignIn;
   final FlutterSecureStorage _secureStorage;
@@ -55,9 +55,9 @@ class CalendarSyncRepositoryImpl implements CalendarSyncRepository {
       await _googleSignIn.signOut();
       throw EmailMismatchError();
     }
-    final hasScope = await _googleSignIn.requestScopes(
-      ['https://www.googleapis.com/auth/calendar.events'],
-    );
+    final hasScope = await _googleSignIn.requestScopes([
+      'https://www.googleapis.com/auth/calendar.events',
+    ]);
     if (!hasScope) {
       appLogger.warning('gcal_sync: calendar scope denied');
       await _googleSignIn.signOut();

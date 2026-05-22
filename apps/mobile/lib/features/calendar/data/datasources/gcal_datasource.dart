@@ -13,7 +13,7 @@ import 'package:mobile/features/sessions/domain/entities/session_entity.dart';
 /// Translates [SessionEntity] objects into Google Calendar [Event] patches.
 class GcalDatasource {
   GcalDatasource(this._calendarApi, {FirebaseCrashlytics? crashlytics})
-      : _crashlytics = crashlytics ?? FirebaseCrashlytics.instance;
+    : _crashlytics = crashlytics ?? FirebaseCrashlytics.instance;
 
   final CalendarApi _calendarApi;
   final FirebaseCrashlytics _crashlytics;
@@ -33,7 +33,8 @@ class GcalDatasource {
     final endTime = session.scheduledEndAt ?? session.scheduledAt;
     return Event(
       summary: session.title,
-      description: '${session.description ?? ''}'
+      description:
+          '${session.description ?? ''}'
           '\n\nHost: ${session.hostDisplayName}'
           '\nStatus: ${session.status}',
       location: session.location,
@@ -71,9 +72,7 @@ class GcalDatasource {
         failed++;
       }
     }
-    appLogger.info(
-      'gcal_sync: sync complete synced=$synced failed=$failed',
-    );
+    appLogger.info('gcal_sync: sync complete synced=$synced failed=$failed');
     return SyncResult(
       syncedCount: synced,
       failedCount: failed,

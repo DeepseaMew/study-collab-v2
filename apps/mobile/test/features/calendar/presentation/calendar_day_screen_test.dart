@@ -29,10 +29,7 @@ class _FakeFirebaseUser extends Fake implements User {
 
 // ── Session fixture ───────────────────────────────────────────────────────────
 
-SessionEntity _session({
-  required String id,
-  required DateTime scheduledAt,
-}) {
+SessionEntity _session({required String id, required DateTime scheduledAt}) {
   return SessionEntity(
     sessionId: id,
     hostUid: 'host-1',
@@ -94,25 +91,25 @@ void main() {
   group('CalendarDayScreen smoke tests', () {
     testWidgets('renders without error', (tester) async {
       await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(
-          _buildScreen(day: day, sessions: []),
-        );
+        await tester.pumpWidget(_buildScreen(day: day, sessions: []));
         await tester.pumpAndSettle(const Duration(seconds: 3));
         expect(find.byType(CalendarDayScreen), findsOneWidget);
       });
     });
 
-    testWidgets('renders app bar with date and All Sessions label', (tester) async {
+    testWidgets('renders app bar with date and All Sessions label', (
+      tester,
+    ) async {
       await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(
-          _buildScreen(day: day, sessions: []),
-        );
+        await tester.pumpWidget(_buildScreen(day: day, sessions: []));
         await tester.pumpAndSettle(const Duration(seconds: 3));
         expect(find.textContaining('All Sessions'), findsOneWidget);
       });
     });
 
-    testWidgets('renders count label with correct session count', (tester) async {
+    testWidgets('renders count label with correct session count', (
+      tester,
+    ) async {
       final sessions = [
         _session(id: 'a', scheduledAt: day),
         _session(id: 'b', scheduledAt: day),
@@ -120,37 +117,35 @@ void main() {
       ];
 
       await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(
-          _buildScreen(day: day, sessions: sessions),
-        );
+        await tester.pumpWidget(_buildScreen(day: day, sessions: sessions));
         await tester.pumpAndSettle(const Duration(seconds: 3));
-        expect(
-          find.textContaining('3 sessions'),
-          findsOneWidget,
-        );
+        expect(find.textContaining('3 sessions'), findsOneWidget);
       });
     });
 
     testWidgets('count label contains "sorted by start time"', (tester) async {
       await mockNetworkImagesFor(() async {
         await tester.pumpWidget(
-          _buildScreen(day: day, sessions: [_session(id: 'x', scheduledAt: day)]),
+          _buildScreen(
+            day: day,
+            sessions: [_session(id: 'x', scheduledAt: day)],
+          ),
         );
         await tester.pumpAndSettle(const Duration(seconds: 3));
         expect(find.textContaining('sorted by start time'), findsOneWidget);
       });
     });
 
-    testWidgets('renders ListView.builder with bounded itemCount', (tester) async {
+    testWidgets('renders ListView.builder with bounded itemCount', (
+      tester,
+    ) async {
       final sessions = List.generate(
         4,
         (i) => _session(id: 'sess-$i', scheduledAt: day),
       );
 
       await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(
-          _buildScreen(day: day, sessions: sessions),
-        );
+        await tester.pumpWidget(_buildScreen(day: day, sessions: sessions));
         await tester.pumpAndSettle(const Duration(seconds: 3));
         // ListView.builder should be present.
         expect(find.byType(ListView), findsOneWidget);
@@ -164,21 +159,18 @@ void main() {
       ];
 
       await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(
-          _buildScreen(day: day, sessions: sessions),
-        );
+        await tester.pumpWidget(_buildScreen(day: day, sessions: sessions));
         await tester.pumpAndSettle(const Duration(seconds: 3));
         expect(find.textContaining('Session Title alpha'), findsOneWidget);
         expect(find.textContaining('Session Title beta'), findsOneWidget);
       });
     });
 
-    testWidgets('shows 0 sessions count label with empty session list',
-        (tester) async {
+    testWidgets('shows 0 sessions count label with empty session list', (
+      tester,
+    ) async {
       await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(
-          _buildScreen(day: day, sessions: const []),
-        );
+        await tester.pumpWidget(_buildScreen(day: day, sessions: const []));
         await tester.pumpAndSettle(const Duration(seconds: 3));
         expect(find.textContaining('0 sessions'), findsOneWidget);
       });
@@ -186,9 +178,7 @@ void main() {
 
     testWidgets('renders Calendar label in app bar sub-title', (tester) async {
       await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(
-          _buildScreen(day: day, sessions: const []),
-        );
+        await tester.pumpWidget(_buildScreen(day: day, sessions: const []));
         await tester.pumpAndSettle(const Duration(seconds: 3));
         expect(find.text('Calendar'), findsOneWidget);
       });

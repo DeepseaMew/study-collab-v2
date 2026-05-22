@@ -42,34 +42,39 @@ void main() {
       final window = container.read(calendarWindowProvider);
 
       // After advancing, start should be start of (futureMonth - 1).
-      final expectedStartMonth =
-          futureMonth.month - 1 == 0 ? 12 : futureMonth.month - 1;
+      final expectedStartMonth = futureMonth.month - 1 == 0
+          ? 12
+          : futureMonth.month - 1;
       expect(window.start.month, expectedStartMonth);
       expect(window.start.day, 1);
     });
 
-    test('advanceToMonth to past month outside current window updates window',
-        () {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
+    test(
+      'advanceToMonth to past month outside current window updates window',
+      () {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
 
-      final now = DateTime.now();
-      final pastMonth = DateTime(now.year - 1, now.month);
+        final now = DateTime.now();
+        final pastMonth = DateTime(now.year - 1, now.month);
 
-      container
-          .read(calendarWindowProvider.notifier)
-          .advanceToMonth(pastMonth);
+        container
+            .read(calendarWindowProvider.notifier)
+            .advanceToMonth(pastMonth);
 
-      final window = container.read(calendarWindowProvider);
+        final window = container.read(calendarWindowProvider);
 
-      // Window start = start of (pastMonth - 1).
-      final expectedStartYear =
-          pastMonth.month - 1 == 0 ? pastMonth.year - 1 : pastMonth.year;
-      final expectedStartMonth =
-          pastMonth.month - 1 == 0 ? 12 : pastMonth.month - 1;
-      expect(window.start.year, expectedStartYear);
-      expect(window.start.month, expectedStartMonth);
-    });
+        // Window start = start of (pastMonth - 1).
+        final expectedStartYear = pastMonth.month - 1 == 0
+            ? pastMonth.year - 1
+            : pastMonth.year;
+        final expectedStartMonth = pastMonth.month - 1 == 0
+            ? 12
+            : pastMonth.month - 1;
+        expect(window.start.year, expectedStartYear);
+        expect(window.start.month, expectedStartMonth);
+      },
+    );
 
     test('window end is last second of (month + 1)', () {
       final container = ProviderContainer();
@@ -119,24 +124,26 @@ void main() {
       expect(window.start.second, 0);
     });
 
-    test('advanceToMonth twice — second call with same month keeps first result',
-        () {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
+    test(
+      'advanceToMonth twice — second call with same month keeps first result',
+      () {
+        final container = ProviderContainer();
+        addTearDown(container.dispose);
 
-      final target = DateTime(2026, 10);
-      container.read(calendarWindowProvider.notifier).advanceToMonth(target);
-      final windowAfterFirst = container.read(calendarWindowProvider);
+        final target = DateTime(2026, 10);
+        container.read(calendarWindowProvider.notifier).advanceToMonth(target);
+        final windowAfterFirst = container.read(calendarWindowProvider);
 
-      // Advance again to same month — window is already outside initial so
-      // the second call lands within the updated window bounds.
-      container.read(calendarWindowProvider.notifier).advanceToMonth(target);
-      final windowAfterSecond = container.read(calendarWindowProvider);
+        // Advance again to same month — window is already outside initial so
+        // the second call lands within the updated window bounds.
+        container.read(calendarWindowProvider.notifier).advanceToMonth(target);
+        final windowAfterSecond = container.read(calendarWindowProvider);
 
-      // Target (October 2026) is within the window set by first advance, so
-      // second advance should be a no-op (month is inside bounds).
-      expect(windowAfterSecond.start, windowAfterFirst.start);
-      expect(windowAfterSecond.end, windowAfterFirst.end);
-    });
+        // Target (October 2026) is within the window set by first advance, so
+        // second advance should be a no-op (month is inside bounds).
+        expect(windowAfterSecond.start, windowAfterFirst.start);
+        expect(windowAfterSecond.end, windowAfterFirst.end);
+      },
+    );
   });
 }

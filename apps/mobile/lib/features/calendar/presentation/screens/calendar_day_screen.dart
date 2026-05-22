@@ -82,11 +82,7 @@ class CalendarDayScreen extends StatelessWidget {
     );
   }
 
-  void _onSessionTap(
-    BuildContext context,
-    SessionEntity session,
-    String uid,
-  ) {
+  void _onSessionTap(BuildContext context, SessionEntity session, String uid) {
     appLogger.debug(AnalyticsEvents.calendarSessionTapped);
     if (session.hostUid == uid) {
       context.push('/my-sessions/session/${session.sessionId}/host');

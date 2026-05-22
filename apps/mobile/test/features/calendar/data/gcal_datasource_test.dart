@@ -121,9 +121,7 @@ void main() {
 
       await datasource.patchEvent(_session());
 
-      verify(
-        () => mockEvents.patch(any(), 'primary', any()),
-      ).called(1);
+      verify(() => mockEvents.patch(any(), 'primary', any())).called(1);
     });
 
     test('calls events.patch with correct deterministic event ID', () async {
@@ -131,9 +129,9 @@ void main() {
       final expectedId = _expectedEventId(sessionId);
       String? capturedId;
 
-      when(
-        () => mockEvents.patch(any(), 'primary', any()),
-      ).thenAnswer((invocation) async {
+      when(() => mockEvents.patch(any(), 'primary', any())).thenAnswer((
+        invocation,
+      ) async {
         capturedId = invocation.positionalArguments[2] as String;
         return Event();
       });
@@ -145,9 +143,9 @@ void main() {
 
     test('maps session title to event summary', () async {
       Event? captured;
-      when(
-        () => mockEvents.patch(any(), 'primary', any()),
-      ).thenAnswer((inv) async {
+      when(() => mockEvents.patch(any(), 'primary', any())).thenAnswer((
+        inv,
+      ) async {
         captured = inv.positionalArguments[0] as Event;
         return Event();
       });
@@ -159,9 +157,9 @@ void main() {
 
     test('maps session location to event location', () async {
       Event? captured;
-      when(
-        () => mockEvents.patch(any(), 'primary', any()),
-      ).thenAnswer((inv) async {
+      when(() => mockEvents.patch(any(), 'primary', any())).thenAnswer((
+        inv,
+      ) async {
         captured = inv.positionalArguments[0] as Event;
         return Event();
       });
@@ -173,9 +171,9 @@ void main() {
 
     test('maps hostDisplayName and status into description', () async {
       Event? captured;
-      when(
-        () => mockEvents.patch(any(), 'primary', any()),
-      ).thenAnswer((inv) async {
+      when(() => mockEvents.patch(any(), 'primary', any())).thenAnswer((
+        inv,
+      ) async {
         captured = inv.positionalArguments[0] as Event;
         return Event();
       });
@@ -188,9 +186,9 @@ void main() {
 
     test('sets source title to Study Collab', () async {
       Event? captured;
-      when(
-        () => mockEvents.patch(any(), 'primary', any()),
-      ).thenAnswer((inv) async {
+      when(() => mockEvents.patch(any(), 'primary', any())).thenAnswer((
+        inv,
+      ) async {
         captured = inv.positionalArguments[0] as Event;
         return Event();
       });
@@ -214,7 +212,11 @@ void main() {
       datasource = GcalDatasource(mockApi, crashlytics: mockCrashlytics);
       when(() => mockApi.events).thenReturn(mockEvents);
       when(
-        () => mockCrashlytics.recordError(any<Object?>(), any<StackTrace?>(), fatal: any<bool>(named: 'fatal')),
+        () => mockCrashlytics.recordError(
+          any<Object?>(),
+          any<StackTrace?>(),
+          fatal: any<bool>(named: 'fatal'),
+        ),
       ).thenAnswer((_) async {});
     });
 
@@ -229,21 +231,24 @@ void main() {
       );
     });
 
-    test('ApiFailureError message contains error code on API failure', () async {
-      when(
-        () => mockEvents.patch(any(), any(), any()),
-      ).thenThrow(DetailedApiRequestError(403, 'Forbidden'));
+    test(
+      'ApiFailureError message contains error code on API failure',
+      () async {
+        when(
+          () => mockEvents.patch(any(), any(), any()),
+        ).thenThrow(DetailedApiRequestError(403, 'Forbidden'));
 
-      ApiFailureError? caught;
-      try {
-        await datasource.patchEvent(_session());
-      } on ApiFailureError catch (e) {
-        caught = e;
-      }
+        ApiFailureError? caught;
+        try {
+          await datasource.patchEvent(_session());
+        } on ApiFailureError catch (e) {
+          caught = e;
+        }
 
-      expect(caught, isNotNull);
-      expect(caught!.message, contains('403'));
-    });
+        expect(caught, isNotNull);
+        expect(caught!.message, contains('403'));
+      },
+    );
 
     test('calls crashlytics.recordError on API failure', () async {
       when(
@@ -257,7 +262,11 @@ void main() {
       }
 
       verify(
-        () => mockCrashlytics.recordError(any<Object?>(), any<StackTrace?>(), fatal: any<bool>(named: 'fatal')),
+        () => mockCrashlytics.recordError(
+          any<Object?>(),
+          any<StackTrace?>(),
+          fatal: any<bool>(named: 'fatal'),
+        ),
       ).called(1);
     });
   });
@@ -275,7 +284,11 @@ void main() {
       datasource = GcalDatasource(mockApi, crashlytics: mockCrashlytics);
       when(() => mockApi.events).thenReturn(mockEvents);
       when(
-        () => mockCrashlytics.recordError(any<Object?>(), any<StackTrace?>(), fatal: any<bool>(named: 'fatal')),
+        () => mockCrashlytics.recordError(
+          any<Object?>(),
+          any<StackTrace?>(),
+          fatal: any<bool>(named: 'fatal'),
+        ),
       ).thenAnswer((_) async {});
     });
 
@@ -295,31 +308,31 @@ void main() {
       verify(() => mockEvents.patch(any(), any(), any())).called(3);
     });
 
-    test('no duplicate patch calls for same sessionId across two sync calls',
-        () async {
-      when(
-        () => mockEvents.patch(any(), any(), any()),
-      ).thenAnswer((_) async => Event());
+    test(
+      'no duplicate patch calls for same sessionId across two sync calls',
+      () async {
+        when(
+          () => mockEvents.patch(any(), any(), any()),
+        ).thenAnswer((_) async => Event());
 
-      final session = _session(id: 'sess-unique');
+        final session = _session(id: 'sess-unique');
 
-      await datasource.syncSessions([session]);
-      await datasource.syncSessions([session]);
+        await datasource.syncSessions([session]);
+        await datasource.syncSessions([session]);
 
-      verify(
-        () => mockEvents.patch(
-          any(),
-          'primary',
-          _expectedEventId('sess-unique'),
-        ),
-      ).called(2);
-    });
+        verify(
+          () => mockEvents.patch(
+            any(),
+            'primary',
+            _expectedEventId('sess-unique'),
+          ),
+        ).called(2);
+      },
+    );
 
     test('counts synced and failed correctly when one session fails', () async {
       var callCount = 0;
-      when(
-        () => mockEvents.patch(any(), any(), any()),
-      ).thenAnswer((_) async {
+      when(() => mockEvents.patch(any(), any(), any())).thenAnswer((_) async {
         callCount++;
         if (callCount == 2) throw DetailedApiRequestError(500, 'error');
         return Event();
@@ -345,10 +358,13 @@ void main() {
       expect(result.syncedAt, isA<DateTime>());
     });
 
-    test('returns syncedCount=0 failedCount=0 for empty session list', () async {
-      final result = await datasource.syncSessions([]);
-      expect(result.syncedCount, 0);
-      expect(result.failedCount, 0);
-    });
+    test(
+      'returns syncedCount=0 failedCount=0 for empty session list',
+      () async {
+        final result = await datasource.syncSessions([]);
+        expect(result.syncedCount, 0);
+        expect(result.failedCount, 0);
+      },
+    );
   });
 }

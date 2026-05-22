@@ -11,10 +11,7 @@ import 'package:mocktail/mocktail.dart';
 
 class _MockCalendarRepository extends Mock implements CalendarRepository {}
 
-SessionEntity _session({
-  required String id,
-  required DateTime scheduledAt,
-}) {
+SessionEntity _session({required String id, required DateTime scheduledAt}) {
   return SessionEntity(
     sessionId: id,
     hostUid: 'host-1',

@@ -70,9 +70,14 @@ void main() {
       : 'localhost';
 
   setUpAll(() async {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
+    // On Android, Firebase is auto-initialized by the platform before main()
+    // runs. Calling initializeApp again throws "already exists". Guard here
+    // so the test works on both Android (auto-init) and other platforms (manual).
+    if (Firebase.apps.isEmpty) {
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+    }
     await FirebaseAuth.instance.useAuthEmulator(emulatorHost, 9099);
     FirebaseFirestore.instance.useFirestoreEmulator(emulatorHost, 8080);
   });

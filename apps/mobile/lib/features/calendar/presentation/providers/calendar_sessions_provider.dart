@@ -11,9 +11,7 @@ part 'calendar_sessions_provider.g.dart';
 /// Provides the [CalendarRepository] wired to Firestore.
 @riverpod
 CalendarRepository calendarRepository(CalendarRepositoryRef ref) =>
-    CalendarRepositoryImpl(
-      CalendarDatasource(FirebaseFirestore.instance),
-    );
+    CalendarRepositoryImpl(CalendarDatasource(FirebaseFirestore.instance));
 
 /// Streams sessions for [uid] whose [scheduledAt] falls in [[windowStart], [windowEnd]].
 @riverpod

@@ -10,9 +10,9 @@ class ConnectGCalUseCase {
     required CalendarSyncRepository syncRepository,
     required UserRepository userRepository,
     required String uid,
-  })  : _syncRepository = syncRepository,
-        _userRepository = userRepository,
-        _uid = uid;
+  }) : _syncRepository = syncRepository,
+       _userRepository = userRepository,
+       _uid = uid;
 
   final CalendarSyncRepository _syncRepository;
   final UserRepository _userRepository;

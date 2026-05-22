@@ -37,57 +37,62 @@ Widget _buildScreen() {
 }
 
 void main() {
-  group('CalendarSyncSettingsScreen — gcalSyncEnabled: false (feature flag off)',
-      () {
-    testWidgets('renders without error (smoke test)', (tester) async {
-      await tester.pumpWidget(_buildScreen());
-      await tester.pumpAndSettle(const Duration(seconds: 3));
-      expect(find.byType(CalendarSyncSettingsScreen), findsOneWidget);
-    });
+  group(
+    'CalendarSyncSettingsScreen — gcalSyncEnabled: false (feature flag off)',
+    () {
+      testWidgets('renders without error (smoke test)', (tester) async {
+        await tester.pumpWidget(_buildScreen());
+        await tester.pumpAndSettle(const Duration(seconds: 3));
+        expect(find.byType(CalendarSyncSettingsScreen), findsOneWidget);
+      });
 
-    testWidgets('shows app bar with "Google Calendar Sync" title',
-        (tester) async {
-      await tester.pumpWidget(_buildScreen());
-      await tester.pumpAndSettle(const Duration(seconds: 3));
-      expect(find.text('Google Calendar Sync'), findsOneWidget);
-    });
+      testWidgets('shows app bar with "Google Calendar Sync" title', (
+        tester,
+      ) async {
+        await tester.pumpWidget(_buildScreen());
+        await tester.pumpAndSettle(const Duration(seconds: 3));
+        expect(find.text('Google Calendar Sync'), findsOneWidget);
+      });
 
-    testWidgets('shows "Coming soon" body text', (tester) async {
-      await tester.pumpWidget(_buildScreen());
-      await tester.pumpAndSettle(const Duration(seconds: 3));
-      expect(find.text('Coming soon'), findsOneWidget);
-    });
+      testWidgets('shows "Coming soon" body text', (tester) async {
+        await tester.pumpWidget(_buildScreen());
+        await tester.pumpAndSettle(const Duration(seconds: 3));
+        expect(find.text('Coming soon'), findsOneWidget);
+      });
 
-    testWidgets('does NOT show Connect Google Calendar button', (tester) async {
-      await tester.pumpWidget(_buildScreen());
-      await tester.pumpAndSettle(const Duration(seconds: 3));
-      expect(find.text('Connect Google Calendar'), findsNothing);
-    });
+      testWidgets('does NOT show Connect Google Calendar button', (
+        tester,
+      ) async {
+        await tester.pumpWidget(_buildScreen());
+        await tester.pumpAndSettle(const Duration(seconds: 3));
+        expect(find.text('Connect Google Calendar'), findsNothing);
+      });
 
-    testWidgets('does NOT show Disconnect button', (tester) async {
-      await tester.pumpWidget(_buildScreen());
-      await tester.pumpAndSettle(const Duration(seconds: 3));
-      expect(find.text('Disconnect'), findsNothing);
-    });
+      testWidgets('does NOT show Disconnect button', (tester) async {
+        await tester.pumpWidget(_buildScreen());
+        await tester.pumpAndSettle(const Duration(seconds: 3));
+        expect(find.text('Disconnect'), findsNothing);
+      });
 
-    testWidgets('does NOT show Sync Now button', (tester) async {
-      await tester.pumpWidget(_buildScreen());
-      await tester.pumpAndSettle(const Duration(seconds: 3));
-      expect(find.text('Sync Now'), findsNothing);
-    });
+      testWidgets('does NOT show Sync Now button', (tester) async {
+        await tester.pumpWidget(_buildScreen());
+        await tester.pumpAndSettle(const Duration(seconds: 3));
+        expect(find.text('Sync Now'), findsNothing);
+      });
 
-    testWidgets('renders a Scaffold as root widget', (tester) async {
-      await tester.pumpWidget(_buildScreen());
-      await tester.pumpAndSettle(const Duration(seconds: 3));
-      expect(find.byType(Scaffold), findsWidgets);
-    });
+      testWidgets('renders a Scaffold as root widget', (tester) async {
+        await tester.pumpWidget(_buildScreen());
+        await tester.pumpAndSettle(const Duration(seconds: 3));
+        expect(find.byType(Scaffold), findsWidgets);
+      });
 
-    testWidgets('"Coming soon" text is centred in the body', (tester) async {
-      await tester.pumpWidget(_buildScreen());
-      await tester.pumpAndSettle(const Duration(seconds: 3));
-      // The body is a Center widget wrapping the Text.
-      expect(find.byType(Center), findsWidgets);
-      expect(find.text('Coming soon'), findsOneWidget);
-    });
-  });
+      testWidgets('"Coming soon" text is centred in the body', (tester) async {
+        await tester.pumpWidget(_buildScreen());
+        await tester.pumpAndSettle(const Duration(seconds: 3));
+        // The body is a Center widget wrapping the Text.
+        expect(find.byType(Center), findsWidgets);
+        expect(find.text('Coming soon'), findsOneWidget);
+      });
+    },
+  );
 }

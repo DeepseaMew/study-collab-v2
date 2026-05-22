@@ -22,14 +22,8 @@ class CalendarDatasource {
     return _firestore
         .collection(FirestorePaths.sessionsCollection)
         .where('memberUids', arrayContains: uid)
-        .where(
-          'scheduledAt',
-          isGreaterThanOrEqualTo: Timestamp.fromDate(start),
-        )
-        .where(
-          'scheduledAt',
-          isLessThanOrEqualTo: Timestamp.fromDate(end),
-        )
+        .where('scheduledAt', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
+        .where('scheduledAt', isLessThanOrEqualTo: Timestamp.fromDate(end))
         .orderBy('scheduledAt')
         .snapshots()
         .map(

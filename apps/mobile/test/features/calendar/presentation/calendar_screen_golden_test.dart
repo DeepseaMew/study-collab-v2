@@ -41,15 +41,15 @@ Widget _buildGolden(double textScale) {
       firebaseAuthStateProvider.overrideWith(
         (_) => Stream.value(_FakeFirebaseUser()),
       ),
-      calendarSessionsProvider(uid, windowStart, windowEnd).overrideWith(
-        (_) => Stream.value(const <SessionEntity>[]),
-      ),
+      calendarSessionsProvider(
+        uid,
+        windowStart,
+        windowEnd,
+      ).overrideWith((_) => Stream.value(const <SessionEntity>[])),
       calendarRepositoryProvider.overrideWith(
         (_) => throw UnimplementedError(),
       ),
-      sessionRepositoryProvider.overrideWith(
-        (_) => throw UnimplementedError(),
-      ),
+      sessionRepositoryProvider.overrideWith((_) => throw UnimplementedError()),
     ],
     child: MaterialApp(
       locale: const Locale('th'),
@@ -80,7 +80,9 @@ void main() {
         await tester.pumpAndSettle(const Duration(seconds: 3));
         await expectLater(
           find.byType(CalendarScreen),
-          matchesGoldenFile('goldens/calendar_screen_no_day_selected_scale_1.0_th.png'),
+          matchesGoldenFile(
+            'goldens/calendar_screen_no_day_selected_scale_1.0_th.png',
+          ),
         );
       });
     });
@@ -91,7 +93,9 @@ void main() {
         await tester.pumpAndSettle(const Duration(seconds: 3));
         await expectLater(
           find.byType(CalendarScreen),
-          matchesGoldenFile('goldens/calendar_screen_no_day_selected_scale_1.5_th.png'),
+          matchesGoldenFile(
+            'goldens/calendar_screen_no_day_selected_scale_1.5_th.png',
+          ),
         );
       });
     });

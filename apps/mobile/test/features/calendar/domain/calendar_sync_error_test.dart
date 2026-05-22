@@ -62,12 +62,15 @@ void main() {
       expect(labels, ['mismatch', 'cancelled', 'api_failure']);
     });
 
-    test('two ApiFailureError instances with same message are not identical', () {
-      final a = ApiFailureError('error');
-      final b = ApiFailureError('error');
-      // They are different object instances but carry the same message value.
-      expect(a.message, b.message);
-      expect(identical(a, b), isFalse);
-    });
+    test(
+      'two ApiFailureError instances with same message are not identical',
+      () {
+        final a = ApiFailureError('error');
+        final b = ApiFailureError('error');
+        // They are different object instances but carry the same message value.
+        expect(a.message, b.message);
+        expect(identical(a, b), isFalse);
+      },
+    );
   });
 }
