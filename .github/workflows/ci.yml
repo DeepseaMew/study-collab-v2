@@ -142,16 +142,7 @@ jobs:
           arch: x86_64
           target: default
           working-directory: ${{ github.workspace }}/apps/mobile
-          script: >-
-            firebase emulators:exec --project study-collab-4d0a0 --only auth,firestore
-            "flutter drive
-              --driver=test_driver/integration_test.dart
-              --target=integration_test/auth_happy_path_test.dart
-              -d emulator-5554 &&
-             flutter drive
-              --driver=test_driver/integration_test.dart
-              --target=integration_test/auth_flow_test.dart
-              -d emulator-5554"
+          script: firebase emulators:exec --project study-collab-4d0a0 --only auth,firestore "flutter drive --driver=test_driver/integration_test.dart --target=integration_test/auth_happy_path_test.dart -d emulator-5554 && flutter drive --driver=test_driver/integration_test.dart --target=integration_test/auth_flow_test.dart -d emulator-5554"
 
   integration-test-web:
     name: Integration Tests (Web)
