@@ -14,10 +14,14 @@ abstract final class StoragePaths {
   /// each new upload (ADR 0005 sub-decision 1).
   static String avatar(String uid) => 'avatars/$uid/avatar.jpg';
 
-  // ── Notes (reserved) ──────────────────────────────────────────────────────
+  // ── Notes ─────────────────────────────────────────────────────────────────
 
-  /// Reserved for the Note-Sharing feature — rules not yet defined.
-  /// Do not use until the Note-Sharing ADR is accepted.
-  static String noteObject(String sessionId, String fileName) =>
-      'sessions/$sessionId/notes/$fileName';
+  /// Storage path for a session note file (ADR 0008 sub-decision 1).
+  ///
+  /// The [noteId] is the Firestore-auto-generated document ID; this path
+  /// mirrors the Firestore `sessions/{sessionId}/notes/{noteId}` path.
+  /// The `storageRef` field on the Firestore note document stores this path
+  /// verbatim.
+  static String sessionNote(String sessionId, String noteId) =>
+      'sessions/$sessionId/notes/$noteId';
 }

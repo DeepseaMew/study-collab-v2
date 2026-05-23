@@ -124,16 +124,30 @@ service cloud.firestore {
              'scheduledAt', 'location', 'capacity', 'hostDisplayName', 'createdAt', 'updatedAt'
            ]);
 
-      allow update: if isHost(sessionId)
-        && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['title', 'description', 'hashtags', 'academicLevel',
-                       'studentYear', 'visibility', 'pin', 'memberUids',
-                       'noteCount', 'status', 'scheduledAt', 'scheduledEndAt',
-                       'location', 'capacity', 'endedAt', 'updatedAt'])
-        && request.resource.data.updatedAt == request.time
-        && request.resource.data.hostUid == resource.data.hostUid
-        && request.resource.data.hostFaculty == resource.data.hostFaculty
-        && request.resource.data.createdAt == resource.data.createdAt;
+      // Amendment B (ADR 0008): allow any session member to update noteCount
+      // by exactly ±1 for note upload/delete WriteBatches by non-host members.
+      allow update: if
+        (isHost(sessionId)
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['title', 'description', 'hashtags', 'academicLevel',
+                         'studentYear', 'visibility', 'pin', 'memberUids',
+                         'noteCount', 'status', 'scheduledAt', 'scheduledEndAt',
+                         'location', 'capacity', 'endedAt', 'updatedAt'])
+          && request.resource.data.updatedAt == request.time
+          && request.resource.data.hostUid == resource.data.hostUid
+          && request.resource.data.hostFaculty == resource.data.hostFaculty
+          && request.resource.data.hostDisplayName == resource.data.hostDisplayName
+          && request.resource.data.hostPhotoUrl == resource.data.hostPhotoUrl
+          && request.resource.data.createdAt == resource.data.createdAt)
+        || (isMember(sessionId)
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['noteCount'])
+          && (request.resource.data.noteCount == resource.data.noteCount + 1
+              || request.resource.data.noteCount == resource.data.noteCount - 1)
+          && request.resource.data.noteCount >= 0);
+      // Note: the member condition intentionally omits updatedAt == request.time.
+      // The WriteBatch for a note upload or delete does not write updatedAt on
+      // the session document (ADR 0008 Amendment B).
 
       allow delete: if isHost(sessionId)
         && resource.data.status == 'scheduled';
@@ -207,8 +221,9 @@ service cloud.firestore {
           && request.resource.data.uploadedAt == request.time
           && request.resource.data.sizeBytes > 0
           && request.resource.data.sizeBytes <= 10485760
+          // Amendment A (ADR 0008): uploaderDisplayName added to hasAll.
           && request.resource.data.keys().hasAll([
-               'noteId', 'uploaderUid', 'fileName', 'mimeType',
+               'noteId', 'uploaderUid', 'uploaderDisplayName', 'fileName', 'mimeType',
                'sizeBytes', 'storageRef', 'downloadUrl', 'uploadedAt'
              ])
           && getAfter(/databases/$(database)/documents/sessions/$(sessionId))

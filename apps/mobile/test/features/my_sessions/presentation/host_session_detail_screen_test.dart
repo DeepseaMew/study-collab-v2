@@ -1,7 +1,7 @@
 // Widget tests for HostSessionDetailScreen.
 //
 // Smoke test: screen renders loading, error, and data states.
-// Verifies 3-tab layout (Members, Notes, Requests) and End Session button
+// Verifies 3-tab layout (Members, Files, Requests) and End Session button
 // per ADR 0003.
 
 import 'package:firebase_auth/firebase_auth.dart';
@@ -144,7 +144,7 @@ void main() {
       await tester.pumpAndSettle(const Duration(seconds: 3));
 
       expect(find.text('Members'), findsOneWidget);
-      expect(find.text('Notes'), findsOneWidget);
+      expect(find.text('Files'), findsOneWidget);
       expect(find.text('Requests'), findsOneWidget);
     });
   });

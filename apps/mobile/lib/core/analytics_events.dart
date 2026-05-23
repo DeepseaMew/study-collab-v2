@@ -106,6 +106,26 @@ abstract final class AnalyticsEvents {
   /// No PII.
   static const String avatarUploadFailed = 'avatar_upload_failed';
 
+  // ── Note-Sharing ──────────────────────────────────────────────────────────
+
+  /// A note file was successfully uploaded.
+  /// Payload: mime_type (String, no PII), size_bytes (int).
+  static const String noteUploaded = 'note_uploaded';
+
+  /// A note file was successfully deleted. No payload.
+  static const String noteDeleted = 'note_deleted';
+
+  /// A note file was opened (url_launcher). No payload.
+  static const String noteFileOpened = 'note_file_opened';
+
+  /// A note upload failed at any step.
+  /// Payload: error_type (String, no PII —
+  ///   'file_too_large' | 'unsupported_mime' | 'upload_failed' | 'cap_reached').
+  static const String noteUploadFailed = 'note_upload_failed';
+
+  /// The "See All" button was tapped to open AllFilesScreen. No payload.
+  static const String noteSeeAllOpened = 'note_see_all_opened';
+
   // ── Calendar ───────────────────────────────────────────────────────────────
 
   /// User toggled the calendar view format (month ↔ week).
