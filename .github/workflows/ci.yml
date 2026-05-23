@@ -194,16 +194,11 @@ jobs:
         uses: nanasess/setup-chromedriver@v2
 
       - name: Run integration tests (Web)
-        working-directory: ${{ github.workspace }}
-        run: |
-          chromedriver --port=4444 &
-          sleep 3
-          firebase emulators:exec --project study-collab-4d0a0 --only auth,firestore \
-            "cd apps/mobile && flutter drive \
-              --driver=test_driver/integration_test.dart \
-              --target=integration_test/auth_happy_path_test.dart \
-              -d web-server \
-              --browser-name=chrome"
+              working-directory: ${{ github.workspace }}
+              run: |
+                chromedriver --port=4444 &
+                sleep 3
+                firebase emulators:exec --project study-collab-4d0a0 --only auth,firestore "cd apps/mobile && flutter drive --driver=test_driver/integration_test.dart --target=integration_test/auth_happy_path_test.dart -d web-server --browser-name=chrome"
 
   firebase-emulator:
     runs-on: ubuntu-latest
