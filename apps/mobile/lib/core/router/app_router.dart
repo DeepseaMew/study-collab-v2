@@ -8,6 +8,10 @@ import 'package:mobile/features/auth/presentation/screens/profile_setup_screen.d
 import 'package:mobile/features/auth/presentation/screens/sign_in_screen.dart';
 import 'package:mobile/features/auth/presentation/screens/sign_up_screen.dart';
 import 'package:mobile/features/auth/presentation/screens/verify_email_screen.dart';
+import 'package:mobile/core/feature_flags.dart';
+import 'package:mobile/features/calendar/presentation/screens/calendar_day_screen.dart';
+import 'package:mobile/features/calendar/presentation/screens/calendar_screen.dart';
+import 'package:mobile/features/calendar/presentation/screens/calendar_sync_settings_screen.dart';
 import 'package:mobile/features/friends/presentation/screens/friend_requests_screen.dart';
 import 'package:mobile/features/friends/presentation/screens/friends_screen.dart';
 import 'package:mobile/features/home/presentation/screens/home_screen.dart';
@@ -16,6 +20,7 @@ import 'package:mobile/features/my_sessions/presentation/screens/member_session_
 import 'package:mobile/features/my_sessions/presentation/screens/my_sessions_screen.dart';
 import 'package:mobile/features/profile/presentation/screens/other_user_profile_screen.dart';
 import 'package:mobile/features/profile/presentation/screens/profile_screen.dart';
+import 'package:mobile/features/sessions/domain/entities/session_entity.dart';
 import 'package:mobile/features/sessions/presentation/screens/create_session_screen.dart';
 import 'package:mobile/features/sessions/presentation/screens/edit_session_screen.dart';
 import 'package:mobile/features/sessions/presentation/screens/members_list_screen.dart';
@@ -62,6 +67,10 @@ abstract final class RouteConstants {
 
   // Messages DM
   static const String messagesDm = '/messages/dm/:id';
+
+  // Calendar sub-routes
+  static const String calendarDay = '/calendar/day';
+  static const String calendarSyncSettings = '/calendar/sync-settings';
 }
 
 // ── Router change notifier ────────────────────────────────────────────────────
@@ -257,8 +266,28 @@ GoRouter router(RouterRef ref) {
             routes: [
               GoRoute(
                 path: RouteConstants.calendar,
-                // TODO(calendar-adr): replace when Calendar ADR is accepted.
-                builder: (_, __) => _comingSoonScreen('Calendar'),
+                builder: (_, __) => const CalendarScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'day',
+                    builder: (context, state) {
+                      final extra =
+                          state.extra! as (DateTime, List<SessionEntity>);
+                      return CalendarDayScreen(
+                        day: extra.$1,
+                        sessions: extra.$2,
+                      );
+                    },
+                  ),
+                  GoRoute(
+                    path: 'sync-settings',
+                    redirect: (_, __) => FeatureFlags.gcalSyncEnabled
+                        ? null
+                        : RouteConstants.calendar,
+                    builder: (context, state) =>
+                        const CalendarSyncSettingsScreen(),
+                  ),
+                ],
               ),
             ],
           ),

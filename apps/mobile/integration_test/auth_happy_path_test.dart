@@ -12,6 +12,14 @@
 // Host selection:
 //   Android emulator → 10.0.2.2 (loopback alias that reaches the host machine)
 //   All other platforms → localhost
+//
+// Android auto-init note:
+//   The debug AndroidManifest removes FirebaseInitProvider so that the
+//   Firebase SDK does not auto-initialize before Dart code runs. This allows
+//   setUpAll() to call Firebase.initializeApp() then useAuthEmulator() in the
+//   correct order without hitting IllegalStateException. Release builds are
+//   unaffected because they use the main AndroidManifest which retains the
+//   provider.
 
 import 'dart:convert';
 
@@ -70,11 +78,25 @@ void main() {
       : 'localhost';
 
   setUpAll(() async {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    await FirebaseAuth.instance.useAuthEmulator(emulatorHost, 9099);
-    FirebaseFirestore.instance.useFirestoreEmulator(emulatorHost, 8080);
+    try {
+      // Auto-init is disabled in debug Android builds via the debug
+      // AndroidManifest (FirebaseInitProvider removed). On all platforms we
+      // therefore always call initializeApp() here — no apps.isEmpty guard
+      // needed or desired, because we need to be the first call to touch Auth.
+      await Firebase.initializeApp(
+        options: DefaultFirebaseOptions.currentPlatform,
+      );
+
+      // Must be called immediately after initializeApp(), before any Firebase
+      // Auth operation or internal state listener is attached by the plugin.
+      await FirebaseAuth.instance.useAuthEmulator(emulatorHost, 9099);
+      FirebaseFirestore.instance.useFirestoreEmulator(emulatorHost, 8080);
+    } catch (e, st) {
+      debugPrint('=== setUpAll FAILED ===');
+      debugPrint('Exception: $e');
+      debugPrint('Stack: $st');
+      fail('setUpAll threw: $e\n$st');
+    }
   });
 
   // ── Helper: mark a Firebase Auth emulator account as email-verified ───────
