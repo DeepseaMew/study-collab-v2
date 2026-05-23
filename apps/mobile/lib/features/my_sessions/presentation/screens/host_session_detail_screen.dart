@@ -8,6 +8,7 @@ import 'package:mobile/core/router/app_router.dart';
 import 'package:mobile/core/utils/date_formatter.dart';
 import 'package:mobile/features/auth/domain/entities/user_entity.dart';
 import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
+import 'package:mobile/features/note_sharing/presentation/widgets/files_tab.dart';
 import 'package:mobile/features/sessions/domain/entities/join_request_entity.dart';
 import 'package:mobile/features/sessions/domain/entities/session_entity.dart';
 import 'package:mobile/features/sessions/presentation/providers/join_requests_provider.dart';
@@ -19,13 +20,22 @@ enum _HostAction { edit, delete }
 
 /// Host management view of a session.
 ///
-/// Three tabs: Members (with End Session), Notes (placeholder), Requests.
+/// Three tabs: Members (with End Session), Files (ADR 0008), Requests.
 ///
 /// Route: `/my-sessions/session/:id/host`
+/// Extra: `{'initialTabIndex': int}` (optional).
 class HostSessionDetailScreen extends ConsumerStatefulWidget {
-  const HostSessionDetailScreen({super.key, required this.sessionId});
+  const HostSessionDetailScreen({
+    super.key,
+    required this.sessionId,
+    this.initialTabIndex = 0,
+  });
 
   final String sessionId;
+
+  /// Tab index to open on creation. Defaults to 0 (Members).
+  /// Pass 1 to open directly at the Files tab.
+  final int initialTabIndex;
 
   @override
   ConsumerState<HostSessionDetailScreen> createState() =>
@@ -40,7 +50,11 @@ class _HostSessionDetailScreenState
   @override
   void initState() {
     super.initState();
-    _tab = TabController(length: 3, vsync: this);
+    _tab = TabController(
+      length: 3,
+      vsync: this,
+      initialIndex: widget.initialTabIndex.clamp(0, 2),
+    );
   }
 
   @override
@@ -267,7 +281,7 @@ class _HostSessionDetailScreenState
                 ),
                 tabs: const [
                   Tab(text: 'Members'),
-                  Tab(text: 'Notes'),
+                  Tab(text: 'Files'),
                   Tab(text: 'Requests'),
                 ],
               ),
@@ -283,7 +297,11 @@ class _HostSessionDetailScreenState
                           : () =>
                                 _showEndSessionSheet(session, members, me.uid),
                     ),
-                    const _NotesTab(),
+                    FilesTab(
+                      sessionId: widget.sessionId,
+                      currentUserId: me?.uid ?? '',
+                      hostUid: session.hostUid,
+                    ),
                     _RequestsTab(
                       session: session,
                       requests: requests,
@@ -748,79 +766,7 @@ class _HostRow extends StatelessWidget {
   }
 }
 
-// ── Tab 1: Notes placeholder ───────────────────────────────────────────────────
-
-class _NotesTab extends StatelessWidget {
-  const _NotesTab();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-      child: Column(
-        children: [
-          TextField(
-            decoration: InputDecoration(
-              hintText: 'Search notes...',
-              prefixIcon: const Icon(
-                Icons.search_outlined,
-                color: AppColors.hint,
-              ),
-              filled: true,
-              fillColor: AppColors.surface,
-              contentPadding: const EdgeInsets.symmetric(vertical: 12),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.border),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.border),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.accent, width: 2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          const Expanded(
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.description_outlined,
-                    size: 64,
-                    color: AppColors.secondary,
-                  ),
-                  SizedBox(height: 12),
-                  Text(
-                    'No notes uploaded yet',
-                    style: TextStyle(color: AppColors.hint, fontSize: 14),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          OutlinedButton.icon(
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.accent,
-              minimumSize: const Size(double.infinity, 48),
-              side: const BorderSide(color: AppColors.accent),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            icon: const Icon(Icons.upload_file_outlined, size: 18),
-            label: const Text('Upload Note'),
-            onPressed: () {},
-          ),
-        ],
-      ),
-    );
-  }
-}
+// ── Tab 1: Files is now FilesTab (ADR 0008) ────────────────────────────────────
 
 // ── Tab 2: Requests ────────────────────────────────────────────────────────────
 

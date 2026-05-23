@@ -18,6 +18,7 @@ import 'package:mobile/features/home/presentation/screens/home_screen.dart';
 import 'package:mobile/features/my_sessions/presentation/screens/host_session_detail_screen.dart';
 import 'package:mobile/features/my_sessions/presentation/screens/member_session_detail_screen.dart';
 import 'package:mobile/features/my_sessions/presentation/screens/my_sessions_screen.dart';
+import 'package:mobile/features/note_sharing/presentation/screens/all_files_screen.dart';
 import 'package:mobile/features/profile/presentation/screens/other_user_profile_screen.dart';
 import 'package:mobile/features/profile/presentation/screens/profile_screen.dart';
 import 'package:mobile/features/sessions/domain/entities/session_entity.dart';
@@ -46,6 +47,9 @@ abstract final class RouteConstants {
   // My Sessions detail routes
   static const String mySessionMember = '/my-sessions/session/:id/member';
   static const String mySessionHost = '/my-sessions/session/:id/host';
+
+  // Note-sharing routes (ADR 0008)
+  static const String sessionFiles = '/my-sessions/session/:id/files';
 
   // Session routes
   static const String sessionCreate = '/sessions/create';
@@ -308,16 +312,46 @@ GoRouter router(RouterRef ref) {
                 routes: [
                   GoRoute(
                     path: 'session/:id/member',
-                    builder: (_, state) => MemberSessionDetailScreen(
-                      sessionId: state.pathParameters['id']!,
-                      isCompleted: state.extra == true,
-                    ),
+                    builder: (_, state) {
+                      final extra = state.extra as Map<String, dynamic>?;
+                      final isCompleted =
+                          (extra?['isCompleted'] as bool?) ?? false;
+                      final initialTabIndex =
+                          (extra?['initialTabIndex'] as int?) ?? 0;
+                      return MemberSessionDetailScreen(
+                        sessionId: state.pathParameters['id']!,
+                        isCompleted: isCompleted,
+                        initialTabIndex: initialTabIndex,
+                      );
+                    },
                   ),
                   GoRoute(
                     path: 'session/:id/host',
-                    builder: (_, state) => HostSessionDetailScreen(
-                      sessionId: state.pathParameters['id']!,
-                    ),
+                    builder: (_, state) {
+                      final extra = state.extra as Map<String, dynamic>?;
+                      final initialTabIndex =
+                          (extra?['initialTabIndex'] as int?) ?? 0;
+                      return HostSessionDetailScreen(
+                        sessionId: state.pathParameters['id']!,
+                        initialTabIndex: initialTabIndex,
+                      );
+                    },
+                  ),
+                  GoRoute(
+                    path: 'session/:id/files',
+                    builder: (context, state) {
+                      final extra = state.extra as Map<String, dynamic>?;
+                      if (extra == null) {
+                        return const Scaffold(
+                          body: Center(child: CircularProgressIndicator()),
+                        );
+                      }
+                      return AllFilesScreen(
+                        sessionId: extra['sessionId'] as String,
+                        currentUserId: extra['currentUserId'] as String,
+                        hostUid: extra['hostUid'] as String,
+                      );
+                    },
                   ),
                 ],
               ),

@@ -305,7 +305,7 @@ class _SessionList extends ConsumerWidget {
                     : RouteConstants.mySessionMember;
                 context.push(
                   route.replaceFirst(':id', session.sessionId),
-                  extra: isCompleted,
+                  extra: <String, dynamic>{'isCompleted': isCompleted},
                 );
               },
             );

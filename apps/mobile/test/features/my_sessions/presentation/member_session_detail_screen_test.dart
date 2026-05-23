@@ -1,7 +1,7 @@
 // Widget tests for MemberSessionDetailScreen.
 //
 // Smoke test: screen renders loading, error, and data states.
-// Verifies 2-tab layout (Members, Notes) per ADR 0003.
+// Verifies 2-tab layout (Members, Files) per ADR 0003.
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -98,7 +98,7 @@ void main() {
     });
   });
 
-  testWidgets('MemberSessionDetailScreen — two tabs rendered: Members, Notes', (
+  testWidgets('MemberSessionDetailScreen — two tabs rendered: Members, Files', (
     tester,
   ) async {
     await mockNetworkImagesFor(() async {
@@ -108,7 +108,7 @@ void main() {
       await tester.pumpAndSettle(const Duration(seconds: 3));
 
       expect(find.text('Members'), findsOneWidget);
-      expect(find.text('Notes'), findsOneWidget);
+      expect(find.text('Files'), findsOneWidget);
     });
   });
 

@@ -7,6 +7,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/core/logger.dart';
+import 'package:mobile/core/remote_config_startup.dart';
 import 'package:mobile/core/router/app_router.dart';
 import 'package:mobile/firebase_options.dart';
 import 'package:mobile/shared/theme/app_colors.dart';
@@ -24,7 +25,11 @@ Future<void> main() async {
       exception: error,
       stackTrace: stack,
     );
-    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    if (!kIsWeb) {
+      try {
+        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      } catch (_) {}
+    }
   });
 }
 
@@ -38,12 +43,19 @@ Future<void> _bootstrap() async {
     cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
   );
 
-  FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+  if (!kIsWeb) {
+    FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
+    PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
+      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      return true;
+    };
+  }
 
-  PlatformDispatcher.instance.onError = (Object error, StackTrace stack) {
-    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
-    return true;
-  };
+  // Fetch and activate Remote Config before the first frame so that
+  // noteSharingEnabledProvider reads the correct server-side value on startup.
+  final container = ProviderContainer();
+  await container.read(remoteConfigStartupProvider.future);
+  container.dispose();
 
   appLogger.info('App bootstrap complete — launching Study Collab');
 
