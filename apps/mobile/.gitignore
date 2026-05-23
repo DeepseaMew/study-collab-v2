@@ -14,6 +14,9 @@
 # Coverage
 **/coverage/
 
+# Golden test failure artifacts (auto-generated on test failure, not source)
+**/failures/
+
 # Dart
 **/.packages
 
