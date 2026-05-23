@@ -16,16 +16,16 @@ import 'package:mocktail/mocktail.dart';
 class _MockNoteRepository extends Mock implements NoteRepository {}
 
 NoteEntity _note(String noteId) => NoteEntity(
-      noteId: noteId,
-      uploaderUid: 'uid-1',
-      uploaderDisplayName: 'Alice',
-      fileName: '$noteId.pdf',
-      mimeType: 'application/pdf',
-      sizeBytes: 1024,
-      storageRef: 'sessions/sess-1/notes/$noteId',
-      downloadUrl: 'https://example.com/$noteId',
-      uploadedAt: DateTime(2026, 5, 23),
-    );
+  noteId: noteId,
+  uploaderUid: 'uid-1',
+  uploaderDisplayName: 'Alice',
+  fileName: '$noteId.pdf',
+  mimeType: 'application/pdf',
+  sizeBytes: 1024,
+  storageRef: 'sessions/sess-1/notes/$noteId',
+  downloadUrl: 'https://example.com/$noteId',
+  uploadedAt: DateTime(2026, 5, 23),
+);
 
 void main() {
   late _MockNoteRepository repository;
@@ -135,10 +135,7 @@ void main() {
       await useCase.call('sess-1');
 
       verify(
-        () => repository.fetchNotesPage(
-          any(),
-          limit: any(named: 'limit'),
-        ),
+        () => repository.fetchNotesPage(any(), limit: any(named: 'limit')),
       ).called(1);
     });
   });
@@ -170,8 +167,11 @@ void main() {
       ).thenAnswer((_) async => notes);
 
       final result = await useCase.call('sess-1');
-      expect(result.map((n) => n.noteId).toList(),
-          ['note-c', 'note-b', 'note-a']);
+      expect(result.map((n) => n.noteId).toList(), [
+        'note-c',
+        'note-b',
+        'note-a',
+      ]);
     });
 
     test('propagates repository exceptions', () async {
@@ -183,10 +183,7 @@ void main() {
         ),
       ).thenAnswer((_) => Future.error(Exception('Firestore unavailable')));
 
-      await expectLater(
-        useCase.call('sess-1'),
-        throwsA(isA<Exception>()),
-      );
+      await expectLater(useCase.call('sess-1'), throwsA(isA<Exception>()));
     });
   });
 }

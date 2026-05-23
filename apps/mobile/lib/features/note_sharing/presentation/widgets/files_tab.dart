@@ -186,7 +186,10 @@ class FilesTab extends ConsumerWidget {
               heroTag: 'files_tab_fab_$sessionId',
               onPressed: () => _showUploadSheet(context, ref),
               backgroundColor: AppColors.accent,
-              child: const Icon(Icons.upload_file_outlined, color: Colors.white),
+              child: const Icon(
+                Icons.upload_file_outlined,
+                color: Colors.white,
+              ),
             ),
           ),
         ),
@@ -282,8 +285,7 @@ class FilesTab extends ConsumerWidget {
         .read(noteActionsNotifierProvider(sessionId).notifier)
         .upload(params);
 
-    final resultState =
-        ref.read(noteActionsNotifierProvider(sessionId));
+    final resultState = ref.read(noteActionsNotifierProvider(sessionId));
     if (resultState is AsyncError && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

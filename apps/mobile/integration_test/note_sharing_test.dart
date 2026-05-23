@@ -34,7 +34,8 @@ void main() {
         //   6. Expect: the file name appears in the ListView.
         //   7. Expect: noteCount on the Firestore session document == 1.
       },
-      skip: true, // Pending CI emulator configuration (ADR 0008 CI pipeline changes)
+      skip:
+          true, // Pending CI emulator configuration (ADR 0008 CI pipeline changes)
     );
 
     // ── Delete happy path ────────────────────────────────────────────────────
@@ -55,7 +56,8 @@ void main() {
         //   7. Expect: the Storage object at the storageRef path returns 404
         //      (deletion propagated to Storage after Firestore batch).
       },
-      skip: true, // Pending CI emulator configuration (ADR 0008 CI pipeline changes)
+      skip:
+          true, // Pending CI emulator configuration (ADR 0008 CI pipeline changes)
     );
 
     // ── Permission denied path ───────────────────────────────────────────────
@@ -74,7 +76,8 @@ void main() {
         //   3. Expect: the Firestore WriteBatch returns permission-denied.
         //   4. Expect: the NoteRepository maps it to NoteError.permissionDenied.
       },
-      skip: true, // Pending CI emulator configuration (ADR 0008 CI pipeline changes)
+      skip:
+          true, // Pending CI emulator configuration (ADR 0008 CI pipeline changes)
     );
 
     // ── Cap enforcement path ─────────────────────────────────────────────────
@@ -94,7 +97,8 @@ void main() {
         //      (permission-denied cannot be distinguished from auth failures at
         //      the SDK level — see NoteRepositoryImpl.uploadNote comment.)
       },
-      skip: true, // Pending CI emulator configuration (ADR 0008 CI pipeline changes)
+      skip:
+          true, // Pending CI emulator configuration (ADR 0008 CI pipeline changes)
     );
   });
 }

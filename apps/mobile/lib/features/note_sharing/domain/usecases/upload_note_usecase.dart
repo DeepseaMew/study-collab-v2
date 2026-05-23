@@ -40,9 +40,7 @@ class UploadNoteUseCase {
     }
 
     if (!_allowedMimeTypes.contains(params.mimeType)) {
-      appLogger.warning(
-        'note_upload: unsupported mimeType=${params.mimeType}',
-      );
+      appLogger.warning('note_upload: unsupported mimeType=${params.mimeType}');
       throw NoteUnsupportedMimeType(params.mimeType);
     }
 

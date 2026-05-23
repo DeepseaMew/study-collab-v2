@@ -51,16 +51,16 @@ class _FakePaginatedNotifier extends PaginatedNotesNotifier {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 NoteEntity _note(int index) => NoteEntity(
-      noteId: 'note-$index',
-      uploaderUid: 'uid-uploader',
-      uploaderDisplayName: 'Alice',
-      fileName: 'lecture_$index.pdf',
-      mimeType: 'application/pdf',
-      sizeBytes: (index + 1) * 512000,
-      storageRef: 'sessions/sess-1/notes/note-$index',
-      downloadUrl: 'https://example.com/note-$index',
-      uploadedAt: DateTime(2026, 5, 23 - index),
-    );
+  noteId: 'note-$index',
+  uploaderUid: 'uid-uploader',
+  uploaderDisplayName: 'Alice',
+  fileName: 'lecture_$index.pdf',
+  mimeType: 'application/pdf',
+  sizeBytes: (index + 1) * 512000,
+  storageRef: 'sessions/sess-1/notes/note-$index',
+  downloadUrl: 'https://example.com/note-$index',
+  uploadedAt: DateTime(2026, 5, 23 - index),
+);
 
 Widget _buildGolden({
   required double textScale,
@@ -71,12 +71,12 @@ Widget _buildGolden({
   return ProviderScope(
     overrides: [
       noteSharingEnabledProvider.overrideWithValue(true),
-      noteActionsNotifierProvider(sessionId).overrideWith(
-        () => _FakeNoteActionsNotifier(),
-      ),
-      paginatedNotesNotifierProvider(sessionId).overrideWith(
-        () => _FakePaginatedNotifier(paginatedState),
-      ),
+      noteActionsNotifierProvider(
+        sessionId,
+      ).overrideWith(() => _FakeNoteActionsNotifier()),
+      paginatedNotesNotifierProvider(
+        sessionId,
+      ).overrideWith(() => _FakePaginatedNotifier(paginatedState)),
     ],
     child: MaterialApp(
       locale: const Locale('th'),

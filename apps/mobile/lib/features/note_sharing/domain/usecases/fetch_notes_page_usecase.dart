@@ -14,6 +14,9 @@ class FetchNotesPageUseCase {
     String sessionId, {
     int limit = 20,
     DateTime? startAfter,
-  }) =>
-      _repository.fetchNotesPage(sessionId, limit: limit, startAfter: startAfter);
+  }) => _repository.fetchNotesPage(
+    sessionId,
+    limit: limit,
+    startAfter: startAfter,
+  );
 }

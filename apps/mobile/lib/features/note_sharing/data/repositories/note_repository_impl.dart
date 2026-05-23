@@ -26,9 +26,9 @@ class NoteRepositoryImpl implements NoteRepository {
     required NoteDatasource datasource,
     FirebaseFirestore? firestore,
     FirebaseAuth? auth,
-  })  : _datasource = datasource,
-        _firestore = firestore ?? FirebaseFirestore.instance,
-        _auth = auth ?? FirebaseAuth.instance;
+  }) : _datasource = datasource,
+       _firestore = firestore ?? FirebaseFirestore.instance,
+       _auth = auth ?? FirebaseAuth.instance;
 
   final NoteDatasource _datasource;
   final FirebaseFirestore _firestore;
@@ -133,7 +133,8 @@ class NoteRepositoryImpl implements NoteRepository {
         .doc(FirestorePaths.sessionNoteDoc(sessionId, noteId))
         .get();
 
-    final storageRef = noteSnap.data()?['storageRef'] as String? ??
+    final storageRef =
+        noteSnap.data()?['storageRef'] as String? ??
         StoragePaths.sessionNote(sessionId, noteId);
 
     try {

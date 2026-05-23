@@ -12,16 +12,16 @@ import 'package:mocktail/mocktail.dart';
 class _MockNoteRepository extends Mock implements NoteRepository {}
 
 NoteEntity _note({String noteId = 'note-1'}) => NoteEntity(
-      noteId: noteId,
-      uploaderUid: 'uid-1',
-      uploaderDisplayName: 'Alice',
-      fileName: 'lecture.pdf',
-      mimeType: 'application/pdf',
-      sizeBytes: 1024,
-      storageRef: 'sessions/sess-1/notes/$noteId',
-      downloadUrl: 'https://example.com/$noteId',
-      uploadedAt: DateTime(2026, 5, 23, 10),
-    );
+  noteId: noteId,
+  uploaderUid: 'uid-1',
+  uploaderDisplayName: 'Alice',
+  fileName: 'lecture.pdf',
+  mimeType: 'application/pdf',
+  sizeBytes: 1024,
+  storageRef: 'sessions/sess-1/notes/$noteId',
+  downloadUrl: 'https://example.com/$noteId',
+  uploadedAt: DateTime(2026, 5, 23, 10),
+);
 
 void main() {
   late _MockNoteRepository repository;
@@ -35,8 +35,9 @@ void main() {
   group('WatchNotesUseCase', () {
     test('delegates to repository.watchNotes with correct sessionId', () {
       const sessionId = 'sess-abc';
-      when(() => repository.watchNotes(sessionId))
-          .thenAnswer((_) => Stream.value([]));
+      when(
+        () => repository.watchNotes(sessionId),
+      ).thenAnswer((_) => Stream.value([]));
 
       useCase.call(sessionId);
 
@@ -47,8 +48,9 @@ void main() {
       const sessionId = 'sess-1';
       final notes = [_note(), _note(noteId: 'note-2')];
 
-      when(() => repository.watchNotes(sessionId))
-          .thenAnswer((_) => Stream.value(notes));
+      when(
+        () => repository.watchNotes(sessionId),
+      ).thenAnswer((_) => Stream.value(notes));
 
       final result = await useCase.call(sessionId).first;
       expect(result, notes);
@@ -56,8 +58,9 @@ void main() {
 
     test('emits empty list when repository emits empty list', () async {
       const sessionId = 'sess-empty';
-      when(() => repository.watchNotes(sessionId))
-          .thenAnswer((_) => Stream.value([]));
+      when(
+        () => repository.watchNotes(sessionId),
+      ).thenAnswer((_) => Stream.value([]));
 
       final result = await useCase.call(sessionId).first;
       expect(result, isEmpty);
@@ -65,8 +68,9 @@ void main() {
 
     test('propagates repository stream error', () async {
       const sessionId = 'sess-err';
-      when(() => repository.watchNotes(sessionId))
-          .thenAnswer((_) => Stream.error(Exception('firestore error')));
+      when(
+        () => repository.watchNotes(sessionId),
+      ).thenAnswer((_) => Stream.error(Exception('firestore error')));
 
       expect(useCase.call(sessionId), emitsError(isA<Exception>()));
     });
@@ -76,8 +80,9 @@ void main() {
       final first = [_note()];
       final second = [_note(), _note(noteId: 'note-2')];
 
-      when(() => repository.watchNotes(sessionId))
-          .thenAnswer((_) => Stream.fromIterable([first, second]));
+      when(
+        () => repository.watchNotes(sessionId),
+      ).thenAnswer((_) => Stream.fromIterable([first, second]));
 
       final results = await useCase.call(sessionId).toList();
       expect(results, [first, second]);

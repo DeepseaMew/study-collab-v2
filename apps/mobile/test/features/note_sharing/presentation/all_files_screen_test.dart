@@ -53,16 +53,16 @@ class _FakePaginatedNotifier extends PaginatedNotesNotifier {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 NoteEntity _note(String noteId) => NoteEntity(
-      noteId: noteId,
-      uploaderUid: 'uid-uploader',
-      uploaderDisplayName: 'Alice',
-      fileName: '$noteId.pdf',
-      mimeType: 'application/pdf',
-      sizeBytes: 1024,
-      storageRef: 'sessions/sess-1/notes/$noteId',
-      downloadUrl: 'https://example.com/$noteId',
-      uploadedAt: DateTime(2026, 5, 23),
-    );
+  noteId: noteId,
+  uploaderUid: 'uid-uploader',
+  uploaderDisplayName: 'Alice',
+  fileName: '$noteId.pdf',
+  mimeType: 'application/pdf',
+  sizeBytes: 1024,
+  storageRef: 'sessions/sess-1/notes/$noteId',
+  downloadUrl: 'https://example.com/$noteId',
+  uploadedAt: DateTime(2026, 5, 23),
+);
 
 Widget _buildScreen({
   PaginatedNotesState? paginatedState,
@@ -72,26 +72,24 @@ Widget _buildScreen({
   String hostUid = 'uid-host',
   String sessionId = 'sess-1',
 }) {
-  final defaultState = paginatedState ??
-      (notes: const <NoteEntity>[], hasMore: false);
+  final defaultState =
+      paginatedState ?? (notes: const <NoteEntity>[], hasMore: false);
 
   return ProviderScope(
     overrides: [
       noteSharingEnabledProvider.overrideWithValue(true),
-      noteActionsNotifierProvider(sessionId).overrideWith(
-        () => _FakeNoteActionsNotifier(),
-      ),
-      paginatedNotesNotifierProvider(sessionId).overrideWith(
-        () {
-          if (paginatedLoading) {
-            return _LoadingPaginatedNotifier();
-          }
-          if (paginatedError) {
-            return _ErrorPaginatedNotifier();
-          }
-          return _FakePaginatedNotifier(defaultState);
-        },
-      ),
+      noteActionsNotifierProvider(
+        sessionId,
+      ).overrideWith(() => _FakeNoteActionsNotifier()),
+      paginatedNotesNotifierProvider(sessionId).overrideWith(() {
+        if (paginatedLoading) {
+          return _LoadingPaginatedNotifier();
+        }
+        if (paginatedError) {
+          return _ErrorPaginatedNotifier();
+        }
+        return _FakePaginatedNotifier(defaultState);
+      }),
     ],
     child: MaterialApp(
       home: AllFilesScreen(
@@ -124,9 +122,7 @@ void main() {
       tester,
     ) async {
       await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(
-          _buildScreen(paginatedLoading: true),
-        );
+        await tester.pumpWidget(_buildScreen(paginatedLoading: true));
         await tester.pump(const Duration(milliseconds: 50));
         expect(find.byType(CircularProgressIndicator), findsOneWidget);
       });
@@ -150,9 +146,7 @@ void main() {
     testWidgets('renders scaffold with app bar "All Files"', (tester) async {
       await mockNetworkImagesFor(() async {
         await tester.pumpWidget(
-          _buildScreen(
-            paginatedState: (notes: [], hasMore: false),
-          ),
+          _buildScreen(paginatedState: (notes: [], hasMore: false)),
         );
         await tester.pumpAndSettle(const Duration(seconds: 1));
         expect(find.text('All Files'), findsOneWidget);
@@ -162,9 +156,7 @@ void main() {
     testWidgets('no note tiles when notes list is empty', (tester) async {
       await mockNetworkImagesFor(() async {
         await tester.pumpWidget(
-          _buildScreen(
-            paginatedState: (notes: [], hasMore: false),
-          ),
+          _buildScreen(paginatedState: (notes: [], hasMore: false)),
         );
         await tester.pumpAndSettle(const Duration(seconds: 1));
         // No file name texts from notes.
@@ -177,9 +169,7 @@ void main() {
     ) async {
       await mockNetworkImagesFor(() async {
         await tester.pumpWidget(
-          _buildScreen(
-            paginatedState: (notes: [], hasMore: false),
-          ),
+          _buildScreen(paginatedState: (notes: [], hasMore: false)),
         );
         await tester.pumpAndSettle(const Duration(seconds: 1));
         expect(find.text('Load more'), findsNothing);
@@ -192,9 +182,7 @@ void main() {
       await mockNetworkImagesFor(() async {
         final notes = List.generate(3, (i) => _note('note-$i'));
         await tester.pumpWidget(
-          _buildScreen(
-            paginatedState: (notes: notes, hasMore: false),
-          ),
+          _buildScreen(paginatedState: (notes: notes, hasMore: false)),
         );
         await tester.pumpAndSettle(const Duration(seconds: 1));
         for (var i = 0; i < 3; i++) {
@@ -209,9 +197,7 @@ void main() {
       await mockNetworkImagesFor(() async {
         final notes = List.generate(5, (i) => _note('note-$i'));
         await tester.pumpWidget(
-          _buildScreen(
-            paginatedState: (notes: notes, hasMore: true),
-          ),
+          _buildScreen(paginatedState: (notes: notes, hasMore: true)),
         );
         await tester.pumpAndSettle(const Duration(seconds: 1));
         expect(find.text('Load more'), findsOneWidget);
@@ -224,9 +210,7 @@ void main() {
       await mockNetworkImagesFor(() async {
         final notes = List.generate(5, (i) => _note('note-$i'));
         await tester.pumpWidget(
-          _buildScreen(
-            paginatedState: (notes: notes, hasMore: false),
-          ),
+          _buildScreen(paginatedState: (notes: notes, hasMore: false)),
         );
         await tester.pumpAndSettle(const Duration(seconds: 1));
         expect(find.text('Load more'), findsNothing);
@@ -239,15 +223,10 @@ void main() {
       await mockNetworkImagesFor(() async {
         final notes = List.generate(2, (i) => _note('note-$i'));
         await tester.pumpWidget(
-          _buildScreen(
-            paginatedState: (notes: notes, hasMore: true),
-          ),
+          _buildScreen(paginatedState: (notes: notes, hasMore: true)),
         );
         await tester.pumpAndSettle(const Duration(seconds: 1));
-        expect(
-          find.bySemanticsLabel('Load more files'),
-          findsOneWidget,
-        );
+        expect(find.bySemanticsLabel('Load more files'), findsOneWidget);
       });
     });
   });
@@ -256,9 +235,7 @@ void main() {
     testWidgets('upload FAB is visible', (tester) async {
       await mockNetworkImagesFor(() async {
         await tester.pumpWidget(
-          _buildScreen(
-            paginatedState: (notes: [], hasMore: false),
-          ),
+          _buildScreen(paginatedState: (notes: [], hasMore: false)),
         );
         await tester.pumpAndSettle(const Duration(seconds: 1));
         expect(find.byType(FloatingActionButton), findsOneWidget);
@@ -268,9 +245,7 @@ void main() {
     testWidgets('upload FAB has Semantics label "Upload file"', (tester) async {
       await mockNetworkImagesFor(() async {
         await tester.pumpWidget(
-          _buildScreen(
-            paginatedState: (notes: [], hasMore: false),
-          ),
+          _buildScreen(paginatedState: (notes: [], hasMore: false)),
         );
         await tester.pumpAndSettle(const Duration(seconds: 1));
         expect(find.bySemanticsLabel('Upload file'), findsOneWidget);

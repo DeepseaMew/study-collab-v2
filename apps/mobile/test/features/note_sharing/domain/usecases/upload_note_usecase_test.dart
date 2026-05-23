@@ -23,13 +23,12 @@ NoteUploadParams _params({
   String mimeType = 'application/pdf',
   int sizeBytes = 1024,
   Uint8List? bytes,
-}) =>
-    NoteUploadParams(
-      fileName: fileName,
-      mimeType: mimeType,
-      sizeBytes: sizeBytes,
-      bytes: bytes ?? Uint8List(sizeBytes),
-    );
+}) => NoteUploadParams(
+  fileName: fileName,
+  mimeType: mimeType,
+  sizeBytes: sizeBytes,
+  bytes: bytes ?? Uint8List(sizeBytes),
+);
 
 void main() {
   late _MockNoteRepository repository;
@@ -71,10 +70,7 @@ void main() {
 
     test('accepts exactly 10 MB (boundary value — not too large)', () async {
       const exactly10Mb = 10485760;
-      final params = _params(
-        sizeBytes: exactly10Mb,
-        bytes: Uint8List(0),
-      );
+      final params = _params(sizeBytes: exactly10Mb, bytes: Uint8List(0));
 
       await useCase.call('sess-1', params);
 
@@ -91,15 +87,18 @@ void main() {
   });
 
   group('UploadNoteUseCase — MIME type validation', () {
-    test('throws NoteUnsupportedMimeType for application/octet-stream', () async {
-      final params = _params(mimeType: 'application/octet-stream');
+    test(
+      'throws NoteUnsupportedMimeType for application/octet-stream',
+      () async {
+        final params = _params(mimeType: 'application/octet-stream');
 
-      await expectLater(
-        useCase.call('sess-1', params),
-        throwsA(isA<NoteUnsupportedMimeType>()),
-      );
-      verifyNever(() => repository.uploadNote(any(), any()));
-    });
+        await expectLater(
+          useCase.call('sess-1', params),
+          throwsA(isA<NoteUnsupportedMimeType>()),
+        );
+        verifyNever(() => repository.uploadNote(any(), any()));
+      },
+    );
 
     test('throws NoteUnsupportedMimeType for video/mp4', () async {
       final params = _params(mimeType: 'video/mp4');
@@ -156,31 +155,29 @@ void main() {
   });
 
   group('UploadNoteUseCase — repository delegation', () {
-    test('delegates to repository.uploadNote with correct sessionId and params',
-        () async {
-      const sessionId = 'sess-delegate';
-      final params = _params(
-        fileName: 'report.pdf',
-        sizeBytes: 512,
-      );
+    test(
+      'delegates to repository.uploadNote with correct sessionId and params',
+      () async {
+        const sessionId = 'sess-delegate';
+        final params = _params(fileName: 'report.pdf', sizeBytes: 512);
 
-      await useCase.call(sessionId, params);
+        await useCase.call(sessionId, params);
 
-      final captured = verify(
-        () => repository.uploadNote(captureAny(), captureAny()),
-      ).captured;
-      expect(captured[0], sessionId);
-      final capturedParams = captured[1] as NoteUploadParams;
-      expect(capturedParams.fileName, 'report.pdf');
-      expect(capturedParams.mimeType, 'application/pdf');
-      expect(capturedParams.sizeBytes, 512);
-    });
+        final captured = verify(
+          () => repository.uploadNote(captureAny(), captureAny()),
+        ).captured;
+        expect(captured[0], sessionId);
+        final capturedParams = captured[1] as NoteUploadParams;
+        expect(capturedParams.fileName, 'report.pdf');
+        expect(capturedParams.mimeType, 'application/pdf');
+        expect(capturedParams.sizeBytes, 512);
+      },
+    );
 
     test('propagates NoteError.uploadFailed from repository', () async {
       when(() => repository.uploadNote(any(), any())).thenAnswer(
-        (_) => Future.error(
-          const NoteError.uploadFailed('Storage write failed'),
-        ),
+        (_) =>
+            Future.error(const NoteError.uploadFailed('Storage write failed')),
       );
       final params = _params();
 
@@ -191,9 +188,9 @@ void main() {
     });
 
     test('propagates NoteError.sessionCapReached from repository', () async {
-      when(() => repository.uploadNote(any(), any())).thenAnswer(
-        (_) => Future.error(const NoteError.sessionCapReached()),
-      );
+      when(
+        () => repository.uploadNote(any(), any()),
+      ).thenAnswer((_) => Future.error(const NoteError.sessionCapReached()));
       final params = _params();
 
       await expectLater(

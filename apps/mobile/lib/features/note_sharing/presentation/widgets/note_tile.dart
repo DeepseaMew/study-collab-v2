@@ -185,10 +185,7 @@ class NoteTile extends StatelessWidget {
 // ── Leading widget ─────────────────────────────────────────────────────────────
 
 class _LeadingWidget extends StatelessWidget {
-  const _LeadingWidget({
-    required this.mimeType,
-    required this.downloadUrl,
-  });
+  const _LeadingWidget({required this.mimeType, required this.downloadUrl});
 
   final String mimeType;
   final String downloadUrl;
@@ -214,10 +211,7 @@ class _LeadingWidget extends StatelessWidget {
             width: 56,
             height: 56,
             color: const Color(0xFFF3F4F6),
-            child: const Icon(
-              Icons.image_outlined,
-              color: Color(0xFF9CA3AF),
-            ),
+            child: const Icon(Icons.image_outlined, color: Color(0xFF9CA3AF)),
           ),
           errorWidget: (_, __, ___) => Container(
             width: 56,

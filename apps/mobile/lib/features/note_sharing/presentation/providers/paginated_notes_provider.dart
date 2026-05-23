@@ -36,10 +36,7 @@ class PaginatedNotesNotifier extends _$PaginatedNotesNotifier {
 
     final repository = ref.read(noteRepositoryProvider);
     final useCase = FetchNotesPageUseCase(repository);
-    final nextPage = await useCase.call(
-      sessionId,
-      startAfter: cursor,
-    );
+    final nextPage = await useCase.call(sessionId, startAfter: cursor);
 
     state = AsyncData((
       notes: [...current.notes, ...nextPage],
@@ -57,9 +54,6 @@ class PaginatedNotesNotifier extends _$PaginatedNotesNotifier {
     final repository = ref.read(noteRepositoryProvider);
     final useCase = FetchNotesPageUseCase(repository);
     final page = await useCase.call(sessionId);
-    return (
-      notes: [...existing, ...page],
-      hasMore: page.length == _pageSize,
-    );
+    return (notes: [...existing, ...page], hasMore: page.length == _pageSize);
   }
 }

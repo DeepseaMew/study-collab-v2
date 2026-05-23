@@ -35,19 +35,14 @@ class AllFilesScreen extends ConsumerWidget {
         if (context.mounted) {
           context.pop();
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Files are not available yet.'),
-            ),
+            const SnackBar(content: Text('Files are not available yet.')),
           );
         }
       });
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    final paginatedAsync =
-        ref.watch(paginatedNotesNotifierProvider(sessionId));
+    final paginatedAsync = ref.watch(paginatedNotesNotifierProvider(sessionId));
     final actionsState = ref.watch(noteActionsNotifierProvider(sessionId));
 
     return Scaffold(
@@ -153,7 +148,10 @@ class AllFilesScreen extends ConsumerWidget {
                                     side: const BorderSide(
                                       color: AppColors.accent,
                                     ),
-                                    minimumSize: const Size(double.infinity, 48),
+                                    minimumSize: const Size(
+                                      double.infinity,
+                                      48,
+                                    ),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(12),
                                     ),

@@ -32,16 +32,16 @@ abstract class NoteModel with _$NoteModel {
 
   /// Converts to the domain [NoteEntity].
   NoteEntity toEntity() => NoteEntity(
-        noteId: noteId,
-        uploaderUid: uploaderUid,
-        uploaderDisplayName: uploaderDisplayName,
-        fileName: fileName,
-        mimeType: mimeType,
-        sizeBytes: sizeBytes,
-        storageRef: storageRef,
-        downloadUrl: downloadUrl,
-        uploadedAt: uploadedAt,
-      );
+    noteId: noteId,
+    uploaderUid: uploaderUid,
+    uploaderDisplayName: uploaderDisplayName,
+    fileName: fileName,
+    mimeType: mimeType,
+    sizeBytes: sizeBytes,
+    storageRef: storageRef,
+    downloadUrl: downloadUrl,
+    uploadedAt: uploadedAt,
+  );
 }
 
 /// Converts Firestore [Timestamp] ↔ [DateTime].

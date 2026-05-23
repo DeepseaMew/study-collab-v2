@@ -24,19 +24,21 @@ void main() {
   });
 
   group('DeleteNoteUseCase — delegation', () {
-    test('delegates to repository.deleteNote with correct sessionId and noteId',
-        () async {
-      const sessionId = 'sess-1';
-      const noteId = 'note-42';
+    test(
+      'delegates to repository.deleteNote with correct sessionId and noteId',
+      () async {
+        const sessionId = 'sess-1';
+        const noteId = 'note-42';
 
-      await useCase.call(sessionId, noteId);
+        await useCase.call(sessionId, noteId);
 
-      final captured =
-          verify(() => repository.deleteNote(captureAny(), captureAny()))
-              .captured;
-      expect(captured[0], sessionId);
-      expect(captured[1], noteId);
-    });
+        final captured = verify(
+          () => repository.deleteNote(captureAny(), captureAny()),
+        ).captured;
+        expect(captured[0], sessionId);
+        expect(captured[1], noteId);
+      },
+    );
 
     test('calls repository.deleteNote exactly once', () async {
       await useCase.call('sess-1', 'note-1');
@@ -54,9 +56,9 @@ void main() {
     test('propagates NoteError.permissionDenied from repository', () async {
       // Use Future.error so the error is wrapped in a Future (as the real
       // repository would do), preventing mocktail from throwing synchronously.
-      when(() => repository.deleteNote(any(), any())).thenAnswer(
-        (_) => Future.error(const NoteError.permissionDenied()),
-      );
+      when(
+        () => repository.deleteNote(any(), any()),
+      ).thenAnswer((_) => Future.error(const NoteError.permissionDenied()));
 
       await expectLater(
         useCase.call('sess-1', 'note-1'),
@@ -79,9 +81,9 @@ void main() {
 
     test('NoteDeleteFailed carries the message from repository', () async {
       const msg = 'storage timeout';
-      when(() => repository.deleteNote(any(), any())).thenAnswer(
-        (_) => Future.error(const NoteError.deleteFailed(msg)),
-      );
+      when(
+        () => repository.deleteNote(any(), any()),
+      ).thenAnswer((_) => Future.error(const NoteError.deleteFailed(msg)));
 
       try {
         await useCase.call('sess-1', 'note-x');
@@ -92,9 +94,9 @@ void main() {
     });
 
     test('does not swallow generic exceptions', () async {
-      when(() => repository.deleteNote(any(), any())).thenAnswer(
-        (_) => Future.error(Exception('unexpected')),
-      );
+      when(
+        () => repository.deleteNote(any(), any()),
+      ).thenAnswer((_) => Future.error(Exception('unexpected')));
 
       await expectLater(
         useCase.call('sess-1', 'note-1'),

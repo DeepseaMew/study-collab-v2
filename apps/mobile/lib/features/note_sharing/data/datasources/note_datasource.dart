@@ -14,11 +14,9 @@ import 'package:mobile/features/note_sharing/data/models/note_model.dart';
 /// No domain types cross this boundary — callers in [NoteRepositoryImpl]
 /// handle model-to-entity conversion.
 class NoteDatasource {
-  NoteDatasource({
-    FirebaseFirestore? firestore,
-    FirebaseStorage? storage,
-  })  : _firestore = firestore ?? FirebaseFirestore.instance,
-        _storage = storage ?? FirebaseStorage.instance;
+  NoteDatasource({FirebaseFirestore? firestore, FirebaseStorage? storage})
+    : _firestore = firestore ?? FirebaseFirestore.instance,
+      _storage = storage ?? FirebaseStorage.instance;
 
   final FirebaseFirestore _firestore;
   final FirebaseStorage _storage;
@@ -34,9 +32,7 @@ class NoteDatasource {
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .map(
-                (doc) => NoteModel.fromJson(doc.data()),
-              )
+              .map((doc) => NoteModel.fromJson(doc.data()))
               .toList(),
         );
   }
@@ -96,8 +92,9 @@ class NoteDatasource {
   Future<void> writeNoteBatch(String sessionId, NoteModel model) async {
     final batch = _firestore.batch();
 
-    final noteRef = _firestore
-        .doc(FirestorePaths.sessionNoteDoc(sessionId, model.noteId));
+    final noteRef = _firestore.doc(
+      FirestorePaths.sessionNoteDoc(sessionId, model.noteId),
+    );
     // Override uploadedAt with FieldValue.serverTimestamp() so the Firestore
     // rule `uploadedAt == request.time` is satisfied. Client-side DateTime.now()
     // never matches the server request timestamp.
@@ -125,8 +122,9 @@ class NoteDatasource {
   ) async {
     final batch = _firestore.batch();
 
-    final noteRef = _firestore
-        .doc(FirestorePaths.sessionNoteDoc(sessionId, noteId));
+    final noteRef = _firestore.doc(
+      FirestorePaths.sessionNoteDoc(sessionId, noteId),
+    );
     batch.delete(noteRef);
 
     final sessionRef = _firestore.doc(FirestorePaths.sessionDoc(sessionId));
@@ -187,8 +185,6 @@ class NoteDatasource {
     final snapshot = await query.get();
     if (snapshot.docs.isEmpty) return [];
 
-    return snapshot.docs
-        .map((doc) => NoteModel.fromJson(doc.data()))
-        .toList();
+    return snapshot.docs.map((doc) => NoteModel.fromJson(doc.data())).toList();
   }
 }

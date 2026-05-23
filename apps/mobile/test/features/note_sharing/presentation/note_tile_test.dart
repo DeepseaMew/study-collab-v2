@@ -27,18 +27,17 @@ NoteEntity _note({
   String mimeType = 'application/pdf',
   int sizeBytes = 4400000, // ~4.2 MB
   String downloadUrl = 'https://example.com/file.pdf',
-}) =>
-    NoteEntity(
-      noteId: noteId,
-      uploaderUid: uploaderUid,
-      uploaderDisplayName: uploaderDisplayName,
-      fileName: fileName,
-      mimeType: mimeType,
-      sizeBytes: sizeBytes,
-      storageRef: 'sessions/sess-1/notes/$noteId',
-      downloadUrl: downloadUrl,
-      uploadedAt: DateTime.now().subtract(const Duration(hours: 2)),
-    );
+}) => NoteEntity(
+  noteId: noteId,
+  uploaderUid: uploaderUid,
+  uploaderDisplayName: uploaderDisplayName,
+  fileName: fileName,
+  mimeType: mimeType,
+  sizeBytes: sizeBytes,
+  storageRef: 'sessions/sess-1/notes/$noteId',
+  downloadUrl: downloadUrl,
+  uploadedAt: DateTime.now().subtract(const Duration(hours: 2)),
+);
 
 Widget _buildTile({
   required NoteEntity note,
@@ -231,10 +230,7 @@ void main() {
           ),
         );
         await tester.pump(const Duration(milliseconds: 100));
-        expect(
-          find.bySemanticsLabel('Delete owner_file.pdf'),
-          findsOneWidget,
-        );
+        expect(find.bySemanticsLabel('Delete owner_file.pdf'), findsOneWidget);
       });
     });
 
@@ -242,9 +238,7 @@ void main() {
       tester,
     ) async {
       await mockNetworkImagesFor(() async {
-        final note = _note(
-          fileName: 'some_file.pdf',
-        );
+        final note = _note(fileName: 'some_file.pdf');
         await tester.pumpWidget(
           _buildTile(
             note: note,
@@ -253,46 +247,36 @@ void main() {
           ),
         );
         await tester.pump(const Duration(milliseconds: 100));
-        expect(
-          find.bySemanticsLabel('Delete some_file.pdf'),
-          findsOneWidget,
-        );
+        expect(find.bySemanticsLabel('Delete some_file.pdf'), findsOneWidget);
       });
     });
 
-    testWidgets(
-      'delete button HIDDEN for non-owner non-host user',
-      (tester) async {
-        await mockNetworkImagesFor(() async {
-          final note = _note(
-            fileName: 'other_file.pdf',
-          );
-          await tester.pumpWidget(
-            _buildTile(
-              note: note,
-              currentUserId: 'uid-bystander', // neither owner nor host
-              hostUid: 'uid-host',
-            ),
-          );
-          await tester.pump(const Duration(milliseconds: 100));
-          expect(
-            find.bySemanticsLabel('Delete other_file.pdf'),
-            findsNothing,
-          );
-          expect(find.byIcon(Icons.delete_outline), findsNothing);
-        });
-      },
-    );
+    testWidgets('delete button HIDDEN for non-owner non-host user', (
+      tester,
+    ) async {
+      await mockNetworkImagesFor(() async {
+        final note = _note(fileName: 'other_file.pdf');
+        await tester.pumpWidget(
+          _buildTile(
+            note: note,
+            currentUserId: 'uid-bystander', // neither owner nor host
+            hostUid: 'uid-host',
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 100));
+        expect(find.bySemanticsLabel('Delete other_file.pdf'), findsNothing);
+        expect(find.byIcon(Icons.delete_outline), findsNothing);
+      });
+    });
   });
 
   group('NoteTile — delete callback', () {
-    testWidgets('tapping delete button calls onDelete callback', (tester) async {
+    testWidgets('tapping delete button calls onDelete callback', (
+      tester,
+    ) async {
       await mockNetworkImagesFor(() async {
         var deleteCalled = false;
-        final note = _note(
-          uploaderUid: 'uid-owner',
-          fileName: 'to_delete.pdf',
-        );
+        final note = _note(uploaderUid: 'uid-owner', fileName: 'to_delete.pdf');
         await tester.pumpWidget(
           _buildTile(
             note: note,
@@ -316,10 +300,7 @@ void main() {
       tester,
     ) async {
       await mockNetworkImagesFor(() async {
-        final note = _note(
-          uploaderUid: 'uid-owner',
-          fileName: 'important.pdf',
-        );
+        final note = _note(uploaderUid: 'uid-owner', fileName: 'important.pdf');
         await tester.pumpWidget(
           _buildTile(
             note: note,

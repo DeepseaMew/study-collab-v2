@@ -313,8 +313,7 @@ GoRouter router(RouterRef ref) {
                   GoRoute(
                     path: 'session/:id/member',
                     builder: (_, state) {
-                      final extra =
-                          state.extra as Map<String, dynamic>?;
+                      final extra = state.extra as Map<String, dynamic>?;
                       final isCompleted =
                           (extra?['isCompleted'] as bool?) ?? false;
                       final initialTabIndex =
@@ -329,8 +328,7 @@ GoRouter router(RouterRef ref) {
                   GoRoute(
                     path: 'session/:id/host',
                     builder: (_, state) {
-                      final extra =
-                          state.extra as Map<String, dynamic>?;
+                      final extra = state.extra as Map<String, dynamic>?;
                       final initialTabIndex =
                           (extra?['initialTabIndex'] as int?) ?? 0;
                       return HostSessionDetailScreen(
@@ -342,8 +340,7 @@ GoRouter router(RouterRef ref) {
                   GoRoute(
                     path: 'session/:id/files',
                     builder: (context, state) {
-                      final extra =
-                          state.extra as Map<String, dynamic>?;
+                      final extra = state.extra as Map<String, dynamic>?;
                       if (extra == null) {
                         return const Scaffold(
                           body: Center(child: CircularProgressIndicator()),
