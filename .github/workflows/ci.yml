@@ -6,7 +6,6 @@ on:
   pull_request:
     branches: [main, develop]
 
-# Required GitHub Actions secrets:
 # FIREBASE_OPTIONS_DART  — full contents of apps/mobile/lib/firebase_options.dart
 #                          Set in GitHub repo Settings → Secrets → Actions
 # GOOGLE_SERVICES_JSON   — full contents of apps/mobile/android/app/google-services.json
