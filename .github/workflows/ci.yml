@@ -6,6 +6,7 @@ on:
   pull_request:
     branches: [main, develop]
 
+# Required GitHub Actions secrets:
 # FIREBASE_OPTIONS_DART  — full contents of apps/mobile/lib/firebase_options.dart
 #                          Set in GitHub repo Settings → Secrets → Actions
 # GOOGLE_SERVICES_JSON   — full contents of apps/mobile/android/app/google-services.json
@@ -140,10 +141,7 @@ jobs:
           api-level: 34
           arch: x86_64
           working-directory: ${{ github.workspace }}
-          script: |
-            adb shell "curl -s http://10.0.2.2:9099/ || echo 'Auth emulator not reachable'"
-            adb shell "curl -s http://10.0.2.2:8080/ || echo 'Firestore emulator not reachable'"
-            firebase emulators:exec --project study-collab-4d0a0 --only auth,firestore "cd apps/mobile && flutter test --verbose integration_test/auth_happy_path_test.dart && flutter test --verbose integration_test/auth_flow_test.dart"
+          script: firebase emulators:exec --project study-collab-4d0a0 --only auth,firestore "cd apps/mobile && flutter test integration_test/auth_happy_path_test.dart && flutter test integration_test/auth_flow_test.dart"
 
   integration-test-web:
     name: Integration Tests (Web)
