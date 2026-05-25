@@ -245,6 +245,28 @@ The cross-user condition permits any KMUTT-authenticated user to update `profile
 
 ---
 
+#### Amendment C — Persistent rating re-entry point for completed sessions
+
+**Reason:** `MemberSessionDetailScreen` already auto-shows the rating popup once when navigated to via the Completed tab (`isCompleted == true`), controlled by `_ratingShownForCompleted` + `WidgetsBinding.instance.addPostFrameCallback`. After the user closes the popup with the X or Skip button, there is no way to re-open it — the screen gives no entry point to rate again later. Sub-decision 2 established `RatingBannerWidget` as the persistent fallback entry point but did not explicitly specify the interaction between the `isCompleted` auto-show path and the banner's visibility. This amendment closes that gap.
+
+**Clarification — `isCompleted` path in `MemberSessionDetailScreen`:**
+
+The `_ratingShownForCompleted` flag controls **auto-show behavior only**. It must never be used as a condition for hiding or showing `RatingBannerWidget`. The banner's visibility is governed solely by `ratingEnabledProvider` and `hasRatedProvider`.
+
+Concretely:
+
+1. **Auto-show (first open of a completed session):** When `isCompleted == true` and `_ratingShownForCompleted == false`, the rating bottom sheet is shown once via `addPostFrameCallback`. `_ratingShownForCompleted` is set to `true` immediately to prevent double-show.
+
+2. **After close — persistent re-entry:** After the user closes the bottom sheet (tapping X or Skip), `_ratingShownForCompleted` remains `true` and the sheet will not auto-show again. However, `RatingBannerWidget` is **always rendered** at the top of the screen body (above the tab bar), independently of `_ratingShownForCompleted`. The banner stays visible until `hasRatedProvider` returns `true`. Tapping "Rate Now" on the banner re-opens `RatingBottomSheet` at any time.
+
+3. **After submission:** Once the user submits ratings, `hasRatedProvider` returns `true` and the banner hides itself; the user is not prompted again.
+
+The same principle applies to `HostSessionDetailScreen`: after the host dismisses the post-end-session rating popup, `RatingBannerWidget` remains visible as the persistent re-entry point.
+
+**No new widget is needed.** `RatingBannerWidget` (Sub-decision 2) already satisfies this requirement. This amendment only clarifies that the banner must be rendered unconditionally — independent of the `_ratingShownForCompleted` auto-show flag. The implementation checklist entry for `MemberSessionDetailScreen` must reflect this coexistence explicitly.
+
+---
+
 ### CI pipeline changes required
 
 The following changes must be made before integration tests can pass in CI. The release engineer owns these changes.
@@ -395,8 +417,9 @@ A stateless widget rendered at the top of the session detail screen scaffold bod
 
 **Detail screen amendments (ADR 0003)**
 
-- `HostSessionDetailScreen` — in `onEndSessionConfirmed` (the callback invoked after the end-session `WriteBatch` succeeds): if `ratingEnabledProvider` is `true` and `hasRatedProvider` is `false`, call `showModalBottomSheet` with `RatingBottomSheet`. Insert `RatingBannerWidget(sessionId: sessionId, currentUserId: currentUserId)` at the top of the screen body, above the `TabBar`.
-- `MemberSessionDetailScreen` — insert the same `RatingBannerWidget` at the top of the screen body.
+- `HostSessionDetailScreen` — in `onEndSessionConfirmed` (the callback invoked after the end-session `WriteBatch` succeeds): if `ratingEnabledProvider` is `true` and `hasRatedProvider` is `false`, call `showModalBottomSheet` with `RatingBottomSheet`. Insert `RatingBannerWidget(sessionId: sessionId, currentUserId: currentUserId)` at the top of the screen body, above the `TabBar`. After the host dismisses the post-end-session popup, the banner remains visible as the persistent re-entry point (see Amendment C).
+
+- `MemberSessionDetailScreen` — insert `RatingBannerWidget(sessionId: sessionId, currentUserId: currentUserId)` at the top of the screen body, above the `TabBar`. The banner is rendered unconditionally (subject only to `ratingEnabledProvider` and `hasRatedProvider`). **The existing `isCompleted` auto-show behavior is preserved alongside the banner:** when `isCompleted == true`, the rating bottom sheet auto-shows once on first open via `addPostFrameCallback` + `_ratingShownForCompleted` flag; after the user closes the popup, the banner remains visible and serves as the persistent re-entry point until the user submits ratings (see Amendment C). The existing private `_RatingBottomSheet` widget in this file must be replaced by the new standalone `RatingBottomSheet` widget; `_RatingBottomSheet` must be converted to a `ConsumerStatefulWidget` (currently it is a plain `StatefulWidget`) or deleted entirely in favour of the standalone widget.
 
 **`ProfileScoreWidget` — `lib/features/rating/presentation/widgets/profile_score_widget.dart`**
 
@@ -485,8 +508,8 @@ Performance check (qa-engineer): confirm that rendering a member list of up to 2
 - [ ] Create `RatingBottomSheet` widget; gate on `ratingEnabledProvider` and `hasRatedProvider`; wrap all interactive elements in `Semantics`; minimum 44 × 44 dp touch targets; verify contrast ≥ 4.5:1
 - [ ] Create `RatingBannerWidget`; gate on `ratingEnabledProvider` and `hasRatedProvider`; wrap in `Semantics` with `liveRegion: true`
 - [ ] Create `ProfileScoreWidget`; two display states (zero and positive); correct `Semantics` labels
-- [ ] Amend `HostSessionDetailScreen` — call `showModalBottomSheet` with `RatingBottomSheet` in `onEndSessionConfirmed`; insert `RatingBannerWidget` at top of screen body
-- [ ] Amend `MemberSessionDetailScreen` — insert `RatingBannerWidget` at top of screen body
+- [ ] Amend `HostSessionDetailScreen` — call `showModalBottomSheet` with `RatingBottomSheet` in `onEndSessionConfirmed`; insert `RatingBannerWidget` at top of screen body; banner persists after popup is dismissed
+- [ ] Amend `MemberSessionDetailScreen` — insert `RatingBannerWidget` at top of screen body rendered independently of `_ratingShownForCompleted`; preserve `isCompleted` auto-show behavior (popup + banner coexist on the completed-session path per Amendment C); replace private `_RatingBottomSheet` with the new standalone `RatingBottomSheet` widget
 - [ ] Integrate `ProfileScoreWidget` into the profile screen (whichever screen displays `users/{uid}.profileScore`)
 - [ ] Verify domain layer has zero Flutter and Firebase imports (`dart run build_runner build` must pass with no import lint errors)
 - [ ] Add `rating_enabled` flag to Firebase Remote Config in the console before first QA deployment (set to `false` initially)
