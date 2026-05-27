@@ -190,8 +190,9 @@ class _MemberSessionDetailScreenState
         final session = next.asData?.value;
         if (session == null ||
             session.status != 'ended' ||
-            _sessionEndedPopupShown)
+            _sessionEndedPopupShown) {
           return;
+        }
 
         // Guard: members must be loaded before opening the sheet.
         final members =
