@@ -9,6 +9,10 @@ import 'package:mobile/core/utils/date_formatter.dart';
 import 'package:mobile/features/auth/domain/entities/user_entity.dart';
 import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
 import 'package:mobile/features/note_sharing/presentation/widgets/files_tab.dart';
+import 'package:mobile/features/rating/presentation/providers/has_rated_provider.dart';
+import 'package:mobile/features/rating/presentation/providers/rating_flag_provider.dart';
+import 'package:mobile/features/rating/presentation/widgets/rating_banner_widget.dart';
+import 'package:mobile/features/rating/presentation/widgets/rating_bottom_sheet.dart';
 import 'package:mobile/features/sessions/domain/entities/join_request_entity.dart';
 import 'package:mobile/features/sessions/domain/entities/session_entity.dart';
 import 'package:mobile/features/sessions/presentation/providers/join_requests_provider.dart';
@@ -75,8 +79,35 @@ class _HostSessionDetailScreenState
       isDismissible: false,
       builder: (_) => _EndSessionSheet(
         session: session,
+        currentUserId: hostUid,
+        onEndSessionConfirmed: () =>
+            _onEndSessionConfirmed(session, members, hostUid),
+      ),
+    );
+  }
+
+  void _onEndSessionConfirmed(
+    SessionEntity session,
+    List<UserEntity> members,
+    String hostUid,
+  ) {
+    final isEnabled = ref.read(ratingEnabledProvider);
+    if (!isEnabled) return;
+
+    final hasRatedValue = ref
+        .read(hasRatedProvider(session.sessionId, hostUid))
+        .valueOrNull;
+    if (hasRatedValue == true) return;
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => RatingBottomSheet(
+        sessionId: session.sessionId,
         members: members,
         currentUserId: hostUid,
+        hostUid: hostUid,
       ),
     );
   }
@@ -266,6 +297,13 @@ class _HostSessionDetailScreenState
           return Column(
             children: [
               _SessionInfoCard(session: session, currentUserId: me?.uid ?? ''),
+              RatingBannerWidget(
+                sessionId: widget.sessionId,
+                currentUserId: me?.uid ?? '',
+                members: members,
+                hostUid: session.hostUid,
+                sessionStatus: session.status,
+              ),
               TabBar(
                 controller: _tab,
                 indicatorColor: AppColors.accent,
@@ -1069,49 +1107,20 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
 class _EndSessionSheet extends ConsumerStatefulWidget {
   const _EndSessionSheet({
     required this.session,
-    required this.members,
     required this.currentUserId,
+    this.onEndSessionConfirmed,
   });
 
   final SessionEntity session;
-  final List<UserEntity> members;
   final String currentUserId;
+  final VoidCallback? onEndSessionConfirmed;
 
   @override
   ConsumerState<_EndSessionSheet> createState() => _EndSessionSheetState();
 }
 
 class _EndSessionSheetState extends ConsumerState<_EndSessionSheet> {
-  final Map<String, bool> _thumbsUp = {};
-  String _searchQuery = '';
   bool _submitting = false;
-
-  List<UserEntity> get _sorted {
-    final host = widget.members
-        .where((m) => m.uid == widget.session.hostUid)
-        .toList();
-    final self = widget.members
-        .where(
-          (m) =>
-              m.uid == widget.currentUserId && m.uid != widget.session.hostUid,
-        )
-        .toList();
-    final others = widget.members
-        .where(
-          (m) =>
-              m.uid != widget.session.hostUid && m.uid != widget.currentUserId,
-        )
-        .toList();
-    return [...host, ...self, ...others];
-  }
-
-  List<UserEntity> get _filtered {
-    final q = _searchQuery.toLowerCase();
-    if (q.isEmpty) return _sorted;
-    return _sorted
-        .where((m) => m.displayName.toLowerCase().contains(q))
-        .toList();
-  }
 
   Future<void> _submit() async {
     setState(() => _submitting = true);
@@ -1124,20 +1133,15 @@ class _EndSessionSheetState extends ConsumerState<_EndSessionSheet> {
         extra: {'sessionId': widget.session.sessionId},
       );
       appLogger.debug(AnalyticsEvents.sessionEnded);
-      final thumbsUpCount = _thumbsUp.values.where((v) => v).length;
-      appLogger.info(
-        'Host rating submitted',
-        extra: {'thumbsUpCount': thumbsUpCount},
-      );
-      appLogger.debug(AnalyticsEvents.sessionRatingSubmitted);
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Session ended & ratings submitted!'),
+            content: Text('Session ended successfully.'),
             backgroundColor: AppColors.success,
           ),
         );
+        widget.onEndSessionConfirmed?.call();
       }
     } catch (e, st) {
       appLogger.error(
@@ -1160,8 +1164,6 @@ class _EndSessionSheetState extends ConsumerState<_EndSessionSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final filtered = _filtered;
-
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.surface,
@@ -1193,13 +1195,13 @@ class _EndSessionSheetState extends ConsumerState<_EndSessionSheet> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.accent,
+                      color: AppColors.error.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: const Text(
-                      'SESSION ENDED',
+                      'END SESSION',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: AppColors.error,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -1217,7 +1219,7 @@ class _EndSessionSheetState extends ConsumerState<_EndSessionSheet> {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 16),
               Text(
                 widget.session.title,
                 style: const TextStyle(
@@ -1225,137 +1227,19 @@ class _EndSessionSheetState extends ConsumerState<_EndSessionSheet> {
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                widget.session.scheduledEndAt != null
-                    ? '${DateFormatter.relativeDate(widget.session.scheduledAt)} · '
-                          '${DateFormatter.timeRange(widget.session.scheduledAt, widget.session.scheduledEndAt!)}'
-                    : DateFormatter.relativeDate(widget.session.scheduledAt),
-                style: const TextStyle(color: AppColors.hint, fontSize: 13),
-              ),
-              const SizedBox(height: 12),
-              const Divider(height: 1, color: AppColors.border),
-              const SizedBox(height: 12),
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Anyone stand out?',
-                  style: TextStyle(
-                    color: AppColors.text,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'There were ${widget.members.length} people in this room. '
-                  "Give a quick thumbs up to anyone you'd like to study with again.",
-                  style: const TextStyle(color: AppColors.hint, fontSize: 13),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                onChanged: (v) => setState(() => _searchQuery = v),
-                decoration: InputDecoration(
-                  hintText: 'Search participants by name',
-                  prefixIcon: const Icon(
-                    Icons.search_outlined,
-                    color: AppColors.hint,
-                  ),
-                  filled: true,
-                  fillColor: AppColors.background,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: AppColors.border),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: AppColors.border),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(
-                      color: AppColors.accent,
-                      width: 2,
-                    ),
-                  ),
-                ),
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.3,
-                ),
-                child: filtered.isEmpty
-                    ? const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        child: Text(
-                          'No participants found.',
-                          style: TextStyle(color: AppColors.hint, fontSize: 13),
-                        ),
-                      )
-                    : ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: filtered.length,
-                        itemBuilder: (_, i) {
-                          final m = filtered[i];
-                          final isHost = m.uid == widget.session.hostUid;
-                          final isSelf = m.uid == widget.currentUserId;
-                          if (isHost) {
-                            return _BadgeTile(
-                              member: m,
-                              badge: 'Host',
-                              badgeColor: AppColors.accent,
-                            );
-                          }
-                          if (isSelf) {
-                            return _BadgeTile(
-                              member: m,
-                              badge: 'ME',
-                              badgeColor: AppColors.hint,
-                            );
-                          }
-                          final liked = _thumbsUp[m.uid] ?? false;
-                          return ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            leading: _Avatar(
-                              displayName: m.displayName,
-                              photoUrl: m.photoUrl,
-                              radius: 20,
-                            ),
-                            title: Text(
-                              m.displayName,
-                              style: const TextStyle(
-                                color: AppColors.text,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            trailing: IconButton(
-                              icon: Icon(
-                                liked
-                                    ? Icons.thumb_up
-                                    : Icons.thumb_up_outlined,
-                                color: liked
-                                    ? AppColors.accent
-                                    : AppColors.hint,
-                              ),
-                              onPressed: () =>
-                                  setState(() => _thumbsUp[m.uid] = !liked),
-                            ),
-                          );
-                        },
-                      ),
+              const Text(
+                'Are you sure you want to end this session? '
+                'This action cannot be undone.',
+                style: TextStyle(color: AppColors.hint, fontSize: 13),
+                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.accent,
+                  backgroundColor: AppColors.error,
                   foregroundColor: Colors.white,
                   minimumSize: const Size(double.infinity, 48),
                   shape: RoundedRectangleBorder(
@@ -1372,58 +1256,20 @@ class _EndSessionSheetState extends ConsumerState<_EndSessionSheet> {
                           color: Colors.white,
                         ),
                       )
-                    : const Text('Submit Rating'),
+                    : const Text('End Session'),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 48),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: _submitting ? null : () => Navigator.pop(context),
+                child: const Text('Cancel'),
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Badge tile (Host / ME — no thumbs-up toggle) ───────────────────────────────
-
-class _BadgeTile extends StatelessWidget {
-  const _BadgeTile({
-    required this.member,
-    required this.badge,
-    required this.badgeColor,
-  });
-
-  final UserEntity member;
-  final String badge;
-  final Color badgeColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: _Avatar(
-        displayName: member.displayName,
-        photoUrl: member.photoUrl,
-        radius: 20,
-      ),
-      title: Text(
-        member.displayName,
-        style: const TextStyle(
-          color: AppColors.text,
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      trailing: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-        decoration: BoxDecoration(
-          color: badgeColor,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          badge,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
           ),
         ),
       ),

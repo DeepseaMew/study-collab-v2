@@ -8,6 +8,7 @@ import 'package:mobile/core/logger.dart';
 import 'package:mobile/core/router/app_router.dart';
 import 'package:mobile/features/auth/domain/entities/user_entity.dart';
 import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
+import 'package:mobile/features/rating/presentation/widgets/profile_score_widget.dart';
 import 'package:mobile/features/friends/presentation/providers/friends_provider.dart';
 import 'package:mobile/features/my_sessions/presentation/providers/completed_sessions_provider.dart';
 import 'package:mobile/features/my_sessions/presentation/providers/upcoming_sessions_provider.dart';
@@ -239,7 +240,10 @@ class _ProfileBodyState extends ConsumerState<_ProfileBody> {
                     ),
                   ),
                   Container(width: 1, height: 36, color: AppColors.border),
-                  const _RatingStatItem(),
+                  ProfileScoreWidget(
+                    profileScore: user.profileScore,
+                    completedSessionCount: completedSessions.length,
+                  ),
                 ],
               ),
             ),
@@ -343,40 +347,6 @@ class _StatItem extends StatelessWidget {
         Text(value, style: tt.displayMedium?.copyWith(color: AppColors.accent)),
         const SizedBox(height: 2),
         Text(label, style: tt.bodyMedium?.copyWith(color: AppColors.hint)),
-      ],
-    );
-  }
-}
-
-class _RatingStatItem extends StatelessWidget {
-  const _RatingStatItem();
-
-  @override
-  Widget build(BuildContext context) {
-    final tt = Theme.of(context).textTheme;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.thumb_up_rounded,
-              size: 18,
-              color: AppColors.accent,
-            ),
-            const SizedBox(width: 4),
-            Text(
-              'N/A',
-              style: tt.displayMedium?.copyWith(color: AppColors.accent),
-            ),
-          ],
-        ),
-        const SizedBox(height: 2),
-        Text(
-          'from 0 sessions',
-          style: tt.bodySmall?.copyWith(color: AppColors.hint),
-        ),
       ],
     );
   }
