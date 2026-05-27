@@ -8,6 +8,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/features/auth/domain/entities/user_entity.dart';
 import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
 import 'package:mobile/features/my_sessions/presentation/screens/member_session_detail_screen.dart';
+import 'package:mobile/features/rating/presentation/providers/has_rated_provider.dart';
+import 'package:mobile/features/rating/presentation/providers/rating_flag_provider.dart';
 import 'package:mobile/features/sessions/domain/entities/session_entity.dart';
 import 'package:mobile/features/sessions/presentation/providers/session_members_provider.dart';
 import 'package:mobile/features/sessions/presentation/providers/session_provider.dart';
@@ -58,6 +60,10 @@ Widget _buildScreen(double textScale) {
       ).overrideWith((_) => Stream.value(const <UserEntity>[])),
       firebaseAuthStateProvider.overrideWith(
         (_) => Stream.value(_FakeFirebaseUser('member-1')),
+      ),
+      ratingEnabledProvider.overrideWithValue(false),
+      hasRatedProvider('sess-golden-member', 'member-1').overrideWith(
+        (_) async => false,
       ),
     ],
     child: MaterialApp(

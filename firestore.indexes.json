@@ -27,25 +27,11 @@
       ]
     },
     {
-      "collectionGroup": "messages",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "sentAt", "order": "DESCENDING" }
-      ]
-    },
-    {
       "collectionGroup": "ratings",
       "queryScope": "COLLECTION_GROUP",
       "fields": [
         { "fieldPath": "rateeUid", "order": "ASCENDING" },
         { "fieldPath": "ratedAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "notes",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "uploadedAt", "order": "DESCENDING" }
       ]
     },
     {
@@ -67,5 +53,13 @@
       ]
     }
   ],
-  "fieldOverrides": []
+  "fieldOverrides": [
+    {
+      "collectionGroup": "ratings",
+      "fieldPath": "rateeUid",
+      "indexes": [
+        { "order": "ASCENDING", "queryScope": "COLLECTION_GROUP" }
+      ]
+    }
+  ]
 }

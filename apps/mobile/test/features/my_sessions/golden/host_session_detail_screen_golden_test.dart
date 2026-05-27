@@ -8,6 +8,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/features/auth/domain/entities/user_entity.dart';
 import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
 import 'package:mobile/features/my_sessions/presentation/screens/host_session_detail_screen.dart';
+import 'package:mobile/features/rating/presentation/providers/has_rated_provider.dart';
+import 'package:mobile/features/rating/presentation/providers/rating_flag_provider.dart';
 import 'package:mobile/features/sessions/domain/entities/join_request_entity.dart';
 import 'package:mobile/features/sessions/domain/entities/session_entity.dart';
 import 'package:mobile/features/sessions/domain/repositories/join_request_repository.dart';
@@ -82,6 +84,10 @@ Widget _buildScreen(double textScale) {
       ),
       sessionRepositoryProvider.overrideWithValue(sessionRepo),
       joinRequestRepositoryProvider.overrideWithValue(requestRepo),
+      ratingEnabledProvider.overrideWithValue(false),
+      hasRatedProvider('sess-golden-host', 'host-1').overrideWith(
+        (_) async => false,
+      ),
     ],
     child: MaterialApp(
       locale: const Locale('th'),
