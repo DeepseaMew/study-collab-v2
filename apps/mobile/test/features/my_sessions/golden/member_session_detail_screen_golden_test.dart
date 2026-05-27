@@ -62,9 +62,10 @@ Widget _buildScreen(double textScale) {
         (_) => Stream.value(_FakeFirebaseUser('member-1')),
       ),
       ratingEnabledProvider.overrideWithValue(false),
-      hasRatedProvider('sess-golden-member', 'member-1').overrideWith(
-        (_) async => false,
-      ),
+      hasRatedProvider(
+        'sess-golden-member',
+        'member-1',
+      ).overrideWith((_) async => false),
     ],
     child: MaterialApp(
       locale: const Locale('th'),

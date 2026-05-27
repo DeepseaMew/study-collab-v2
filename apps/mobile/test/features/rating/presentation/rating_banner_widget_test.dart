@@ -65,13 +65,14 @@ Widget _buildBanner({
   return ProviderScope(
     overrides: [
       ratingEnabledProvider.overrideWithValue(ratingEnabled),
-      hasRatedProvider(_sessionId, _currentUserId).overrideWith(
-        (_) async => hasRated.valueOrNull ?? false,
-      ),
+      hasRatedProvider(
+        _sessionId,
+        _currentUserId,
+      ).overrideWith((_) async => hasRated.valueOrNull ?? false),
       ratingRepositoryProvider.overrideWithValue(repo),
-      sessionRatingsProvider(_sessionId).overrideWith(
-        (_) => Stream.value(const <RatingEntity>[]),
-      ),
+      sessionRatingsProvider(
+        _sessionId,
+      ).overrideWith((_) => Stream.value(const <RatingEntity>[])),
     ],
     child: MaterialApp(
       home: Scaffold(
@@ -89,10 +90,10 @@ Widget _buildBanner({
 
 void main() {
   group('RatingBannerWidget — hidden states', () {
-    testWidgets('renders nothing when sessionStatus is not ended', (tester) async {
-      await tester.pumpWidget(
-        _buildBanner(sessionStatus: 'scheduled'),
-      );
+    testWidgets('renders nothing when sessionStatus is not ended', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_buildBanner(sessionStatus: 'scheduled'));
       await tester.pump();
 
       expect(find.text('Rate your session members'), findsNothing);
@@ -100,9 +101,7 @@ void main() {
     });
 
     testWidgets('renders nothing when ratingEnabled is false', (tester) async {
-      await tester.pumpWidget(
-        _buildBanner(ratingEnabled: false),
-      );
+      await tester.pumpWidget(_buildBanner(ratingEnabled: false));
       await tester.pump();
 
       expect(find.text('Rate your session members'), findsNothing);
@@ -134,9 +133,9 @@ void main() {
           overrides: [
             ratingEnabledProvider.overrideWithValue(true),
             ratingRepositoryProvider.overrideWithValue(repo),
-            sessionRatingsProvider(_sessionId).overrideWith(
-              (_) => Stream.value(const []),
-            ),
+            sessionRatingsProvider(
+              _sessionId,
+            ).overrideWith((_) => Stream.value(const [])),
           ],
           child: MaterialApp(
             home: Scaffold(
@@ -156,10 +155,10 @@ void main() {
       expect(find.text('Rate your session members'), findsNothing);
     });
 
-    testWidgets('renders nothing when active (ongoing) session', (tester) async {
-      await tester.pumpWidget(
-        _buildBanner(sessionStatus: 'active'),
-      );
+    testWidgets('renders nothing when active (ongoing) session', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_buildBanner(sessionStatus: 'active'));
       await tester.pump();
 
       expect(find.text('Rate your session members'), findsNothing);
@@ -167,7 +166,9 @@ void main() {
   });
 
   group('RatingBannerWidget — visible state', () {
-    testWidgets('renders banner card with label and Rate Now button', (tester) async {
+    testWidgets('renders banner card with label and Rate Now button', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildBanner());
       await tester.pumpAndSettle();
 
@@ -182,8 +183,9 @@ void main() {
       expect(find.byIcon(Icons.thumb_up_outlined), findsOneWidget);
     });
 
-    testWidgets('Semantics label is "Rate your session members banner"',
-        (tester) async {
+    testWidgets('Semantics label is "Rate your session members banner"', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildBanner());
       await tester.pumpAndSettle();
 

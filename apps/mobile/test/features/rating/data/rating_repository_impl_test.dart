@@ -176,9 +176,7 @@ void main() {
     });
 
     test('propagates exception from datasource', () async {
-      when(
-        () => datasource.hasRatedInSession(any(), any()),
-      ).thenAnswer(
+      when(() => datasource.hasRatedInSession(any(), any())).thenAnswer(
         (_) => Future.error(
           FirebaseException(plugin: 'cloud_firestore', code: 'unavailable'),
         ),

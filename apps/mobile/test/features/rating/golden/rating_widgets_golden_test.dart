@@ -69,9 +69,7 @@ ThemeData _theme() => ThemeData(
 
 _MockRatingRepository _mockRepo() {
   final repo = _MockRatingRepository();
-  when(
-    () => repo.submitRatings(any(), any()),
-  ).thenAnswer((_) async {});
+  when(() => repo.submitRatings(any(), any())).thenAnswer((_) async {});
   when(
     () => repo.watchSessionRatings(any()),
   ).thenAnswer((_) => Stream.value(const []));
@@ -92,14 +90,17 @@ Widget _bottomSheetHost() {
   return ProviderScope(
     overrides: [
       ratingEnabledProvider.overrideWithValue(true),
-      hasRatedProvider(_sessionId, _currentUid).overrideWith(
-        (_) async => false,
-      ),
+      hasRatedProvider(
+        _sessionId,
+        _currentUid,
+      ).overrideWith((_) async => false),
       ratingRepositoryProvider.overrideWithValue(_mockRepo()),
-      sessionRatingsProvider(_sessionId).overrideWith(
-        (_) => Stream.value(const <RatingEntity>[]),
-      ),
-      ratingNotifierProvider(_sessionId).overrideWith(() => _FakeIdleNotifier()),
+      sessionRatingsProvider(
+        _sessionId,
+      ).overrideWith((_) => Stream.value(const <RatingEntity>[])),
+      ratingNotifierProvider(
+        _sessionId,
+      ).overrideWith(() => _FakeIdleNotifier()),
     ],
     child: MaterialApp(
       theme: _theme(),
@@ -132,8 +133,9 @@ Widget _bottomSheetHost() {
 
 void main() {
   group('Rating goldens', () {
-    testWidgets('RatingBottomSheet — all unselected (Submit disabled)',
-        (tester) async {
+    testWidgets('RatingBottomSheet — all unselected (Submit disabled)', (
+      tester,
+    ) async {
       await mockNetworkImagesFor(() async {
         await tester.pumpWidget(_bottomSheetHost());
         await tester.tap(find.text('Open'));
@@ -146,8 +148,9 @@ void main() {
       });
     });
 
-    testWidgets('RatingBottomSheet — one member selected (Submit enabled)',
-        (tester) async {
+    testWidgets('RatingBottomSheet — one member selected (Submit enabled)', (
+      tester,
+    ) async {
       await mockNetworkImagesFor(() async {
         await tester.pumpWidget(_bottomSheetHost());
         await tester.tap(find.text('Open'));
@@ -169,13 +172,14 @@ void main() {
         ProviderScope(
           overrides: [
             ratingEnabledProvider.overrideWithValue(true),
-            hasRatedProvider(_sessionId, _currentUid).overrideWith(
-              (_) async => false,
-            ),
+            hasRatedProvider(
+              _sessionId,
+              _currentUid,
+            ).overrideWith((_) async => false),
             ratingRepositoryProvider.overrideWithValue(_mockRepo()),
-            sessionRatingsProvider(_sessionId).overrideWith(
-              (_) => Stream.value(const []),
-            ),
+            sessionRatingsProvider(
+              _sessionId,
+            ).overrideWith((_) => Stream.value(const [])),
           ],
           child: MaterialApp(
             theme: _theme(),
@@ -204,8 +208,9 @@ void main() {
       );
     });
 
-    testWidgets('ProfileScoreWidget — zero score ("No ratings yet")',
-        (tester) async {
+    testWidgets('ProfileScoreWidget — zero score ("No ratings yet")', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: _theme(),

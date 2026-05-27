@@ -60,47 +60,59 @@ void main() {
   });
 
   group('SubmitRatingsUseCase — self-rating guard', () {
-    test('throws selfRatingNotAllowed when current user is sole ratee', () async {
-      final sub = _submission(rateeUids: const [_currentUid]);
+    test(
+      'throws selfRatingNotAllowed when current user is sole ratee',
+      () async {
+        final sub = _submission(rateeUids: const [_currentUid]);
 
-      await expectLater(
-        useCase.call(sub, _allMembers),
-        throwsA(isA<RatingSelfRatingNotAllowed>()),
-      );
-      verifyNever(() => repo.submitRatings(any(), any()));
-    });
+        await expectLater(
+          useCase.call(sub, _allMembers),
+          throwsA(isA<RatingSelfRatingNotAllowed>()),
+        );
+        verifyNever(() => repo.submitRatings(any(), any()));
+      },
+    );
 
-    test('throws selfRatingNotAllowed when current user is one of multiple ratees', () async {
-      final sub = _submission(rateeUids: const [_member1, _currentUid]);
+    test(
+      'throws selfRatingNotAllowed when current user is one of multiple ratees',
+      () async {
+        final sub = _submission(rateeUids: const [_member1, _currentUid]);
 
-      await expectLater(
-        useCase.call(sub, _allMembers),
-        throwsA(isA<RatingSelfRatingNotAllowed>()),
-      );
-      verifyNever(() => repo.submitRatings(any(), any()));
-    });
+        await expectLater(
+          useCase.call(sub, _allMembers),
+          throwsA(isA<RatingSelfRatingNotAllowed>()),
+        );
+        verifyNever(() => repo.submitRatings(any(), any()));
+      },
+    );
   });
 
   group('SubmitRatingsUseCase — ratee membership guard', () {
-    test('throws rateeNotMember when rateeUid is not in sessionMemberUids', () async {
-      final sub = _submission(rateeUids: const ['outsider-uid']);
+    test(
+      'throws rateeNotMember when rateeUid is not in sessionMemberUids',
+      () async {
+        final sub = _submission(rateeUids: const ['outsider-uid']);
 
-      await expectLater(
-        useCase.call(sub, _allMembers),
-        throwsA(isA<RatingRateeNotMember>()),
-      );
-      verifyNever(() => repo.submitRatings(any(), any()));
-    });
+        await expectLater(
+          useCase.call(sub, _allMembers),
+          throwsA(isA<RatingRateeNotMember>()),
+        );
+        verifyNever(() => repo.submitRatings(any(), any()));
+      },
+    );
 
-    test('throws rateeNotMember when one of multiple ratees is not a member', () async {
-      final sub = _submission(rateeUids: const [_member1, 'outsider-uid']);
+    test(
+      'throws rateeNotMember when one of multiple ratees is not a member',
+      () async {
+        final sub = _submission(rateeUids: const [_member1, 'outsider-uid']);
 
-      await expectLater(
-        useCase.call(sub, _allMembers),
-        throwsA(isA<RatingRateeNotMember>()),
-      );
-      verifyNever(() => repo.submitRatings(any(), any()));
-    });
+        await expectLater(
+          useCase.call(sub, _allMembers),
+          throwsA(isA<RatingRateeNotMember>()),
+        );
+        verifyNever(() => repo.submitRatings(any(), any()));
+      },
+    );
 
     test('throws rateeNotMember when sessionMemberUids is empty', () async {
       final sub = _submission();
@@ -114,14 +126,17 @@ void main() {
   });
 
   group('SubmitRatingsUseCase — happy path delegation', () {
-    test('delegates to repository when submission is valid (single ratee)', () async {
-      const sessionId = 'sess-delegate';
-      final sub = _submission(sessionId: sessionId);
+    test(
+      'delegates to repository when submission is valid (single ratee)',
+      () async {
+        const sessionId = 'sess-delegate';
+        final sub = _submission(sessionId: sessionId);
 
-      await useCase.call(sub, _allMembers);
+        await useCase.call(sub, _allMembers);
 
-      verify(() => repo.submitRatings(sessionId, const [_member1])).called(1);
-    });
+        verify(() => repo.submitRatings(sessionId, const [_member1])).called(1);
+      },
+    );
 
     test('delegates to repository with multiple valid ratees', () async {
       const sessionId = 'sess-multi';
@@ -161,27 +176,26 @@ void main() {
       );
     });
 
-    test('propagates RatingError.offlineNotSupported from repository', () async {
-      when(
-        () => repo.submitRatings(any(), any()),
-      ).thenAnswer(
-        (_) => Future.error(const RatingError.offlineNotSupported()),
-      );
-      final sub = _submission();
+    test(
+      'propagates RatingError.offlineNotSupported from repository',
+      () async {
+        when(() => repo.submitRatings(any(), any())).thenAnswer(
+          (_) => Future.error(const RatingError.offlineNotSupported()),
+        );
+        final sub = _submission();
 
-      await expectLater(
-        useCase.call(sub, _allMembers),
-        throwsA(isA<RatingOfflineNotSupported>()),
-      );
-    });
+        await expectLater(
+          useCase.call(sub, _allMembers),
+          throwsA(isA<RatingOfflineNotSupported>()),
+        );
+      },
+    );
   });
 
   group('SubmitRatingsUseCase — guard precedence', () {
     test('empty check fires before self-rating check', () async {
       // Ratee list is empty — expect submitFailed (empty), not selfRatingNotAllowed
-      final sub = _submission(
-        rateeUids: const [],
-      );
+      final sub = _submission(rateeUids: const []);
 
       await expectLater(
         useCase.call(sub, _allMembers),

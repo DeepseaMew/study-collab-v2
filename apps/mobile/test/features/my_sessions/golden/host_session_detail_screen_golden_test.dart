@@ -85,9 +85,10 @@ Widget _buildScreen(double textScale) {
       sessionRepositoryProvider.overrideWithValue(sessionRepo),
       joinRequestRepositoryProvider.overrideWithValue(requestRepo),
       ratingEnabledProvider.overrideWithValue(false),
-      hasRatedProvider('sess-golden-host', 'host-1').overrideWith(
-        (_) async => false,
-      ),
+      hasRatedProvider(
+        'sess-golden-host',
+        'host-1',
+      ).overrideWith((_) async => false),
     ],
     child: MaterialApp(
       locale: const Locale('th'),

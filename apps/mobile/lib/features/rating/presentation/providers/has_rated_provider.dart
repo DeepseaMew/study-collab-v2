@@ -6,12 +6,7 @@ part 'has_rated_provider.g.dart';
 
 /// Returns true if [raterUid] has already submitted ratings for [sessionId].
 @riverpod
-Future<bool> hasRated(
-  HasRatedRef ref,
-  String sessionId,
-  String raterUid,
-) =>
-    CheckHasRatedUseCase(ref.watch(ratingRepositoryProvider)).call(
-      sessionId,
-      raterUid,
-    );
+Future<bool> hasRated(HasRatedRef ref, String sessionId, String raterUid) =>
+    CheckHasRatedUseCase(
+      ref.watch(ratingRepositoryProvider),
+    ).call(sessionId, raterUid);

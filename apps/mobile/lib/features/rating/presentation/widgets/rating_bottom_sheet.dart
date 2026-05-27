@@ -43,13 +43,17 @@ class _RatingBottomSheetState extends ConsumerState<RatingBottomSheet> {
   List<UserEntity> _filterBySearch(List<UserEntity> members) {
     final q = _search.toLowerCase();
     if (q.isEmpty) return members;
-    return members.where((m) => m.displayName.toLowerCase().contains(q)).toList();
+    return members
+        .where((m) => m.displayName.toLowerCase().contains(q))
+        .toList();
   }
 
   String _errorMessage(RatingError e) => switch (e) {
     RatingSelfRatingNotAllowed() => 'You cannot rate yourself.',
-    RatingSessionNotEnded() => 'Rating is only available after the session ends.',
-    RatingAlreadyRated() => 'You have already rated the members of this session.',
+    RatingSessionNotEnded() =>
+      'Rating is only available after the session ends.',
+    RatingAlreadyRated() =>
+      'You have already rated the members of this session.',
     RatingSubmitFailed(message: final msg) when msg == 'rating_disabled' =>
       'Rating is not available right now.',
     RatingSubmitFailed(message: final msg) when msg == 'permission_denied' =>
@@ -57,41 +61,41 @@ class _RatingBottomSheetState extends ConsumerState<RatingBottomSheet> {
     RatingSubmitFailed() => 'Could not submit ratings. Please try again.',
     RatingOfflineNotSupported() =>
       'Rating requires an internet connection. Please try again.',
-    RatingRateeNotMember() => 'One or more selected members are not in this session.',
+    RatingRateeNotMember() =>
+      'One or more selected members are not in this session.',
   };
 
   @override
   Widget build(BuildContext context) {
     final isEnabled = ref.watch(ratingEnabledProvider);
-    final hasRatedAsync =
-        ref.watch(hasRatedProvider(widget.sessionId, widget.currentUserId));
+    final hasRatedAsync = ref.watch(
+      hasRatedProvider(widget.sessionId, widget.currentUserId),
+    );
 
     // Close with a success message the moment submit transitions loading → data.
-    ref.listen<AsyncValue<void>>(
-      ratingNotifierProvider(widget.sessionId),
-      (prev, next) {
-        if (prev is AsyncLoading && next is AsyncData) {
-          if (mounted) {
-            Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Ratings submitted! Thanks for your feedback.'),
-                backgroundColor: AppColors.success,
-              ),
-            );
-          }
+    ref.listen<AsyncValue<void>>(ratingNotifierProvider(widget.sessionId), (
+      prev,
+      next,
+    ) {
+      if (prev is AsyncLoading && next is AsyncData) {
+        if (mounted) {
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Ratings submitted! Thanks for your feedback.'),
+              backgroundColor: AppColors.success,
+            ),
+          );
         }
-      },
-    );
+      }
+    });
 
     if (!isEnabled) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Rating is not available right now.'),
-            ),
+            const SnackBar(content: Text('Rating is not available right now.')),
           );
         }
       });
@@ -114,7 +118,8 @@ class _RatingBottomSheetState extends ConsumerState<RatingBottomSheet> {
 
     // Determine which rateable members the current user has already rated.
     final ratingsAsync = ref.watch(sessionRatingsProvider(widget.sessionId));
-    final alreadyRatedUids = ratingsAsync.valueOrNull
+    final alreadyRatedUids =
+        ratingsAsync.valueOrNull
             ?.where((r) => r.raterUid == widget.currentUserId)
             .map((r) => r.rateeUid)
             .toSet() ??
@@ -129,8 +134,10 @@ class _RatingBottomSheetState extends ConsumerState<RatingBottomSheet> {
     );
     final allVisible = [...unvoted, ...voted];
 
-    final selectedUids =
-        _selected.entries.where((e) => e.value).map((e) => e.key).toList();
+    final selectedUids = _selected.entries
+        .where((e) => e.value)
+        .map((e) => e.key)
+        .toList();
     final canSubmit = selectedUids.isNotEmpty && !isLoading;
 
     final mq = MediaQuery.of(context);
@@ -144,7 +151,10 @@ class _RatingBottomSheetState extends ConsumerState<RatingBottomSheet> {
       // padding.bottom    = device safe area (home indicator)
       // kBottomNavigationBarHeight = app nav bar
       padding: EdgeInsets.only(
-        bottom: mq.viewInsets.bottom + mq.padding.bottom + kBottomNavigationBarHeight,
+        bottom:
+            mq.viewInsets.bottom +
+            mq.padding.bottom +
+            kBottomNavigationBarHeight,
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
@@ -233,9 +243,7 @@ class _RatingBottomSheetState extends ConsumerState<RatingBottomSheet> {
             const SizedBox(height: 8),
             // Member list — unvoted (interactive) first, already-voted (disabled) below
             ConstrainedBox(
-              constraints: BoxConstraints(
-                maxHeight: mq.size.height * 0.3,
-              ),
+              constraints: BoxConstraints(maxHeight: mq.size.height * 0.3),
               child: allVisible.isEmpty
                   ? const Padding(
                       padding: EdgeInsets.symmetric(vertical: 12),
@@ -345,11 +353,16 @@ class _RatingBottomSheetState extends ConsumerState<RatingBottomSheet> {
               const SizedBox(height: 8),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.error.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: AppColors.error.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Text(
                   _errorMessage(ratingError),
@@ -373,7 +386,9 @@ class _RatingBottomSheetState extends ConsumerState<RatingBottomSheet> {
                     onPressed: canSubmit
                         ? () => ref
                               .read(
-                                ratingNotifierProvider(widget.sessionId).notifier,
+                                ratingNotifierProvider(
+                                  widget.sessionId,
+                                ).notifier,
                               )
                               .submitRatings(
                                 selectedUids,
@@ -415,10 +430,7 @@ class _RatingBottomSheetState extends ConsumerState<RatingBottomSheet> {
 }
 
 class _MemberAvatar extends StatelessWidget {
-  const _MemberAvatar({
-    required this.displayName,
-    required this.photoUrl,
-  });
+  const _MemberAvatar({required this.displayName, required this.photoUrl});
 
   final String displayName;
   final String? photoUrl;

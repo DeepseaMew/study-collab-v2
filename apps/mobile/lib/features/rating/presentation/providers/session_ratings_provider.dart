@@ -10,7 +10,6 @@ part 'session_ratings_provider.g.dart';
 Stream<List<RatingEntity>> sessionRatings(
   SessionRatingsRef ref,
   String sessionId,
-) =>
-    WatchSessionRatingsUseCase(ref.watch(ratingRepositoryProvider)).call(
-      sessionId,
-    );
+) => WatchSessionRatingsUseCase(
+  ref.watch(ratingRepositoryProvider),
+).call(sessionId);

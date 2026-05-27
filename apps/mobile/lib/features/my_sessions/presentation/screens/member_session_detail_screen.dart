@@ -188,17 +188,25 @@ class _MemberSessionDetailScreenState
       sessionStreamProvider(widget.sessionId),
       (prev, next) {
         final session = next.asData?.value;
-        if (session == null || session.status != 'ended' || _sessionEndedPopupShown) return;
+        if (session == null ||
+            session.status != 'ended' ||
+            _sessionEndedPopupShown)
+          return;
 
         // Guard: members must be loaded before opening the sheet.
-        final members = ref.read(sessionMembersProvider(widget.sessionId)).asData?.value ?? [];
+        final members =
+            ref.read(sessionMembersProvider(widget.sessionId)).asData?.value ??
+            [];
         if (members.isEmpty) return;
 
-        final currentUid = ref.read(firebaseAuthStateProvider).valueOrNull?.uid ?? '';
+        final currentUid =
+            ref.read(firebaseAuthStateProvider).valueOrNull?.uid ?? '';
         if (currentUid.isEmpty) return;
 
         // Guard: skip if already rated (e.g. rated on another device).
-        final hasRated = ref.read(hasRatedProvider(widget.sessionId, currentUid)).valueOrNull;
+        final hasRated = ref
+            .read(hasRatedProvider(widget.sessionId, currentUid))
+            .valueOrNull;
         if (hasRated == true) return;
 
         setState(() => _sessionEndedPopupShown = true);

@@ -48,7 +48,8 @@ void main() {
         //      Assert returns true.
         //  12. Assert RatingBannerWidget is hidden (hasRated: true).
       },
-      skip: true, // Pending CI emulator configuration (ADR 0009 CI pipeline changes)
+      skip:
+          true, // Pending CI emulator configuration (ADR 0009 CI pipeline changes)
     );
 
     testWidgets(

@@ -10,7 +10,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/features/rating/presentation/widgets/profile_score_widget.dart';
 
-Widget _wrap(Widget child) => MaterialApp(home: Scaffold(body: Center(child: child)));
+Widget _wrap(Widget child) => MaterialApp(
+  home: Scaffold(body: Center(child: child)),
+);
 
 void main() {
   group('ProfileScoreWidget — zero score', () {
@@ -77,10 +79,7 @@ void main() {
     testWidgets('renders "100%" for score 1.0', (tester) async {
       await tester.pumpWidget(
         _wrap(
-          const ProfileScoreWidget(
-            profileScore: 1.0,
-            completedSessionCount: 2,
-          ),
+          const ProfileScoreWidget(profileScore: 1.0, completedSessionCount: 2),
         ),
       );
 
@@ -90,10 +89,7 @@ void main() {
     testWidgets('renders "50%" for score 0.5', (tester) async {
       await tester.pumpWidget(
         _wrap(
-          const ProfileScoreWidget(
-            profileScore: 0.5,
-            completedSessionCount: 6,
-          ),
+          const ProfileScoreWidget(profileScore: 0.5, completedSessionCount: 6),
         ),
       );
 
@@ -113,28 +109,32 @@ void main() {
       expect(find.text('1%'), findsOneWidget);
     });
 
-    testWidgets('Semantics label includes percentage and "percent positive rating"',
-        (tester) async {
-      await tester.pumpWidget(
-        _wrap(
-          const ProfileScoreWidget(
-            profileScore: 0.85,
-            completedSessionCount: 4,
+    testWidgets(
+      'Semantics label includes percentage and "percent positive rating"',
+      (tester) async {
+        await tester.pumpWidget(
+          _wrap(
+            const ProfileScoreWidget(
+              profileScore: 0.85,
+              completedSessionCount: 4,
+            ),
           ),
-        ),
-      );
+        );
 
-      expect(
-        find.byWidgetPredicate(
-          (w) =>
-              w is Semantics &&
-              w.properties.label == '85 percent positive rating',
-        ),
-        findsOneWidget,
-      );
-    });
+        expect(
+          find.byWidgetPredicate(
+            (w) =>
+                w is Semantics &&
+                w.properties.label == '85 percent positive rating',
+          ),
+          findsOneWidget,
+        );
+      },
+    );
 
-    testWidgets('renders filled thumbs-up icon (positive state)', (tester) async {
+    testWidgets('renders filled thumbs-up icon (positive state)', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
           const ProfileScoreWidget(
@@ -147,7 +147,9 @@ void main() {
       expect(find.byIcon(Icons.thumb_up), findsOneWidget);
     });
 
-    testWidgets('renders completedSessionCount in "from N sessions" text', (tester) async {
+    testWidgets('renders completedSessionCount in "from N sessions" text', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _wrap(
           const ProfileScoreWidget(

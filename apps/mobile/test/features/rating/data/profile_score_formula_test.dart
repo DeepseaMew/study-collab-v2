@@ -40,23 +40,32 @@ void main() {
   });
 
   group('profile score formula — edge case: endedSessions == 0', () {
-    test('endedSessions 0 with 0 thumbsUp — denominator clamps to 1, score is 1.0', () {
-      // denominator = max(1, 0) = 1; (0 + 1) / 1 = 1.0
-      // This edge case arises when the rating is submitted before the session
-      // count query reflects the ended session.
-      expect(_computeNewScore(0, 0), 1.0);
-    });
+    test(
+      'endedSessions 0 with 0 thumbsUp — denominator clamps to 1, score is 1.0',
+      () {
+        // denominator = max(1, 0) = 1; (0 + 1) / 1 = 1.0
+        // This edge case arises when the rating is submitted before the session
+        // count query reflects the ended session.
+        expect(_computeNewScore(0, 0), 1.0);
+      },
+    );
 
-    test('endedSessions 0 with non-zero thumbsUp — score is clamped to 1.0', () {
-      expect(_computeNewScore(5, 0), 1.0);
-    });
+    test(
+      'endedSessions 0 with non-zero thumbsUp — score is clamped to 1.0',
+      () {
+        expect(_computeNewScore(5, 0), 1.0);
+      },
+    );
   });
 
   group('profile score formula — clamp: score cannot exceed 1.0', () {
-    test('multiple raters in one session — raw ratio above 1 is clamped to 1.0', () {
-      // e.g. 5 thumbsUp for 1 endedSession → raw = 6/1 = 6.0 → clamped to 1.0
-      expect(_computeNewScore(5, 1), 1.0);
-    });
+    test(
+      'multiple raters in one session — raw ratio above 1 is clamped to 1.0',
+      () {
+        // e.g. 5 thumbsUp for 1 endedSession → raw = 6/1 = 6.0 → clamped to 1.0
+        expect(_computeNewScore(5, 1), 1.0);
+      },
+    );
 
     test('raw ratio exactly 1.0 is not clamped', () {
       expect(_computeNewScore(3, 4), closeTo(1.0, 0.001));

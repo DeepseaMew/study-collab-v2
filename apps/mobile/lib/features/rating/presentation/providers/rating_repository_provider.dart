@@ -10,10 +10,10 @@ part 'rating_repository_provider.g.dart';
 
 @Riverpod(keepAlive: true)
 RatingDatasource ratingDatasource(RatingDatasourceRef ref) => RatingDatasource(
-      FirebaseFirestore.instance,
-      // Crashlytics is not supported on Web.
-      kIsWeb ? null : FirebaseCrashlytics.instance,
-    );
+  FirebaseFirestore.instance,
+  // Crashlytics is not supported on Web.
+  kIsWeb ? null : FirebaseCrashlytics.instance,
+);
 
 @Riverpod(keepAlive: true)
 RatingRepository ratingRepository(RatingRepositoryRef ref) {

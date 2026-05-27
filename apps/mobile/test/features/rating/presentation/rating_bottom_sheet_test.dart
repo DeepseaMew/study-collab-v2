@@ -64,9 +64,7 @@ Widget _buildApp({
   _MockRatingRepository? repo,
 }) {
   final mockRepo = repo ?? _MockRatingRepository();
-  when(
-    () => mockRepo.submitRatings(any(), any()),
-  ).thenAnswer((_) async {});
+  when(() => mockRepo.submitRatings(any(), any())).thenAnswer((_) async {});
   when(
     () => mockRepo.watchSessionRatings(any()),
   ).thenAnswer((_) => Stream.value(const []));
@@ -77,16 +75,17 @@ Widget _buildApp({
   return ProviderScope(
     overrides: [
       ratingEnabledProvider.overrideWithValue(ratingEnabled),
-      hasRatedProvider(_sessionId, _currentUid).overrideWith(
-        (_) async => hasRated,
-      ),
+      hasRatedProvider(
+        _sessionId,
+        _currentUid,
+      ).overrideWith((_) async => hasRated),
       ratingRepositoryProvider.overrideWithValue(mockRepo),
-      sessionRatingsProvider(_sessionId).overrideWith(
-        (_) => Stream.value(sessionRatings),
-      ),
-      ratingNotifierProvider(_sessionId).overrideWith(
-        () => _FakeRatingNotifier(ratingState),
-      ),
+      sessionRatingsProvider(
+        _sessionId,
+      ).overrideWith((_) => Stream.value(sessionRatings)),
+      ratingNotifierProvider(
+        _sessionId,
+      ).overrideWith(() => _FakeRatingNotifier(ratingState)),
     ],
     child: MaterialApp(
       home: Scaffold(
@@ -137,8 +136,9 @@ Future<void> _openSheet(WidgetTester tester) async {
 
 void main() {
   group('RatingBottomSheet — disabled / already-rated guards', () {
-    testWidgets('pops and shows snackbar when ratingEnabled is false',
-        (tester) async {
+    testWidgets('pops and shows snackbar when ratingEnabled is false', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildApp(ratingEnabled: false));
       await _openSheet(tester);
       await tester.pumpAndSettle();
@@ -203,8 +203,9 @@ void main() {
       });
     });
 
-    testWidgets('shows "No members found." when search yields no results',
-        (tester) async {
+    testWidgets('shows "No members found." when search yields no results', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildApp());
       await _openSheet(tester);
 
@@ -216,7 +217,9 @@ void main() {
   });
 
   group('RatingBottomSheet — Submit button state', () {
-    testWidgets('Submit is disabled initially (no member toggled)', (tester) async {
+    testWidgets('Submit is disabled initially (no member toggled)', (
+      tester,
+    ) async {
       await mockNetworkImagesFor(() async {
         await tester.pumpWidget(_buildApp());
         await _openSheet(tester);
@@ -245,8 +248,9 @@ void main() {
       });
     });
 
-    testWidgets('Submit is disabled again after un-toggling the only member',
-        (tester) async {
+    testWidgets('Submit is disabled again after un-toggling the only member', (
+      tester,
+    ) async {
       await mockNetworkImagesFor(() async {
         await tester.pumpWidget(_buildApp());
         await _openSheet(tester);
@@ -298,21 +302,25 @@ void main() {
       await tester.pump(const Duration(milliseconds: 500));
     }
 
-    testWidgets('Submit is disabled and shows CircularProgressIndicator while loading',
-        (tester) async {
-      await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(
-          _buildApp(ratingState: const AsyncValue.loading()),
-        );
-        await openSheetForLoading(tester);
+    testWidgets(
+      'Submit is disabled and shows CircularProgressIndicator while loading',
+      (tester) async {
+        await mockNetworkImagesFor(() async {
+          await tester.pumpWidget(
+            _buildApp(ratingState: const AsyncValue.loading()),
+          );
+          await openSheetForLoading(tester);
 
-        // In AsyncLoading the FilledButton shows a CPI, not "Submit" text.
-        // Locate it by type — there is exactly one FilledButton in the sheet.
-        final submitBtn = tester.widget<FilledButton>(find.byType(FilledButton));
-        expect(submitBtn.onPressed, isNull);
-        expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      });
-    });
+          // In AsyncLoading the FilledButton shows a CPI, not "Submit" text.
+          // Locate it by type — there is exactly one FilledButton in the sheet.
+          final submitBtn = tester.widget<FilledButton>(
+            find.byType(FilledButton),
+          );
+          expect(submitBtn.onPressed, isNull);
+          expect(find.byType(CircularProgressIndicator), findsOneWidget);
+        });
+      },
+    );
 
     testWidgets('X button is disabled while loading', (tester) async {
       await mockNetworkImagesFor(() async {
@@ -344,7 +352,9 @@ void main() {
   });
 
   group('RatingBottomSheet — AsyncError state', () {
-    testWidgets('renders inline error banner for submit failed', (tester) async {
+    testWidgets('renders inline error banner for submit failed', (
+      tester,
+    ) async {
       await mockNetworkImagesFor(() async {
         await tester.pumpWidget(
           _buildApp(
@@ -356,14 +366,13 @@ void main() {
         );
         await _openSheet(tester);
 
-        expect(
-          find.textContaining('Could not submit ratings'),
-          findsOneWidget,
-        );
+        expect(find.textContaining('Could not submit ratings'), findsOneWidget);
       });
     });
 
-    testWidgets('renders inline error banner for offline error', (tester) async {
+    testWidgets('renders inline error banner for offline error', (
+      tester,
+    ) async {
       await mockNetworkImagesFor(() async {
         await tester.pumpWidget(
           _buildApp(
@@ -375,14 +384,13 @@ void main() {
         );
         await _openSheet(tester);
 
-        expect(
-          find.textContaining('internet connection'),
-          findsOneWidget,
-        );
+        expect(find.textContaining('internet connection'), findsOneWidget);
       });
     });
 
-    testWidgets('renders inline error banner for already rated', (tester) async {
+    testWidgets('renders inline error banner for already rated', (
+      tester,
+    ) async {
       await mockNetworkImagesFor(() async {
         await tester.pumpWidget(
           _buildApp(
@@ -394,14 +402,13 @@ void main() {
         );
         await _openSheet(tester);
 
-        expect(
-          find.textContaining('already rated'),
-          findsOneWidget,
-        );
+        expect(find.textContaining('already rated'), findsOneWidget);
       });
     });
 
-    testWidgets('Submit remains enabled after error (can retry)', (tester) async {
+    testWidgets('Submit remains enabled after error (can retry)', (
+      tester,
+    ) async {
       await mockNetworkImagesFor(() async {
         await tester.pumpWidget(
           _buildApp(
@@ -426,8 +433,9 @@ void main() {
   });
 
   group('RatingBottomSheet — Semantics (accessibility)', () {
-    testWidgets('each rateable member has a Semantics "Rate [name]" label',
-        (tester) async {
+    testWidgets('each rateable member has a Semantics "Rate [name]" label', (
+      tester,
+    ) async {
       await mockNetworkImagesFor(() async {
         await tester.pumpWidget(_buildApp());
         await _openSheet(tester);
@@ -440,14 +448,13 @@ void main() {
       });
     });
 
-    testWidgets('Close button has Semantics label "Close rating"', (tester) async {
+    testWidgets('Close button has Semantics label "Close rating"', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildApp());
       await _openSheet(tester);
 
-      expect(
-        find.bySemanticsLabel('Close rating'),
-        findsOneWidget,
-      );
+      expect(find.bySemanticsLabel('Close rating'), findsOneWidget);
     });
   });
 }

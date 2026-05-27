@@ -80,7 +80,8 @@ class _HostSessionDetailScreenState
       builder: (_) => _EndSessionSheet(
         session: session,
         currentUserId: hostUid,
-        onEndSessionConfirmed: () => _onEndSessionConfirmed(session, members, hostUid),
+        onEndSessionConfirmed: () =>
+            _onEndSessionConfirmed(session, members, hostUid),
       ),
     );
   }
@@ -93,8 +94,9 @@ class _HostSessionDetailScreenState
     final isEnabled = ref.read(ratingEnabledProvider);
     if (!isEnabled) return;
 
-    final hasRatedValue =
-        ref.read(hasRatedProvider(session.sessionId, hostUid)).valueOrNull;
+    final hasRatedValue = ref
+        .read(hasRatedProvider(session.sessionId, hostUid))
+        .valueOrNull;
     if (hasRatedValue == true) return;
 
     showModalBottomSheet<void>(
@@ -1208,7 +1210,9 @@ class _EndSessionSheetState extends ConsumerState<_EndSessionSheet> {
                   const Spacer(),
                   IconButton(
                     icon: const Icon(Icons.close, color: AppColors.hint),
-                    onPressed: _submitting ? null : () => Navigator.pop(context),
+                    onPressed: _submitting
+                        ? null
+                        : () => Navigator.pop(context),
                     visualDensity: VisualDensity.compact,
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(),

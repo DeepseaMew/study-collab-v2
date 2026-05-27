@@ -23,10 +23,7 @@ class RatingDatasource {
     String rateeUid,
     double newProfileScore,
   ) async {
-    appLogger.debug(
-      'rating: writing batch',
-      extra: {'sessionId': sessionId},
-    );
+    appLogger.debug('rating: writing batch', extra: {'sessionId': sessionId});
     final batch = _firestore.batch();
 
     final ratingRef = _firestore.doc(

@@ -18,8 +18,7 @@ class RatingRepositoryImpl implements RatingRepository {
   /// Fetched fresh on every [submitRatings] call so that a [keepAlive]
   /// repository instance constructed before sign-in completes does not carry
   /// a stale uid. Callers must check for empty string before use (SEC-R03).
-  String get _currentUserId =>
-      FirebaseAuth.instance.currentUser?.uid ?? '';
+  String get _currentUserId => FirebaseAuth.instance.currentUser?.uid ?? '';
 
   @override
   Future<void> submitRatings(String sessionId, List<String> rateeUids) async {
@@ -37,8 +36,10 @@ class RatingRepositoryImpl implements RatingRepository {
       // session attempts to overwrite an existing rating doc. Firestore rules
       // have `allow update: if false` on ratings, so the overwrite fails with
       // permission-denied rather than a meaningful domain error.
-      final alreadyRated =
-          await _datasource.hasRatedInSession(sessionId, currentUid);
+      final alreadyRated = await _datasource.hasRatedInSession(
+        sessionId,
+        currentUid,
+      );
       if (alreadyRated) {
         appLogger.warning(
           'rating: submitRatings blocked — already rated in session',
@@ -57,13 +58,18 @@ class RatingRepositoryImpl implements RatingRepository {
         final thumbsUp = await _datasource.countThumbsUpReceived(rateeUid);
         appLogger.debug(
           'rating: step 2 — countEndedSessionsJoined',
-          extra: {'sessionId': sessionId, 'rateeIndex': i, 'thumbsUp': thumbsUp},
+          extra: {
+            'sessionId': sessionId,
+            'rateeIndex': i,
+            'thumbsUp': thumbsUp,
+          },
         );
         // countEndedSessionsJoined is called with rateeUid (not raterUid) so
         // the denominator reflects the number of ended sessions the RATEE has
         // participated in — the correct denominator for their profile score.
-        final endedSessions =
-            await _datasource.countEndedSessionsJoined(rateeUid);
+        final endedSessions = await _datasource.countEndedSessionsJoined(
+          rateeUid,
+        );
         final denominator = endedSessions > 0 ? endedSessions : 1;
         // +1 accounts for the rating being written in this iteration.
         // clamp to [0.0, 1.0]: multiple raters in one session can push
