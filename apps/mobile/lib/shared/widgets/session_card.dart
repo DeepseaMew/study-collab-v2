@@ -472,8 +472,7 @@ class _ThreeDotMenu extends ConsumerWidget {
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed:
-                              loading ? null : () => Navigator.pop(ctx),
+                          onPressed: loading ? null : () => Navigator.pop(ctx),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
@@ -605,8 +604,7 @@ class _ThreeDotMenu extends ConsumerWidget {
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed:
-                              loading ? null : () => Navigator.pop(ctx),
+                          onPressed: loading ? null : () => Navigator.pop(ctx),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
@@ -642,7 +640,9 @@ class _ThreeDotMenu extends ConsumerWidget {
                                       'Session left from session card',
                                       extra: {'sessionId': session.sessionId},
                                     );
-                                    appLogger.debug(AnalyticsEvents.sessionLeft);
+                                    appLogger.debug(
+                                      AnalyticsEvents.sessionLeft,
+                                    );
                                     if (ctx.mounted) Navigator.pop(ctx);
                                   } catch (e, st) {
                                     appLogger.error(

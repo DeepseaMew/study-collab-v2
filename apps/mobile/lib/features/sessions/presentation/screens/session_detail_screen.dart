@@ -51,9 +51,7 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
     return sessionAsync.when(
       loading: () => effectiveSession != null
           ? _SessionDetailBody(session: effectiveSession)
-          : const Scaffold(
-              body: Center(child: CircularProgressIndicator()),
-            ),
+          : const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (e, st) {
         appLogger.error(
           'SessionDetailScreen failed to load',
