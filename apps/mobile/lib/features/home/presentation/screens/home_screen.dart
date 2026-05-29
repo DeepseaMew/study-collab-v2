@@ -8,6 +8,7 @@ import 'package:mobile/core/router/app_router.dart';
 import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
 import 'package:mobile/features/profile/presentation/providers/user_provider.dart';
 import 'package:mobile/features/sessions/presentation/providers/join_requests_provider.dart';
+import 'package:mobile/features/sessions/presentation/providers/pin_provider.dart';
 import 'package:mobile/features/sessions/presentation/providers/session_provider.dart';
 import 'package:mobile/shared/theme/app_colors.dart';
 import 'package:mobile/shared/widgets/avatar_widget.dart';
@@ -81,6 +82,7 @@ class _HomeBodyState extends ConsumerState<_HomeBody> {
           const SnackBar(content: Text('No session found with that PIN')),
         );
       } else {
+        ref.read(joinPinProvider.notifier).state = pin;
         await router.push(
           RouteConstants.sessionDetail.replaceFirst(':id', session.sessionId),
         );
@@ -228,11 +230,20 @@ class _HomeBodyState extends ConsumerState<_HomeBody> {
                   ),
                 ),
                 data: (sessions) {
-                  final filtered = widget.uid == null
-                      ? sessions
-                      : sessions
-                            .where((s) => !s.memberUids.contains(widget.uid))
-                            .toList();
+                  final now = DateTime.now();
+                  final filtered = sessions
+                      .where(
+                        (s) =>
+                            s.status == 'scheduled' &&
+                            (s.scheduledEndAt == null ||
+                                s.scheduledEndAt!.isAfter(now)),
+                      )
+                      .where(
+                        (s) =>
+                            widget.uid == null ||
+                            !s.memberUids.contains(widget.uid),
+                      )
+                      .toList();
                   if (filtered.isEmpty) return const _EmptyState();
                   return ListView.builder(
                     padding: const EdgeInsets.symmetric(

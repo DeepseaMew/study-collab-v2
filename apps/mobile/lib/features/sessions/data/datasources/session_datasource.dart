@@ -33,7 +33,7 @@ class SessionDatasource {
     return _sessionRef(sessionId).snapshots().map((snap) {
       if (!snap.exists || snap.data() == null) return null;
       try {
-        return SessionModel.fromJson(snap.data()!);
+        return SessionModel.fromFirestore(snap.data()!);
       } catch (e, st) {
         appLogger.error(
           'Failed to parse session document',
@@ -56,7 +56,7 @@ class SessionDatasource {
           (snap) => snap.docs
               .map((doc) {
                 try {
-                  return SessionModel.fromJson(doc.data());
+                  return SessionModel.fromFirestore(doc.data());
                 } catch (e, st) {
                   appLogger.error(
                     'Failed to parse public session document',
@@ -67,6 +67,12 @@ class SessionDatasource {
                 }
               })
               .whereType<SessionModel>()
+              .where((s) {
+                final now = DateTime.now();
+                return s.status == 'scheduled' ||
+                    (s.scheduledEndAt != null &&
+                        s.scheduledEndAt!.isAfter(now));
+              })
               .toList(),
         );
   }
@@ -253,7 +259,7 @@ class SessionDatasource {
           .limit(1)
           .get();
       if (snap.docs.isEmpty) return null;
-      return SessionModel.fromJson(snap.docs.first.data());
+      return SessionModel.fromFirestore(snap.docs.first.data());
     } on FirebaseException catch (e, st) {
       appLogger.error(
         'Firestore findSessionByPin failed',
@@ -301,7 +307,7 @@ class SessionDatasource {
     return docs
         .map((doc) {
           try {
-            return SessionModel.fromJson(doc.data());
+            return SessionModel.fromFirestore(doc.data());
           } catch (e, st) {
             appLogger.error(
               'Failed to parse session document',

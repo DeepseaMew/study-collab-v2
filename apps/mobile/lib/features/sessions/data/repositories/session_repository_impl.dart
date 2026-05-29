@@ -80,8 +80,9 @@ class SessionRepositoryImpl implements SessionRepository {
       'noteCount': 0,
       'status': 'scheduled',
       'scheduledAt': session.scheduledAt,
-      if (session.scheduledEndAt != null)
-        'scheduledEndAt': session.scheduledEndAt,
+      'scheduledEndAt':
+          session.scheduledEndAt ??
+          session.scheduledAt.add(const Duration(hours: 2)),
       'location': session.location,
       'capacity': session.capacity,
       'hostDisplayName': hostDisplayName,

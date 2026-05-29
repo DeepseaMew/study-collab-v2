@@ -15,9 +15,11 @@ import 'package:mobile/features/profile/presentation/providers/user_provider.dar
 import 'package:mobile/features/sessions/domain/entities/join_request_entity.dart';
 import 'package:mobile/features/sessions/domain/entities/session_entity.dart';
 import 'package:mobile/features/sessions/presentation/providers/join_requests_provider.dart';
+import 'package:mobile/features/sessions/presentation/providers/pin_provider.dart';
 import 'package:mobile/features/sessions/presentation/providers/session_members_provider.dart';
 import 'package:mobile/features/sessions/presentation/providers/session_provider.dart';
 import 'package:mobile/shared/theme/app_colors.dart';
+import 'package:mobile/shared/theme/subject_colors.dart';
 
 /// Public pre-join session detail screen.
 ///
@@ -25,34 +27,52 @@ import 'package:mobile/shared/theme/app_colors.dart';
 /// and a context-aware join action row.
 ///
 /// Route: `/sessions/:id`
-class SessionDetailScreen extends ConsumerWidget {
+class SessionDetailScreen extends ConsumerStatefulWidget {
   const SessionDetailScreen({super.key, required this.sessionId});
 
   final String sessionId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final sessionAsync = ref.watch(sessionStreamProvider(sessionId));
+  ConsumerState<SessionDetailScreen> createState() =>
+      _SessionDetailScreenState();
+}
+
+class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
+  SessionEntity? _lastKnownSession;
+
+  @override
+  Widget build(BuildContext context) {
+    final sessionAsync = ref.watch(sessionStreamProvider(widget.sessionId));
+
+    final streamSession = sessionAsync.asData?.value;
+    if (streamSession != null) _lastKnownSession = streamSession;
+    final effectiveSession = streamSession ?? _lastKnownSession;
 
     return sessionAsync.when(
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      loading: () => effectiveSession != null
+          ? _SessionDetailBody(session: effectiveSession)
+          : const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            ),
       error: (e, st) {
         appLogger.error(
           'SessionDetailScreen failed to load',
           exception: e,
           stackTrace: st,
-          extra: {'sessionId': sessionId},
+          extra: {'sessionId': widget.sessionId},
         );
+        if (effectiveSession != null) {
+          return _SessionDetailBody(session: effectiveSession);
+        }
         return _SessionNotFoundScaffold(message: e.toString());
       },
-      data: (session) {
-        if (session == null) {
+      data: (streamValue) {
+        if (effectiveSession == null) {
           return const _SessionNotFoundScaffold(
             message: 'This session no longer exists.',
           );
         }
-        return _SessionDetailBody(session: session);
+        return _SessionDetailBody(session: effectiveSession);
       },
     );
   }
@@ -385,6 +405,7 @@ class _InfoChipsRow extends StatelessWidget {
     final subjectLabel = session.hashtags.isNotEmpty
         ? session.hashtags.first
         : session.academicLevel;
+    final subjectChipColor = subjectColor(subjectLabel);
     final visibilityLabel = session.visibility == 'private'
         ? 'Private'
         : 'Public';
@@ -396,14 +417,14 @@ class _InfoChipsRow extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(
-            color: AppColors.accent.withValues(alpha: 0.12),
+            color: subjectChipColor.background,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppColors.accent.withValues(alpha: 0.25)),
+            border: Border.all(color: subjectChipColor.border),
           ),
           child: Text(
             subjectLabel,
-            style: const TextStyle(
-              color: AppColors.accent,
+            style: TextStyle(
+              color: subjectChipColor.text,
               fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
@@ -1035,26 +1056,150 @@ class _JoinActionRow extends ConsumerWidget {
         false;
 
     if (isPending) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: AppColors.warning,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: const Text(
-          'Pending...',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      );
+      return _PendingButton(session: session, uid: me!.uid);
     }
 
     return _NotJoinedActions(session: session, me: me);
+  }
+}
+
+// ── Pending request button with cancel flow ───────────────────────────────────
+
+class _PendingButton extends ConsumerStatefulWidget {
+  const _PendingButton({required this.session, required this.uid});
+
+  final SessionEntity session;
+  final String uid;
+
+  @override
+  ConsumerState<_PendingButton> createState() => _PendingButtonState();
+}
+
+class _PendingButtonState extends ConsumerState<_PendingButton> {
+  bool _loading = false;
+
+  Future<void> _confirmCancel() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        icon: Container(
+          width: 64,
+          height: 64,
+          decoration: BoxDecoration(
+            color: AppColors.error.withValues(alpha: 0.12),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.cancel_outlined,
+            color: AppColors.error,
+            size: 32,
+          ),
+        ),
+        title: const Text(
+          'Cancel Request?',
+          style: TextStyle(
+            color: AppColors.text,
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        content: const Text(
+          'Are you sure you want to cancel your join request?',
+          style: TextStyle(color: AppColors.hint, fontSize: 14),
+          textAlign: TextAlign.center,
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        actions: [
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.text,
+                    side: const BorderSide(color: AppColors.border),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: const Text('Keep'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.error,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: const Text('Cancel Request'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true) return;
+
+    setState(() => _loading = true);
+    try {
+      await ref
+          .read(joinRequestRepositoryProvider)
+          .withdrawRequest(widget.session.sessionId, widget.uid);
+      appLogger.info(
+        'Join request withdrawn from session detail',
+        extra: {'sessionId': widget.session.sessionId},
+      );
+    } catch (e, st) {
+      appLogger.error(
+        'Withdraw request failed in session detail',
+        exception: e,
+        stackTrace: st,
+        extra: {'sessionId': widget.session.sessionId},
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not cancel request: $e'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppColors.warning,
+        foregroundColor: Colors.white,
+        minimumSize: const Size(double.infinity, 48),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+      onPressed: _loading ? null : _confirmCancel,
+      child: _loading
+          ? const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: Colors.white,
+              ),
+            )
+          : const Text('Pending...'),
+    );
   }
 }
 
@@ -1076,22 +1221,31 @@ class _NotJoinedActionsState extends ConsumerState<_NotJoinedActions> {
     if (me == null) return;
     setState(() => _loading = true);
     try {
-      await ref
-          .read(joinRequestRepositoryProvider)
-          .submitRequest(
-            widget.session.sessionId,
-            JoinRequestEntity(
-              uid: me.uid,
-              displayName: me.displayName,
-              photoUrl: me.photoUrl,
-              requestedAt: DateTime.now(),
-            ),
-          );
+      final request = JoinRequestEntity(
+        uid: me.uid,
+        displayName: me.displayName,
+        photoUrl: me.photoUrl,
+        requestedAt: DateTime.now(),
+      );
+      final repo = ref.read(joinRequestRepositoryProvider);
+      final pin = ref.read(joinPinProvider);
+      if (widget.session.visibility == 'private' && pin != null) {
+        await repo.submitRequestWithPin(widget.session.sessionId, request, pin);
+      } else {
+        await repo.submitRequest(widget.session.sessionId, request);
+      }
       appLogger.info(
         'Join request submitted',
         extra: {'sessionId': widget.session.sessionId},
       );
       appLogger.debug(AnalyticsEvents.sessionJoinRequested);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Request sent! Waiting for the host to approve.'),
+          ),
+        );
+      }
     } catch (e, st) {
       appLogger.error('Request join failed', exception: e, stackTrace: st);
       if (mounted) {
@@ -1103,81 +1257,17 @@ class _NotJoinedActionsState extends ConsumerState<_NotJoinedActions> {
         );
       }
     } finally {
-      if (mounted) setState(() => _loading = false);
-    }
-  }
-
-  Future<void> _joinWithPassword() async {
-    final me = widget.me;
-    if (me == null) return;
-
-    final password = await showDialog<String>(
-      context: context,
-      builder: (_) => const _JoinPasswordDialog(),
-    );
-    if (password == null || password.isEmpty) return;
-
-    setState(() => _loading = true);
-    try {
-      final request = JoinRequestEntity(
-        uid: me.uid,
-        displayName: me.displayName,
-        photoUrl: me.photoUrl,
-        requestedAt: DateTime.now(),
-      );
-      await ref
-          .read(joinRequestRepositoryProvider)
-          .joinWithPin(widget.session.sessionId, request, password);
-      appLogger.info(
-        'Joined private session with PIN',
-        extra: {'sessionId': widget.session.sessionId},
-      );
-      appLogger.debug(AnalyticsEvents.sessionJoined);
-    } catch (e, st) {
-      appLogger.error(
-        'Join with password failed',
-        exception: e,
-        stackTrace: st,
-      );
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: AppColors.error,
-          ),
-        );
-      }
-    } finally {
+      ref.read(joinPinProvider.notifier).state = null;
       if (mounted) setState(() => _loading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (widget.session.visibility == 'private') {
-      return ElevatedButton.icon(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.accent,
-          minimumSize: const Size(double.infinity, 48),
-        ),
-        onPressed: _loading ? null : _joinWithPassword,
-        icon: _loading
-            ? const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Colors.white,
-                ),
-              )
-            : const Icon(Icons.lock_outline, size: 16),
-        label: const Text('Join with Password'),
-      );
-    }
-
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         backgroundColor: AppColors.accent,
+        foregroundColor: Colors.white,
         minimumSize: const Size(double.infinity, 48),
       ),
       onPressed: _loading ? null : _requestJoin,
@@ -1191,69 +1281,6 @@ class _NotJoinedActionsState extends ConsumerState<_NotJoinedActions> {
               ),
             )
           : const Text('Request to Join'),
-    );
-  }
-}
-
-// ── Join password dialog ──────────────────────────────────────────────────────
-
-class _JoinPasswordDialog extends StatefulWidget {
-  const _JoinPasswordDialog();
-
-  @override
-  State<_JoinPasswordDialog> createState() => _JoinPasswordDialogState();
-}
-
-class _JoinPasswordDialogState extends State<_JoinPasswordDialog> {
-  final _ctrl = TextEditingController();
-  bool _obscure = true;
-
-  @override
-  void dispose() {
-    _ctrl.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      backgroundColor: AppColors.surface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: const Text(
-        'Enter Session Password',
-        style: TextStyle(color: AppColors.text, fontSize: 16),
-      ),
-      content: TextField(
-        controller: _ctrl,
-        obscureText: _obscure,
-        decoration: InputDecoration(
-          hintText: 'Password',
-          suffixIcon: IconButton(
-            icon: Icon(
-              _obscure
-                  ? Icons.visibility_off_outlined
-                  : Icons.visibility_outlined,
-              size: 18,
-              color: AppColors.hint,
-            ),
-            onPressed: () => setState(() => _obscure = !_obscure),
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel', style: TextStyle(color: AppColors.hint)),
-        ),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.accent,
-            foregroundColor: Colors.white,
-          ),
-          onPressed: () => Navigator.pop(context, _ctrl.text.trim()),
-          child: const Text('Join'),
-        ),
-      ],
     );
   }
 }

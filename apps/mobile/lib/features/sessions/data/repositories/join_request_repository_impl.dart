@@ -75,6 +75,25 @@ class JoinRequestRepositoryImpl implements JoinRequestRepository {
   }
 
   @override
+  Future<void> submitRequestWithPin(
+    String sessionId,
+    JoinRequestEntity request,
+    String pin,
+  ) async {
+    final data = <String, dynamic>{
+      'uid': request.uid,
+      'displayName': request.displayName,
+      if (request.photoUrl != null) 'photoUrl': request.photoUrl,
+      'pin': pin,
+    };
+    await _datasource.submitPinRequest(sessionId, data);
+    appLogger.info(
+      'PIN-validated join request submitted (pending host approval)',
+      extra: {'sessionId': sessionId},
+    );
+  }
+
+  @override
   Future<void> joinWithPin(
     String sessionId,
     JoinRequestEntity request,
