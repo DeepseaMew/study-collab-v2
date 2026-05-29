@@ -22,7 +22,10 @@ Future<void> remoteConfigStartup(RemoteConfigStartupRef ref) async {
     ),
   );
 
-  await remoteConfig.setDefaults(const {'note_sharing_enabled': false});
+  await remoteConfig.setDefaults(const {
+    'note_sharing_enabled': false,
+    'rating_enabled': false,
+  });
 
   try {
     await remoteConfig.fetchAndActivate();

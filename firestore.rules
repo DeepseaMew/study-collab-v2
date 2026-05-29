@@ -53,15 +53,20 @@ service cloud.firestore {
         && request.resource.data.hasHostedBefore == false
         && request.resource.data.profileScore == 0.0;
 
-      allow update: if isKmuttUser()
-        && request.auth.uid == uid
-        && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['displayName', 'fullName', 'photoUrl', 'studentYear', 'academicLevel',
-                       'faculty', 'bio', 'hasHostedBefore', 'profileScore', 'updatedAt'])
-        && request.resource.data.updatedAt == request.time
-        && request.resource.data.uid == resource.data.uid
-        && request.resource.data.createdAt == resource.data.createdAt
-        && request.resource.data.email == resource.data.email;
+      allow update: if
+        (isKmuttUser()
+          && request.auth.uid == uid
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['displayName', 'fullName', 'photoUrl', 'studentYear', 'academicLevel',
+                         'faculty', 'bio', 'hasHostedBefore', 'profileScore', 'updatedAt'])
+          && request.resource.data.updatedAt == request.time
+          && request.resource.data.uid == resource.data.uid
+          && request.resource.data.createdAt == resource.data.createdAt
+          && request.resource.data.email == resource.data.email)
+        || (isKmuttUser()
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['profileScore'])
+          && request.resource.data.profileScore >= 0.0);
 
       allow delete: if false;
 
@@ -111,7 +116,8 @@ service cloud.firestore {
             || resource.data.hostUid == request.auth.uid
             || (resource.data.visibility == 'private'
                 && resource.data.pin is string
-                && resource.data.status == 'scheduled'));
+                && resource.data.status == 'scheduled')
+            || resource.data.status == 'ended');
 
       allow create: if isKmuttUser()
         && request.resource.data.hostUid == request.auth.uid
@@ -204,20 +210,26 @@ service cloud.firestore {
         allow delete: if false;
       }
 
-      // ── sessions/{sessionId}/ratings/{raterUid} ──────────────────────────
+      // ── sessions/{sessionId}/ratings/{ratingId} ──────────────────────────
 
-      match /ratings/{raterUid} {
-        allow read: if isMember(sessionId);
+      match /ratings/{ratingId} {
+        // isKmuttUser() (not isMember) so collection-group count() queries for
+        // profileScore calculation can read across all sessions without the caller
+        // needing to be a member of every session the ratee was ever in.
+        allow read: if isKmuttUser();
 
         allow create: if isMember(sessionId)
           && sessionEnded(sessionId)
-          && request.auth.uid == raterUid
-          && request.resource.data.raterUid == raterUid
-          && request.resource.data.rateeUid != raterUid
+          && request.resource.data.raterUid == request.auth.uid
+          && request.resource.data.rateeUid != request.resource.data.raterUid
           && request.resource.data.liked == true
           && request.resource.data.ratedAt == request.time
+          && request.resource.data.ratingId == ratingId
           && request.resource.data.keys().hasAll([
-               'raterUid', 'rateeUid', 'liked', 'ratedAt'
+               'ratingId', 'raterUid', 'rateeUid', 'liked', 'ratedAt'
+             ])
+          && request.resource.data.keys().hasOnly([
+               'ratingId', 'raterUid', 'rateeUid', 'liked', 'ratedAt'
              ]);
 
         allow update: if false;
@@ -247,6 +259,14 @@ service cloud.firestore {
         allow delete: if isKmuttUser()
           && (isHost(sessionId) || request.auth.uid == resource.data.uploaderUid);
       }
+    }
+
+    // ── ratings collection-group ────────────────────────────────────────────
+    // Required so collectionGroup('ratings').count() queries used for
+    // profile-score calculation are not blocked. The nested path rule alone
+    // does not cover allDescendants=true aggregation queries.
+    match /{path=**}/ratings/{ratingId} {
+      allow read: if isKmuttUser();
     }
 
     // ── dms/{dmId} ──────────────────────────────────────────────────────────

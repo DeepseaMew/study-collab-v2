@@ -126,6 +126,22 @@ abstract final class AnalyticsEvents {
   /// The "See All" button was tapped to open AllFilesScreen. No payload.
   static const String noteSeeAllOpened = 'note_see_all_opened';
 
+  // ── Rating ────────────────────────────────────────────────────────────────
+
+  /// User successfully submitted ratings after a session ended.
+  /// Payload: ratee_count (int). No PII.
+  static const String ratingSubmitted = 'rating_submitted';
+
+  /// User dismissed the rating sheet without submitting. No payload.
+  static const String ratingSkipped = 'rating_skipped';
+
+  /// User tapped the rating banner card to open the rating sheet. No payload.
+  static const String ratingBannerTapped = 'rating_banner_tapped';
+
+  /// Rating submission failed.
+  /// Payload: error_type (String, no PII).
+  static const String ratingSubmitFailed = 'rating_submit_failed';
+
   // ── Calendar ───────────────────────────────────────────────────────────────
 
   /// User toggled the calendar view format (month ↔ week).
