@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/core/logger.dart';
 import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
+import 'package:mobile/features/sessions/domain/entities/session_entity.dart';
 import 'package:mobile/features/sessions/presentation/providers/session_provider.dart';
 import 'package:mobile/features/sessions/presentation/widgets/session_form.dart';
 import 'package:mobile/shared/theme/app_colors.dart';
@@ -12,69 +13,91 @@ import 'package:mobile/shared/theme/app_colors.dart';
 /// Loads the session via [sessionStreamProvider], guards non-hosts,
 /// and wraps [SessionForm] with a Delete button injected via [bottomExtra].
 ///
+/// Uses [_lastKnownSession] so that the transient null the stream emits
+/// during the Firestore optimistic-write pending state (before the server
+/// timestamp resolves) does not replace [SessionForm] with an error
+/// scaffold and unmount it — which would prevent [context.go] from firing.
+///
 /// Route: `/sessions/:id/edit`
-class EditSessionScreen extends ConsumerWidget {
+class EditSessionScreen extends ConsumerStatefulWidget {
   const EditSessionScreen({super.key, required this.sessionId});
 
   final String sessionId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final sessionAsync = ref.watch(sessionStreamProvider(sessionId));
-    final me = ref.watch(firebaseAuthStateProvider).valueOrNull;
+  ConsumerState<EditSessionScreen> createState() => _EditSessionScreenState();
+}
+
+class _EditSessionScreenState extends ConsumerState<EditSessionScreen> {
+  SessionEntity? _lastKnownSession;
+
+  @override
+  Widget build(BuildContext context) {
+    final sessionAsync = ref.watch(sessionStreamProvider(widget.sessionId));
+
+    final streamSession = sessionAsync.asData?.value;
+    if (streamSession != null) _lastKnownSession = streamSession;
+    final effectiveSession = streamSession ?? _lastKnownSession;
 
     return sessionAsync.when(
-      loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      loading: () => effectiveSession != null
+          ? _buildForm(context, effectiveSession)
+          : const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (e, st) {
         appLogger.error(
           'EditSessionScreen failed to load session',
           exception: e,
           stackTrace: st,
-          extra: {'sessionId': sessionId},
+          extra: {'sessionId': widget.sessionId},
         );
-        return _ErrorScaffold(message: e.toString());
+        return effectiveSession != null
+            ? _buildForm(context, effectiveSession)
+            : _ErrorScaffold(message: e.toString());
       },
-      data: (session) {
-        if (session == null) {
+      data: (_) {
+        if (effectiveSession == null) {
           return const _ErrorScaffold(message: 'Session not found.');
         }
-
-        if (me == null || me.uid != session.hostUid) {
-          return Scaffold(
-            appBar: AppBar(
-              backgroundColor: AppColors.background,
-              leading: IconButton(
-                icon: const Icon(
-                  Icons.arrow_back_ios_new_rounded,
-                  color: AppColors.text,
-                ),
-                onPressed: () => context.pop(),
-              ),
-              title: const Text(
-                'Edit Session',
-                style: TextStyle(
-                  color: AppColors.text,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-            body: const Center(
-              child: Text(
-                'You are not authorised to edit this session.',
-                style: TextStyle(color: AppColors.hint),
-                textAlign: TextAlign.center,
-              ),
-            ),
-          );
-        }
-
-        return SessionForm(
-          isEditing: true,
-          initialSession: session,
-          bottomExtra: _DeleteSessionButton(sessionId: sessionId),
-        );
+        return _buildForm(context, effectiveSession);
       },
+    );
+  }
+
+  Widget _buildForm(BuildContext context, SessionEntity session) {
+    final me = ref.watch(firebaseAuthStateProvider).valueOrNull;
+    if (me == null || me.uid != session.hostUid) {
+      return Scaffold(
+        appBar: AppBar(
+          backgroundColor: AppColors.background,
+          leading: IconButton(
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: AppColors.text,
+            ),
+            onPressed: () => context.pop(),
+          ),
+          title: const Text(
+            'Edit Session',
+            style: TextStyle(
+              color: AppColors.text,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        body: const Center(
+          child: Text(
+            'You are not authorised to edit this session.',
+            style: TextStyle(color: AppColors.hint),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
+
+    return SessionForm(
+      isEditing: true,
+      initialSession: session,
+      bottomExtra: _DeleteSessionButton(sessionId: widget.sessionId),
     );
   }
 }

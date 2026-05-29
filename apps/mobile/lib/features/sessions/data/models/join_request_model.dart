@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:mobile/features/sessions/data/models/session_model.dart';
 import 'package:mobile/features/sessions/domain/entities/join_request_entity.dart';

@@ -220,7 +220,7 @@ void main() {
   });
 
   testWidgets(
-    'SessionDetailScreen — private session shows "Join with Password" button',
+    'SessionDetailScreen — private session shows "Request to Join" button',
     (tester) async {
       await mockNetworkImagesFor(() async {
         await tester.pumpWidget(
@@ -231,7 +231,7 @@ void main() {
         );
         await tester.pumpAndSettle(const Duration(seconds: 3));
 
-        expect(find.text('Join with Password'), findsOneWidget);
+        expect(find.text('Request to Join'), findsOneWidget);
       });
     },
   );

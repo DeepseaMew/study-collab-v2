@@ -238,11 +238,6 @@ GoRouter router(RouterRef ref) {
             SessionDetailScreen(sessionId: state.pathParameters['id']!),
         routes: [
           GoRoute(
-            path: 'edit',
-            builder: (_, state) =>
-                EditSessionScreen(sessionId: state.pathParameters['id']!),
-          ),
-          GoRoute(
             path: 'members',
             builder: (_, state) =>
                 MembersListScreen(sessionId: state.pathParameters['id']!),
@@ -253,6 +248,13 @@ GoRouter router(RouterRef ref) {
                 RequestsScreen(sessionId: state.pathParameters['id']!),
           ),
         ],
+      ),
+      // Top-level so pushing /sessions/:id/edit does not insert
+      // SessionDetailScreen as an intermediate stack entry.
+      GoRoute(
+        path: '/sessions/:id/edit',
+        builder: (_, state) =>
+            EditSessionScreen(sessionId: state.pathParameters['id']!),
       ),
 
       StatefulShellRoute.indexedStack(

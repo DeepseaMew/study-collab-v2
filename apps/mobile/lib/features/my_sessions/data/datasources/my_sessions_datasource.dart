@@ -59,7 +59,7 @@ class MySessionsDatasource {
     return docs
         .map((doc) {
           try {
-            return SessionModel.fromJson(doc.data());
+            return SessionModel.fromFirestore(doc.data());
           } catch (e, st) {
             appLogger.error(
               'Failed to parse session document in my_sessions',

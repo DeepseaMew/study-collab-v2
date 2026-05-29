@@ -114,6 +114,9 @@ service cloud.firestore {
         && (resource.data.visibility == 'public'
             || request.auth.uid in resource.data.memberUids
             || resource.data.hostUid == request.auth.uid
+            || (resource.data.visibility == 'private'
+                && resource.data.pin is string
+                && resource.data.status == 'scheduled')
             || resource.data.status == 'ended');
 
       allow create: if isKmuttUser()
@@ -150,8 +153,18 @@ service cloud.firestore {
                .hasOnly(['noteCount'])
           && (request.resource.data.noteCount == resource.data.noteCount + 1
               || request.resource.data.noteCount == resource.data.noteCount - 1)
-          && request.resource.data.noteCount >= 0);
-      // Note: the member condition intentionally omits updatedAt == request.time.
+          && request.resource.data.noteCount >= 0)
+        // Member self-removal: non-host member may remove only themselves
+        // from memberUids. updatedAt must be set server-side.
+        || (isKmuttUser()
+          && request.auth.uid in resource.data.memberUids
+          && request.auth.uid != resource.data.hostUid
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['memberUids', 'updatedAt'])
+          && request.resource.data.updatedAt == request.time
+          && request.resource.data.memberUids
+               == resource.data.memberUids.removeAll([request.auth.uid]));
+      // Note: the member noteCount condition intentionally omits updatedAt == request.time.
       // The WriteBatch for a note upload or delete does not write updatedAt on
       // the session document (ADR 0008 Amendment B).
 

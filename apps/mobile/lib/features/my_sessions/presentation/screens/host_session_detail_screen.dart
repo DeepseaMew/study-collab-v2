@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/core/analytics_events.dart';
@@ -19,6 +20,7 @@ import 'package:mobile/features/sessions/presentation/providers/join_requests_pr
 import 'package:mobile/features/sessions/presentation/providers/session_members_provider.dart';
 import 'package:mobile/features/sessions/presentation/providers/session_provider.dart';
 import 'package:mobile/shared/theme/app_colors.dart';
+import 'package:mobile/shared/theme/subject_colors.dart';
 
 enum _HostAction { edit, delete }
 
@@ -50,6 +52,7 @@ class _HostSessionDetailScreenState
     extends ConsumerState<HostSessionDetailScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tab;
+  SessionEntity? _lastKnownSession;
 
   @override
   void initState() {
@@ -213,7 +216,9 @@ class _HostSessionDetailScreenState
     final requestsAsync = ref.watch(joinRequestsProvider(widget.sessionId));
     final me = ref.watch(firebaseAuthStateProvider).valueOrNull;
 
-    final session = sessionAsync.asData?.value;
+    final streamSession = sessionAsync.asData?.value;
+    if (streamSession != null) _lastKnownSession = streamSession;
+    final session = streamSession ?? _lastKnownSession;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -283,7 +288,8 @@ class _HostSessionDetailScreenState
             ),
           );
         },
-        data: (session) {
+        data: (streamValue) {
+          final session = streamValue ?? _lastKnownSession;
           if (session == null) {
             return const Center(
               child: Text(
@@ -428,6 +434,7 @@ class _SessionInfoCardState extends ConsumerState<_SessionInfoCard> {
     final subjectLabel = session.hashtags.isNotEmpty
         ? session.hashtags.first
         : session.academicLevel;
+    final subjectChipColor = subjectColor(subjectLabel);
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -454,16 +461,14 @@ class _SessionInfoCardState extends ConsumerState<_SessionInfoCard> {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.accent.withValues(alpha: 0.12),
+                  color: subjectChipColor.background,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: AppColors.accent.withValues(alpha: 0.25),
-                  ),
+                  border: Border.all(color: subjectChipColor.border),
                 ),
                 child: Text(
                   subjectLabel,
-                  style: const TextStyle(
-                    color: AppColors.accent,
+                  style: TextStyle(
+                    color: subjectChipColor.text,
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                   ),
@@ -608,7 +613,7 @@ class _SessionInfoCardState extends ConsumerState<_SessionInfoCard> {
                     ),
                   ),
                 const Spacer(),
-                if (!_pinLoading)
+                if (!_pinLoading) ...[
                   IconButton(
                     visualDensity: VisualDensity.compact,
                     padding: EdgeInsets.zero,
@@ -622,6 +627,30 @@ class _SessionInfoCardState extends ConsumerState<_SessionInfoCard> {
                     ),
                     onPressed: _togglePin,
                   ),
+                  if (_pinRevealed && _fetchedPin != null) ...[
+                    const SizedBox(width: 8),
+                    IconButton(
+                      visualDensity: VisualDensity.compact,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      icon: const Icon(
+                        Icons.copy_outlined,
+                        size: 18,
+                        color: AppColors.hint,
+                      ),
+                      onPressed: () async {
+                        await Clipboard.setData(
+                          ClipboardData(text: _fetchedPin!),
+                        );
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('PIN copied')),
+                          );
+                        }
+                      },
+                    ),
+                  ],
+                ],
               ],
             ),
           ],
@@ -951,6 +980,79 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
     }
   }
 
+  Future<void> _confirmAndDecline() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        icon: Container(
+          width: 64,
+          height: 64,
+          decoration: BoxDecoration(
+            color: AppColors.error.withValues(alpha: 0.12),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.group_remove_rounded,
+            color: AppColors.error,
+            size: 32,
+          ),
+        ),
+        title: const Text(
+          'Decline Request?',
+          style: TextStyle(
+            color: AppColors.text,
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        content: Text(
+          'Are you sure you want to decline the request from ${widget.request.displayName}?',
+          style: const TextStyle(color: AppColors.hint, fontSize: 14),
+          textAlign: TextAlign.center,
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        actions: [
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.border),
+                    foregroundColor: AppColors.text,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onPressed: () => Navigator.of(ctx).pop(false),
+                  child: const Text('Cancel'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.error,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onPressed: () => Navigator.of(ctx).pop(true),
+                  icon: const Icon(Icons.close_rounded, size: 16),
+                  label: const Text('Decline'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) await _decline();
+  }
+
   Future<void> _decline() async {
     setState(() => _decliningLoading = true);
     try {
@@ -1057,7 +1159,7 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              onPressed: isWorking ? null : _decline,
+              onPressed: isWorking ? null : _confirmAndDecline,
               child: _decliningLoading
                   ? const SizedBox(
                       width: 14,

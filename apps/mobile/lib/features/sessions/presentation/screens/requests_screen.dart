@@ -170,6 +170,62 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
     }
   }
 
+  Future<void> _confirmAndDecline() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        icon: const Icon(
+          Icons.group_remove_rounded,
+          color: AppColors.error,
+          size: 40,
+        ),
+        title: const Text(
+          'Decline Request?',
+          style: TextStyle(
+            color: AppColors.text,
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        content: Text(
+          'Are you sure you want to decline the request from ${widget.request.displayName}?',
+          style: const TextStyle(color: AppColors.hint, fontSize: 14),
+          textAlign: TextAlign.center,
+        ),
+        actionsAlignment: MainAxisAlignment.spaceEvenly,
+        actions: [
+          OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: AppColors.border),
+              foregroundColor: AppColors.text,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.error,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+            onPressed: () => Navigator.of(ctx).pop(true),
+            icon: const Icon(Icons.close_rounded, size: 16),
+            label: const Text('Decline'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) await _decline();
+  }
+
   Future<void> _decline() async {
     setState(() => _decliningLoading = true);
     try {
@@ -276,7 +332,7 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              onPressed: isWorking ? null : _decline,
+              onPressed: isWorking ? null : _confirmAndDecline,
               child: _decliningLoading
                   ? const SizedBox(
                       width: 14,
