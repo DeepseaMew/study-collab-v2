@@ -46,22 +46,29 @@ Notes: <!-- conditions or concerns, leave blank if none -->
 
 ## Options considered
 
-<!-- For each sub-decision, provide a comparison table followed by a short
-     recommendation paragraph (max 3 sentences).
-     Do not use Pro/Con bullet lists. -->
+### Option A — name
+<!-- One paragraph description. -->
 
-### Sub-decision N — name
+**Trade-offs**
+- Pro:
+- Con:
+- Reversal cost: <!-- how hard to undo if wrong -->
 
-| | Option A | Option B | Option C |
-|---|---|---|---|
-| Summary | | | |
-| Read cost | | | |
-| Offline support | | | |
-| Write complexity | | | |
-| Reversal cost | | | |
-| Recommendation | | | |
+### Option B — name
+<!-- One paragraph description. -->
 
-<!-- One paragraph: which option and why. Max 3 sentences. -->
+**Trade-offs**
+- Pro:
+- Con:
+- Reversal cost:
+
+### Option C — name (if applicable)
+<!-- One paragraph description. -->
+
+**Trade-offs**
+- Pro:
+- Con:
+- Reversal cost:
 
 ---
 
@@ -77,9 +84,7 @@ Notes: <!-- conditions or concerns, leave blank if none -->
 ## Consequences
 
 <!-- Bullet list. What does this decision change downstream?
-     Include effects on other features, agents, or the CI pipeline.
-     List concrete file paths, new providers, and analytics events
-     that must be declared in lib/core/analytics_events.dart. -->
+     Include effects on other features, agents, or the CI pipeline. -->
 -
 
 ---

@@ -23,9 +23,6 @@ For every review:
 4. Check for PII in log statements and Crashlytics custom keys.
 5. Check for secrets or API keys in source.
 6. Emit a JSON block in the report for CI parsing.
-7. Never write API keys, tokens, or secrets verbatim into the report.
-   Replace any found with [REDACTED]. If found in source code, flag as
-   a Critical finding instead.
 
 Bash scoped to: dart pub deps, grep for secret patterns only.
 

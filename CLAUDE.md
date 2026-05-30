@@ -190,7 +190,3 @@ write operations. KMUTT domain validated server-side in Firestore rules.
 - A deliberate debug-only test crash must exist to verify Crashlytics receives data.
 - TLS enforced by Firebase SDK; never disable certificate validation.
 - `flutter_secure_storage` for any token or sensitive value that must persist locally.
-
-## Planned in the future
-- Profile (view own and others) — depends on Friends, Sessions, Rating
-- Profile Edit (display name, faculty, bio, avatar) — depends on Profile, ADR 0001 amendment

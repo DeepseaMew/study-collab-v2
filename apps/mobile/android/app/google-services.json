@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "381478877763",
+    "project_id": "study-collab-4d0a0",
+    "storage_bucket": "study-collab-4d0a0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:381478877763:android:342f61d3e82b6f115fb2f6",
+        "android_client_info": {
+          "package_name": "com.example.study_collab"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCBhHGJrr7VdVtzCe80TFCzokPdTZzKp5A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:381478877763:android:b1afe2bb25c005585fb2f6",
+        "android_client_info": {
+          "package_name": "com.kmutt.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCBhHGJrr7VdVtzCe80TFCzokPdTZzKp5A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

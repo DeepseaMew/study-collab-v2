@@ -14,10 +14,6 @@ abstract final class AppColors {
   /// Card and surface background
   static const Color secondary = Color(0xFFEDE9FE);
 
-  /// Surface — card/tile backgrounds, bottom sheets, dialogs
-  /// Slightly off-white with a warm tint, pairs with secondary.
-  static const Color surface = Color(0xFFF8F7FF);
-
   /// Secondary hover state
   static const Color secondaryHover = Color(0xFFE3DCFF);
 
@@ -33,8 +29,7 @@ abstract final class AppColors {
   static const Color border = Color(0xFFD4D4D4);
 
   /// Hint — placeholder text, secondary icons
-  /// 0xFF767676 gives 4.54:1 contrast on white — passes WCAG 2.2 AA.
-  static const Color hint = Color(0xFF767676);
+  static const Color hint = Color(0xFF888888);
 
   /// Disabled — disabled inputs, inactive elements
   static const Color disabled = Color(0xFFDED8F7);
@@ -45,8 +40,7 @@ abstract final class AppColors {
 
   // ── Semantic ──────────────────────────────────────────────────────────────
   /// Error states — validation messages, error banners
-  /// 0xFFCC0000 gives 5.91:1 contrast on white — passes WCAG 2.2 AA.
-  static const Color error = Color(0xFFCC0000);
+  static const Color error = Color(0xFFE53E3E);
 
   /// Success states — snackbars, verified badges
   static const Color success = Color(0xFF38A169);
