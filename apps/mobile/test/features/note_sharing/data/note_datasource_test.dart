@@ -98,9 +98,7 @@ void main() {
         firestore: fakeFirestore,
         storage: _MockFirebaseStorage(),
       );
-      final model = _stubNoteModel(
-        
-      );
+      final model = _stubNoteModel();
 
       await datasource.writeNoteBatch(
         'session-1',
