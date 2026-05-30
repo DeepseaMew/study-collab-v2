@@ -120,84 +120,96 @@ class _MemberTile extends StatelessWidget {
         ? member.displayName[0].toUpperCase()
         : '?';
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 22,
-            backgroundColor: AppColors.secondary,
-            backgroundImage:
-                member.photoUrl != null && member.photoUrl!.isNotEmpty
-                ? CachedNetworkImageProvider(member.photoUrl!)
-                : null,
-            child: member.photoUrl == null || member.photoUrl!.isEmpty
-                ? Text(
-                    initial,
-                    style: const TextStyle(
-                      color: AppColors.accent,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  )
-                : null,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: () => context.push('/profile/${member.uid}'),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: AppColors.border),
+            ),
+            child: Row(
               children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        member.displayName,
-                        style: const TextStyle(
-                          color: AppColors.text,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    if (isSessionHost) ...[
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.accent,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Text(
-                          'Host',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
+                CircleAvatar(
+                  radius: 22,
+                  backgroundColor: AppColors.secondary,
+                  backgroundImage:
+                      member.photoUrl != null && member.photoUrl!.isNotEmpty
+                      ? CachedNetworkImageProvider(member.photoUrl!)
+                      : null,
+                  child: member.photoUrl == null || member.photoUrl!.isEmpty
+                      ? Text(
+                          initial,
+                          style: const TextStyle(
+                            color: AppColors.accent,
+                            fontSize: 14,
                             fontWeight: FontWeight.w600,
                           ),
-                        ),
-                      ),
-                    ],
-                  ],
+                        )
+                      : null,
                 ),
-                if (showFaculty && member.faculty.isNotEmpty)
-                  Text(
-                    member.faculty,
-                    style: const TextStyle(color: AppColors.hint, fontSize: 12),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              member.displayName,
+                              style: const TextStyle(
+                                color: AppColors.text,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (isSessionHost) ...[
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppColors.accent,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Text(
+                                'Host',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      if (showFaculty && member.faculty.isNotEmpty)
+                        Text(
+                          member.faculty,
+                          style: const TextStyle(
+                            color: AppColors.hint,
+                            fontSize: 12,
+                          ),
+                        ),
+                    ],
                   ),
+                ),
               ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }

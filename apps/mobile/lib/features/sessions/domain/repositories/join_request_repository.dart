@@ -49,6 +49,17 @@ abstract interface class JoinRequestRepository {
   /// Allows the requesting user to withdraw their own pending request.
   Future<void> withdrawRequest(String sessionId, String uid);
 
+  /// Submits a join request for a private session, including [pin] so that
+  /// the Firestore rule `request.resource.data.pin == session.pin` passes.
+  ///
+  /// Unlike [joinWithPin], the request is left pending — the host must still
+  /// approve it. Throws [InvalidPinException] if the PIN does not match.
+  Future<void> submitRequestWithPin(
+    String sessionId,
+    JoinRequestEntity request,
+    String pin,
+  );
+
   /// Joins a private session by submitting a request that includes [pin].
   ///
   /// The PIN is written to `sessions/{sessionId}/requests/{request.uid}`

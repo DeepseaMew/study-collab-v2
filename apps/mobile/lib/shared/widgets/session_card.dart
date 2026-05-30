@@ -9,6 +9,7 @@ import 'package:mobile/core/utils/date_formatter.dart';
 import 'package:mobile/features/sessions/domain/entities/session_entity.dart';
 import 'package:mobile/features/sessions/presentation/providers/session_provider.dart';
 import 'package:mobile/shared/theme/app_colors.dart';
+import 'package:mobile/shared/theme/subject_colors.dart';
 
 /// Shared session card widget used by My Sessions, Dashboard, and Search.
 ///
@@ -282,17 +283,18 @@ class _SubjectChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colors = subjectColor(label);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.accent.withValues(alpha: 0.12),
+        color: colors.background,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.accent.withValues(alpha: 0.25)),
+        border: Border.all(color: colors.border),
       ),
       child: Text(
         label,
-        style: const TextStyle(
-          color: AppColors.accent,
+        style: TextStyle(
+          color: colors.text,
           fontSize: 11,
           fontWeight: FontWeight.w600,
         ),
@@ -427,85 +429,127 @@ class _ThreeDotMenu extends ConsumerWidget {
       builder: (ctx) {
         var loading = false;
         return StatefulBuilder(
-          builder: (ctx, setDialogState) => AlertDialog(
-            backgroundColor: AppColors.surface,
+          builder: (ctx, setDialogState) => Dialog(
+            backgroundColor: Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            title: const Text(
-              'Delete Session?',
-              style: TextStyle(
-                color: AppColors.text,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            content: const Text(
-              'This will permanently delete the session and remove all members. '
-              'This action cannot be undone.',
-              style: TextStyle(color: AppColors.hint, fontSize: 14),
-            ),
-            actions: [
-              TextButton(
-                onPressed: loading ? null : () => Navigator.pop(ctx),
-                child: const Text(
-                  'Cancel',
-                  style: TextStyle(color: AppColors.hint),
-                ),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.error,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade50,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.delete,
+                      color: Colors.red,
+                      size: 32,
+                    ),
                   ),
-                ),
-                onPressed: loading
-                    ? null
-                    : () async {
-                        setDialogState(() => loading = true);
-                        try {
-                          await ref
-                              .read(sessionRepositoryProvider)
-                              .deleteSession(session.sessionId, currentUserId);
-                          appLogger.info(
-                            'Session deleted from session card',
-                            extra: {'sessionId': session.sessionId},
-                          );
-                          appLogger.debug(AnalyticsEvents.sessionDeleted);
-                          if (ctx.mounted) Navigator.pop(ctx);
-                        } catch (e, st) {
-                          appLogger.error(
-                            'Delete session failed from session card',
-                            exception: e,
-                            stackTrace: st,
-                            extra: {'sessionId': session.sessionId},
-                          );
-                          setDialogState(() => loading = false);
-                          if (ctx.mounted) Navigator.pop(ctx);
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Could not delete: $e'),
-                                backgroundColor: AppColors.error,
-                              ),
-                            );
-                          }
-                        }
-                      },
-                child: loading
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Delete Session',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'This will permanently delete the session and remove all members. '
+                    'This action cannot be undone.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Color(0xFF888888)),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: loading ? null : () => Navigator.pop(ctx),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const Text('Cancel'),
                         ),
-                      )
-                    : const Text('Delete'),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          onPressed: loading
+                              ? null
+                              : () async {
+                                  setDialogState(() => loading = true);
+                                  try {
+                                    await ref
+                                        .read(sessionRepositoryProvider)
+                                        .deleteSession(
+                                          session.sessionId,
+                                          currentUserId,
+                                        );
+                                    appLogger.info(
+                                      'Session deleted from session card',
+                                      extra: {'sessionId': session.sessionId},
+                                    );
+                                    appLogger.debug(
+                                      AnalyticsEvents.sessionDeleted,
+                                    );
+                                    if (ctx.mounted) Navigator.pop(ctx);
+                                  } catch (e, st) {
+                                    appLogger.error(
+                                      'Delete session failed from session card',
+                                      exception: e,
+                                      stackTrace: st,
+                                      extra: {'sessionId': session.sessionId},
+                                    );
+                                    setDialogState(() => loading = false);
+                                    if (ctx.mounted) Navigator.pop(ctx);
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text('Could not delete: $e'),
+                                          backgroundColor: AppColors.error,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                },
+                          child: loading
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Text('Delete'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         );
       },
@@ -518,84 +562,126 @@ class _ThreeDotMenu extends ConsumerWidget {
       builder: (ctx) {
         var loading = false;
         return StatefulBuilder(
-          builder: (ctx, setDialogState) => AlertDialog(
-            backgroundColor: AppColors.surface,
+          builder: (ctx, setDialogState) => Dialog(
+            backgroundColor: Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(16),
             ),
-            title: const Text(
-              'Leave Session?',
-              style: TextStyle(
-                color: AppColors.text,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            content: const Text(
-              'You will be removed from this session.',
-              style: TextStyle(color: AppColors.hint, fontSize: 14),
-            ),
-            actions: [
-              TextButton(
-                onPressed: loading ? null : () => Navigator.pop(ctx),
-                child: const Text(
-                  'Cancel',
-                  style: TextStyle(color: AppColors.hint),
-                ),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.error,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.red.shade50,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.delete,
+                      color: Colors.red,
+                      size: 32,
+                    ),
                   ),
-                ),
-                onPressed: loading
-                    ? null
-                    : () async {
-                        setDialogState(() => loading = true);
-                        try {
-                          await ref
-                              .read(sessionRepositoryProvider)
-                              .leaveSession(session.sessionId, currentUserId);
-                          appLogger.info(
-                            'Session left from session card',
-                            extra: {'sessionId': session.sessionId},
-                          );
-                          appLogger.debug(AnalyticsEvents.sessionLeft);
-                          if (ctx.mounted) Navigator.pop(ctx);
-                        } catch (e, st) {
-                          appLogger.error(
-                            'Leave session failed from session card',
-                            exception: e,
-                            stackTrace: st,
-                            extra: {'sessionId': session.sessionId},
-                          );
-                          setDialogState(() => loading = false);
-                          if (ctx.mounted) Navigator.pop(ctx);
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text('Could not leave: $e'),
-                                backgroundColor: AppColors.error,
-                              ),
-                            );
-                          }
-                        }
-                      },
-                child: loading
-                    ? const SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Leave Session?',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.black,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'You will be removed from this session.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Color(0xFF888888)),
+                  ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: loading ? null : () => Navigator.pop(ctx),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: const Text('Cancel'),
                         ),
-                      )
-                    : const Text('Leave'),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          onPressed: loading
+                              ? null
+                              : () async {
+                                  setDialogState(() => loading = true);
+                                  try {
+                                    await ref
+                                        .read(sessionRepositoryProvider)
+                                        .leaveSession(
+                                          session.sessionId,
+                                          currentUserId,
+                                        );
+                                    appLogger.info(
+                                      'Session left from session card',
+                                      extra: {'sessionId': session.sessionId},
+                                    );
+                                    appLogger.debug(
+                                      AnalyticsEvents.sessionLeft,
+                                    );
+                                    if (ctx.mounted) Navigator.pop(ctx);
+                                  } catch (e, st) {
+                                    appLogger.error(
+                                      'Leave session failed from session card',
+                                      exception: e,
+                                      stackTrace: st,
+                                      extra: {'sessionId': session.sessionId},
+                                    );
+                                    setDialogState(() => loading = false);
+                                    if (ctx.mounted) Navigator.pop(ctx);
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text('Could not leave: $e'),
+                                          backgroundColor: AppColors.error,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                },
+                          child: loading
+                              ? const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: Colors.white,
+                                  ),
+                                )
+                              : const Text('Leave'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
         );
       },
