@@ -191,6 +191,15 @@ write operations. KMUTT domain validated server-side in Firestore rules.
 - TLS enforced by Firebase SDK; never disable certificate validation.
 - `flutter_secure_storage` for any token or sensitive value that must persist locally.
 
+## Feature flag rollback
+
+### rating_enabled
+- Flag location: `lib/core/feature_flags.dart`
+- To disable: set `rating_enabled = false` in `feature_flags.dart` and redeploy
+- Effect: hides all rating UI; rating writes are blocked client-side
+- Rollback time: ~5 minutes (code change + hot deploy)
+- No data migration needed — ratings already written are unaffected
+
 ## Planned in the future
 - Profile (view own and others) — depends on Friends, Sessions, Rating
 - Profile Edit (display name, faculty, bio, avatar) — depends on Profile, ADR 0001 amendment

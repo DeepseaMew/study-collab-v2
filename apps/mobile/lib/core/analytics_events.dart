@@ -142,6 +142,21 @@ abstract final class AnalyticsEvents {
   /// Payload: error_type (String, no PII).
   static const String ratingSubmitFailed = 'rating_submit_failed';
 
+  // ── Chat (Session / Group) ────────────────────────────────────────────────
+
+  /// User opened a session (group) chat thread. No PII.
+  static const String sessionChatOpened = 'session_chat_opened';
+
+  /// User successfully sent a session chat message. No PII.
+  static const String sessionChatMessageSent = 'session_chat_message_sent';
+
+  /// User tapped a file_shared message in a session chat. No PII.
+  static const String sessionChatFileMessageTapped =
+      'session_chat_file_message_tapped';
+
+  /// User viewed the Groups tab in the Messages screen.
+  static const String groupsTabViewed = 'groups_tab_viewed';
+
   // ── Chat (DM) ─────────────────────────────────────────────────────────────
 
   /// User viewed the DM conversation list screen.
