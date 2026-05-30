@@ -83,7 +83,7 @@ DmMessage _msg({
       senderUid: senderUid,
       senderDisplayName: senderName,
       text: text,
-      sentAt: sentAt ?? DateTime(2026, 5, 1, 10, 0),
+      sentAt: sentAt ?? DateTime(2026, 5, 1, 10),
       readBy: [senderUid],
     );
 
@@ -113,7 +113,7 @@ Widget _buildScreen({
       }),
       chatActionsProvider.overrideWith(() => notifier),
     ],
-    child: MaterialApp(
+    child: const MaterialApp(
       home: DmMessageScreen(
         dmId: _dmId,
         otherUid: _otherUid,
@@ -141,7 +141,7 @@ void main() {
           ),
           chatActionsProvider.overrideWith(() => _StubChatActionsNotifier()),
         ],
-        child: MaterialApp(
+        child: const MaterialApp(
           home: DmMessageScreen(
             dmId: _dmId,
             otherUid: _otherUid,
@@ -175,7 +175,7 @@ void main() {
           ),
           chatActionsProvider.overrideWith(() => _StubChatActionsNotifier()),
         ],
-        child: MaterialApp(
+        child: const MaterialApp(
           home: DmMessageScreen(
             dmId: _dmId,
             otherUid: _otherUid,
@@ -207,7 +207,7 @@ void main() {
 
   testWidgets('message bubbles rendered after data arrives', (tester) async {
     final msgs = [
-      _msg(id: 'msg-1', text: 'Hello there'),
+      _msg(text: 'Hello there'),
       _msg(
         id: 'msg-2',
         senderUid: _otherUid,
@@ -230,7 +230,7 @@ void main() {
     tester,
   ) async {
     final msgs = [
-      _msg(id: 'msg-1', text: 'First message', sentAt: DateTime(2026, 5, 1, 9)),
+      _msg(text: 'First message', sentAt: DateTime(2026, 5, 1, 9)),
       _msg(
         id: 'msg-2',
         text: 'Second message',
@@ -255,7 +255,6 @@ void main() {
   ) async {
     final msgs = [
       _msg(
-        id: 'msg-1',
         text: 'Day one message',
         sentAt: DateTime(2026, 5, 1, 10),
       ),
@@ -284,7 +283,7 @@ void main() {
     tester,
   ) async {
     final msgs = [
-      _msg(id: 'msg-1', text: 'Morning', sentAt: DateTime(2026, 5, 1, 9)),
+      _msg(text: 'Morning', sentAt: DateTime(2026, 5, 1, 9)),
       _msg(id: 'msg-2', text: 'Afternoon', sentAt: DateTime(2026, 5, 1, 15)),
     ];
 
@@ -331,7 +330,7 @@ void main() {
           ),
           chatActionsProvider.overrideWith(() => notifier),
         ],
-        child: MaterialApp(
+        child: const MaterialApp(
           home: DmMessageScreen(
             dmId: _dmId,
             otherUid: _otherUid,

@@ -25,7 +25,7 @@ class _MockChatRepository extends Mock implements ChatRepository {}
 DmConversation _stubConversation() => DmConversation(
       dmId: 'a_z',
       participantUids: const ['a', 'z'],
-      createdAt: DateTime(2026, 5, 1),
+      createdAt: DateTime(2026, 5),
       unreadCounts: const {'a': 0, 'z': 1},
       lastMessageText: 'Hello',
       lastMessageAt: DateTime(2026, 5, 1, 12),

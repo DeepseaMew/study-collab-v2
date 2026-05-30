@@ -137,7 +137,7 @@ void main() {
     /// Pre-creates the `dms/{dmId}` document so that step-2's update() call
     /// does not throw not-found (which would trigger Crashlytics.instance and
     /// fail in a unit-test environment with no Firebase app initialized).
-    Future<void> _preCreateDmDoc(
+    Future<void> preCreateDmDoc(
       FakeFirebaseFirestore fakeFirestore,
       String dmId,
       String uidA,
@@ -154,7 +154,7 @@ void main() {
 
     test('step-1 sets required message fields', () async {
       final fakeFirestore = FakeFirebaseFirestore();
-      await _preCreateDmDoc(fakeFirestore, 'a_z', 'a', 'z');
+      await preCreateDmDoc(fakeFirestore, 'a_z', 'a', 'z');
       final datasource = _datasource(fakeFirestore);
 
       await datasource.sendMessage(
@@ -183,7 +183,7 @@ void main() {
     test('step-2 updates unreadCounts, lastMessageText, lastMessageAt',
         () async {
       final fakeFirestore = FakeFirebaseFirestore();
-      await _preCreateDmDoc(fakeFirestore, 'a_z', 'a', 'z');
+      await preCreateDmDoc(fakeFirestore, 'a_z', 'a', 'z');
       final datasource = _datasource(fakeFirestore);
 
       await datasource.sendMessage(
@@ -243,7 +243,7 @@ void main() {
 
     test('preview text truncated to 200 chars when text is longer', () async {
       final fakeFirestore = FakeFirebaseFirestore();
-      await _preCreateDmDoc(fakeFirestore, 'a_z', 'a', 'z');
+      await preCreateDmDoc(fakeFirestore, 'a_z', 'a', 'z');
       final datasource = _datasource(fakeFirestore);
 
       final longText = 'A' * 250;
@@ -268,7 +268,7 @@ void main() {
       // With FakeFirebaseFirestore, we verify that the message sub-collection
       // document exists whenever the DM parent doc is updated.
       final fakeFirestore = FakeFirebaseFirestore();
-      await _preCreateDmDoc(fakeFirestore, 'a_z', 'a', 'z');
+      await preCreateDmDoc(fakeFirestore, 'a_z', 'a', 'z');
       final datasource = _datasource(fakeFirestore);
 
       await datasource.sendMessage(

@@ -59,7 +59,7 @@ List<DmMessage> _stubMessages() => [
         senderUid: _otherUid,
         senderDisplayName: 'Alice Siriporn',
         text: 'Hey! Are you joining the study session today?',
-        sentAt: DateTime(2026, 5, 30, 14, 0),
+        sentAt: DateTime(2026, 5, 30, 14),
         readBy: const [_otherUid],
       ),
       DmMessage(

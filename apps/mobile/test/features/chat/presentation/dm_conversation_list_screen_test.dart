@@ -50,7 +50,7 @@ DmConversation _stubConversation({
 }) => DmConversation(
       dmId: _sortedDmId,
       participantUids: const [_myUid, _otherUid],
-      createdAt: DateTime(2026, 5, 1),
+      createdAt: DateTime(2026, 5),
       unreadCounts: {_myUid: unreadForMe, _otherUid: 0},
       lastMessageText: lastMessageText ?? 'Hello',
       lastMessageAt: DateTime(2026, 5, 1, 12),
@@ -60,8 +60,8 @@ FriendEntity _stubFriend() => FriendEntity(
       friendUid: _otherUid,
       status: 'accepted',
       initiatorUid: _otherUid,
-      createdAt: DateTime(2026, 5, 1),
-      updatedAt: DateTime(2026, 5, 1),
+      createdAt: DateTime(2026, 5),
+      updatedAt: DateTime(2026, 5),
       friendDisplayName: 'Alice Smith',
     );
 
@@ -87,8 +87,8 @@ Widget _buildScreen({
         (_) => Stream.value(friends),
       ),
     ],
-    child: MaterialApp(
-      home: const DmConversationListScreen(),
+    child: const MaterialApp(
+      home: DmConversationListScreen(),
     ),
   );
 
@@ -200,7 +200,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       _buildScreen(
-        conversations: [_stubConversation(unreadForMe: 0)],
+        conversations: [_stubConversation()],
         friends: [_stubFriend()],
       ),
     );
@@ -229,10 +229,10 @@ void main() {
     final conv1 = DmConversation(
       dmId: 'user-me_user-other',
       participantUids: const [_myUid, _otherUid],
-      createdAt: DateTime(2026, 5, 1),
+      createdAt: DateTime(2026, 5),
       unreadCounts: {_myUid: 0, _otherUid: 0},
       lastMessageText: 'Hi',
-      lastMessageAt: DateTime(2026, 5, 1),
+      lastMessageAt: DateTime(2026, 5),
     );
     final conv2 = DmConversation(
       dmId: 'bob_user-me',
@@ -248,8 +248,8 @@ void main() {
         friendUid: _otherUid,
         status: 'accepted',
         initiatorUid: _otherUid,
-        createdAt: DateTime(2026, 5, 1),
-        updatedAt: DateTime(2026, 5, 1),
+        createdAt: DateTime(2026, 5),
+        updatedAt: DateTime(2026, 5),
         friendDisplayName: 'Alice Smith',
       ),
       FriendEntity(
