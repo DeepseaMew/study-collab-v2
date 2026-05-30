@@ -47,8 +47,7 @@ void main() {
   });
 
   group('ChatActions.markRead fire-and-forget contract (CHAT-M3)', () {
-    test(
-        'state remains AsyncData(null) when repository.markRead throws '
+    test('state remains AsyncData(null) when repository.markRead throws '
         'ChatDataException — exception is NOT surfaced to UI', () async {
       final mockRepo = _MockChatRepository();
       when(
@@ -59,18 +58,15 @@ void main() {
 
       // Build a minimal ProviderScope to host the notifier.
       final container = ProviderContainer(
-        overrides: [
-          chatActionsProvider.overrideWith(() => notifier),
-        ],
+        overrides: [chatActionsProvider.overrideWith(() => notifier)],
       );
       addTearDown(container.dispose);
 
       // Trigger markRead; must not throw at the call site.
       await expectLater(
-        () => container.read(chatActionsProvider.notifier).markRead(
-              'a_z',
-              'uid-a',
-            ),
+        () => container
+            .read(chatActionsProvider.notifier)
+            .markRead('a_z', 'uid-a'),
         returnsNormally,
       );
 
@@ -80,20 +76,15 @@ void main() {
       expect(state.hasError, isFalse);
     });
 
-    test(
-        'state remains AsyncData(null) when repository.markRead succeeds '
+    test('state remains AsyncData(null) when repository.markRead succeeds '
         '— normal path is also fire-and-forget', () async {
       final mockRepo = _MockChatRepository();
-      when(
-        () => mockRepo.markRead(any(), any()),
-      ).thenAnswer((_) async {});
+      when(() => mockRepo.markRead(any(), any())).thenAnswer((_) async {});
 
       final notifier = _ThrowingChatActionsNotifier(mockRepo);
 
       final container = ProviderContainer(
-        overrides: [
-          chatActionsProvider.overrideWith(() => notifier),
-        ],
+        overrides: [chatActionsProvider.overrideWith(() => notifier)],
       );
       addTearDown(container.dispose);
 
@@ -108,53 +99,50 @@ void main() {
     });
 
     testWidgets(
-        'DmMessageScreen does not show an error banner after markRead throws',
-        (tester) async {
-      // This widget-level test confirms the UI does not display an error
-      // widget as a result of a markRead failure.
-      //
-      // We build a minimal scaffold with a ProviderScope and verify no
-      // error text appears after the notifier's markRead is called with a
-      // throwing repository.
-      final mockRepo = _MockChatRepository();
-      when(
-        () => mockRepo.markRead(any(), any()),
-      ).thenThrow(const ChatDataException('network error'));
+      'DmMessageScreen does not show an error banner after markRead throws',
+      (tester) async {
+        // This widget-level test confirms the UI does not display an error
+        // widget as a result of a markRead failure.
+        //
+        // We build a minimal scaffold with a ProviderScope and verify no
+        // error text appears after the notifier's markRead is called with a
+        // throwing repository.
+        final mockRepo = _MockChatRepository();
+        when(
+          () => mockRepo.markRead(any(), any()),
+        ).thenThrow(const ChatDataException('network error'));
 
-      final notifier = _ThrowingChatActionsNotifier(mockRepo);
+        final notifier = _ThrowingChatActionsNotifier(mockRepo);
 
-      final container = ProviderContainer(
-        overrides: [
-          chatActionsProvider.overrideWith(() => notifier),
-        ],
-      );
-      addTearDown(container.dispose);
+        final container = ProviderContainer(
+          overrides: [chatActionsProvider.overrideWith(() => notifier)],
+        );
+        addTearDown(container.dispose);
 
-      // Pump a bare scaffold — we just need the provider to be active.
-      await tester.pumpWidget(
-        UncontrolledProviderScope(
-          container: container,
-          child: const MaterialApp(
-            home: Scaffold(body: Text('stub screen')),
+        // Pump a bare scaffold — we just need the provider to be active.
+        await tester.pumpWidget(
+          UncontrolledProviderScope(
+            container: container,
+            child: const MaterialApp(home: Scaffold(body: Text('stub screen'))),
           ),
-        ),
-      );
+        );
 
-      // Trigger markRead (simulates what DmMessageScreen calls on open).
-      await container
-          .read(chatActionsProvider.notifier)
-          .markRead('a_z', 'uid-a');
-      await tester.pumpAndSettle(const Duration(seconds: 1));
+        // Trigger markRead (simulates what DmMessageScreen calls on open).
+        await container
+            .read(chatActionsProvider.notifier)
+            .markRead('a_z', 'uid-a');
+        await tester.pumpAndSettle(const Duration(seconds: 1));
 
-      // No error text of any kind should be rendered.
-      expect(find.text('Could not mark read'), findsNothing);
-      expect(find.text('network error'), findsNothing);
-      expect(
-        find.byWidgetPredicate(
-          (w) => w is Text && (w.data?.contains('error') ?? false),
-        ),
-        findsNothing,
-      );
-    });
+        // No error text of any kind should be rendered.
+        expect(find.text('Could not mark read'), findsNothing);
+        expect(find.text('network error'), findsNothing);
+        expect(
+          find.byWidgetPredicate(
+            (w) => w is Text && (w.data?.contains('error') ?? false),
+          ),
+          findsNothing,
+        );
+      },
+    );
   });
 }

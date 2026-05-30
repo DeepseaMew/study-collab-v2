@@ -66,9 +66,9 @@ class ChatRemoteDatasource {
     int limit = 50,
     DateTime? startAfter,
   }) {
-    Query<Map<String, dynamic>> q = _messagesCol(dmId)
-        .orderBy('sentAt', descending: false)
-        .limit(limit);
+    Query<Map<String, dynamic>> q = _messagesCol(
+      dmId,
+    ).orderBy('sentAt', descending: false).limit(limit);
 
     if (startAfter != null) {
       q = q.startAfter([Timestamp.fromDate(startAfter)]);
@@ -89,16 +89,13 @@ class ChatRemoteDatasource {
   Future<void> createDm(String dmId, String uidA, String uidB) async {
     final sorted = [uidA, uidB]..sort();
     try {
-      await _dmDoc(dmId).set(
-        {
-          'participantUids': sorted,
-          'createdAt': FieldValue.serverTimestamp(),
-          'unreadCounts': {uidA: 0, uidB: 0},
-          'lastMessageText': null,
-          'lastMessageAt': null,
-        },
-        SetOptions(merge: true),
-      );
+      await _dmDoc(dmId).set({
+        'participantUids': sorted,
+        'createdAt': FieldValue.serverTimestamp(),
+        'unreadCounts': {uidA: 0, uidB: 0},
+        'lastMessageText': null,
+        'lastMessageAt': null,
+      }, SetOptions(merge: true));
       appLogger.debug('DM doc created/verified', extra: {'dmId': dmId});
     } on FirebaseException catch (e, st) {
       if (e.code == 'permission-denied') {
@@ -215,7 +212,9 @@ class ChatRemoteDatasource {
       );
       if (!kIsWeb) {
         await FirebaseCrashlytics.instance.recordError(
-          e, st, reason: 'chat_mark_read failed',
+          e,
+          st,
+          reason: 'chat_mark_read failed',
         );
       }
       throw ChatDataException('Could not mark conversation read: ${e.message}');
@@ -227,12 +226,8 @@ class ChatRemoteDatasource {
   /// in rules on this path due to the 10-call budget).
   Future<bool> areFriends(String uidA, String uidB) async {
     try {
-      final aDoc = await _firestore
-          .doc('users/$uidA/friends/$uidB')
-          .get();
-      final bDoc = await _firestore
-          .doc('users/$uidB/friends/$uidA')
-          .get();
+      final aDoc = await _firestore.doc('users/$uidA/friends/$uidB').get();
+      final bDoc = await _firestore.doc('users/$uidB/friends/$uidA').get();
       final aStatus = aDoc.data()?['status'] as String?;
       final bStatus = bDoc.data()?['status'] as String?;
       return aStatus == 'accepted' && bStatus == 'accepted';

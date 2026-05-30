@@ -48,22 +48,22 @@ DmConversation _stubConversation({
   int unreadForMe = 0,
   String? lastMessageText,
 }) => DmConversation(
-      dmId: _sortedDmId,
-      participantUids: const [_myUid, _otherUid],
-      createdAt: DateTime(2026, 5),
-      unreadCounts: {_myUid: unreadForMe, _otherUid: 0},
-      lastMessageText: lastMessageText ?? 'Hello',
-      lastMessageAt: DateTime(2026, 5, 1, 12),
-    );
+  dmId: _sortedDmId,
+  participantUids: const [_myUid, _otherUid],
+  createdAt: DateTime(2026, 5),
+  unreadCounts: {_myUid: unreadForMe, _otherUid: 0},
+  lastMessageText: lastMessageText ?? 'Hello',
+  lastMessageAt: DateTime(2026, 5, 1, 12),
+);
 
 FriendEntity _stubFriend() => FriendEntity(
-      friendUid: _otherUid,
-      status: 'accepted',
-      initiatorUid: _otherUid,
-      createdAt: DateTime(2026, 5),
-      updatedAt: DateTime(2026, 5),
-      friendDisplayName: 'Alice Smith',
-    );
+  friendUid: _otherUid,
+  status: 'accepted',
+  initiatorUid: _otherUid,
+  createdAt: DateTime(2026, 5),
+  updatedAt: DateTime(2026, 5),
+  friendDisplayName: 'Alice Smith',
+);
 
 /// Builds the screen under test with the given provider overrides.
 ///
@@ -80,16 +80,12 @@ Widget _buildScreen({
       firebaseAuthStateProvider.overrideWith(
         (_) => Stream.value(_FakeFirebaseUser(myUid, 'Me')),
       ),
-      dmConversationsProvider(myUid).overrideWith(
-        (_) => Stream.value(conversations),
-      ),
-      friendsProvider(myUid).overrideWith(
-        (_) => Stream.value(friends),
-      ),
+      dmConversationsProvider(
+        myUid,
+      ).overrideWith((_) => Stream.value(conversations)),
+      friendsProvider(myUid).overrideWith((_) => Stream.value(friends)),
     ],
-    child: const MaterialApp(
-      home: DmConversationListScreen(),
-    ),
+    child: const MaterialApp(home: DmConversationListScreen()),
   );
 
   if (router != null) {
@@ -98,12 +94,10 @@ Widget _buildScreen({
         firebaseAuthStateProvider.overrideWith(
           (_) => Stream.value(_FakeFirebaseUser(myUid, 'Me')),
         ),
-        dmConversationsProvider(myUid).overrideWith(
-          (_) => Stream.value(conversations),
-        ),
-        friendsProvider(myUid).overrideWith(
-          (_) => Stream.value(friends),
-        ),
+        dmConversationsProvider(
+          myUid,
+        ).overrideWith((_) => Stream.value(conversations)),
+        friendsProvider(myUid).overrideWith((_) => Stream.value(friends)),
       ],
       child: MaterialApp.router(routerConfig: router),
     );
@@ -152,22 +146,23 @@ void main() {
 
   // ── Conversation tile ──────────────────────────────────────────────────────
 
-  testWidgets('conversation tile visible when stream emits one DmConversation',
-      (tester) async {
-    await tester.pumpWidget(
-      _buildScreen(
-        conversations: [_stubConversation()],
-        friends: [_stubFriend()],
-      ),
-    );
-    await tester.pumpAndSettle(const Duration(seconds: 3));
-
-    expect(find.byType(DmConversationTile), findsOneWidget);
-    expect(find.text('Alice Smith'), findsOneWidget);
-  });
-
   testWidgets(
-      'last message preview text visible in tile', (tester) async {
+    'conversation tile visible when stream emits one DmConversation',
+    (tester) async {
+      await tester.pumpWidget(
+        _buildScreen(
+          conversations: [_stubConversation()],
+          friends: [_stubFriend()],
+        ),
+      );
+      await tester.pumpAndSettle(const Duration(seconds: 3));
+
+      expect(find.byType(DmConversationTile), findsOneWidget);
+      expect(find.text('Alice Smith'), findsOneWidget);
+    },
+  );
+
+  testWidgets('last message preview text visible in tile', (tester) async {
     await tester.pumpWidget(
       _buildScreen(
         conversations: [_stubConversation(lastMessageText: 'Hey there')],
@@ -224,8 +219,9 @@ void main() {
     expect(find.byType(TextField), findsOneWidget);
   });
 
-  testWidgets('search field filters tiles by display name (case-insensitive)',
-      (tester) async {
+  testWidgets('search field filters tiles by display name (case-insensitive)', (
+    tester,
+  ) async {
     final conv1 = DmConversation(
       dmId: 'user-me_user-other',
       participantUids: const [_myUid, _otherUid],
@@ -281,21 +277,22 @@ void main() {
   });
 
   testWidgets(
-      '"No results found" shown when search query has no matching conversation',
-      (tester) async {
-    await tester.pumpWidget(
-      _buildScreen(
-        conversations: [_stubConversation()],
-        friends: [_stubFriend()],
-      ),
-    );
-    await tester.pumpAndSettle(const Duration(seconds: 3));
+    '"No results found" shown when search query has no matching conversation',
+    (tester) async {
+      await tester.pumpWidget(
+        _buildScreen(
+          conversations: [_stubConversation()],
+          friends: [_stubFriend()],
+        ),
+      );
+      await tester.pumpAndSettle(const Duration(seconds: 3));
 
-    await tester.enterText(find.byType(TextField), 'ZZZNOTEXIST');
-    await tester.pumpAndSettle(const Duration(seconds: 1));
+      await tester.enterText(find.byType(TextField), 'ZZZNOTEXIST');
+      await tester.pumpAndSettle(const Duration(seconds: 1));
 
-    expect(find.text('No results found'), findsOneWidget);
-  });
+      expect(find.text('No results found'), findsOneWidget);
+    },
+  );
 
   // ── Tile tap navigates ─────────────────────────────────────────────────────
 
@@ -327,12 +324,12 @@ void main() {
           firebaseAuthStateProvider.overrideWith(
             (_) => Stream.value(_FakeFirebaseUser(_myUid, 'Me')),
           ),
-          dmConversationsProvider(_myUid).overrideWith(
-            (_) => Stream.value([_stubConversation()]),
-          ),
-          friendsProvider(_myUid).overrideWith(
-            (_) => Stream.value([_stubFriend()]),
-          ),
+          dmConversationsProvider(
+            _myUid,
+          ).overrideWith((_) => Stream.value([_stubConversation()])),
+          friendsProvider(
+            _myUid,
+          ).overrideWith((_) => Stream.value([_stubFriend()])),
         ],
         child: MaterialApp.router(routerConfig: router),
       ),
@@ -351,9 +348,7 @@ void main() {
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          firebaseAuthStateProvider.overrideWith(
-            (_) => Stream.value(null),
-          ),
+          firebaseAuthStateProvider.overrideWith((_) => Stream.value(null)),
         ],
         child: const MaterialApp(home: DmConversationListScreen()),
       ),

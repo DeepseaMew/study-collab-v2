@@ -51,8 +51,8 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
     final authAsync = ref.watch(authStateNotifierProvider);
     final isLoading = authAsync.isLoading;
     final failure = authAsync.hasError && authAsync.error is AuthFailure
-      ? authAsync.error as AuthFailure
-      : null;
+        ? authAsync.error as AuthFailure
+        : null;
 
     return Scaffold(
       backgroundColor: AppColors.background,

@@ -54,31 +54,31 @@ const _dmId = 'golden-me_golden-other';
 const _displayName = 'Alice Siriporn';
 
 List<DmMessage> _stubMessages() => [
-      DmMessage(
-        messageId: 'msg-1',
-        senderUid: _otherUid,
-        senderDisplayName: 'Alice Siriporn',
-        text: 'Hey! Are you joining the study session today?',
-        sentAt: DateTime(2026, 5, 30, 14),
-        readBy: const [_otherUid],
-      ),
-      DmMessage(
-        messageId: 'msg-2',
-        senderUid: _myUid,
-        senderDisplayName: 'Golden Me',
-        text: 'Yes, I will be there! Should I bring my laptop?',
-        sentAt: DateTime(2026, 5, 30, 14, 5),
-        readBy: const [_myUid],
-      ),
-      DmMessage(
-        messageId: 'msg-3',
-        senderUid: _otherUid,
-        senderDisplayName: 'Alice Siriporn',
-        text: 'Of course! We need it for the group project.',
-        sentAt: DateTime(2026, 5, 30, 14, 8),
-        readBy: const [_otherUid],
-      ),
-    ];
+  DmMessage(
+    messageId: 'msg-1',
+    senderUid: _otherUid,
+    senderDisplayName: 'Alice Siriporn',
+    text: 'Hey! Are you joining the study session today?',
+    sentAt: DateTime(2026, 5, 30, 14),
+    readBy: const [_otherUid],
+  ),
+  DmMessage(
+    messageId: 'msg-2',
+    senderUid: _myUid,
+    senderDisplayName: 'Golden Me',
+    text: 'Yes, I will be there! Should I bring my laptop?',
+    sentAt: DateTime(2026, 5, 30, 14, 5),
+    readBy: const [_myUid],
+  ),
+  DmMessage(
+    messageId: 'msg-3',
+    senderUid: _otherUid,
+    senderDisplayName: 'Alice Siriporn',
+    text: 'Of course! We need it for the group project.',
+    sentAt: DateTime(2026, 5, 30, 14, 8),
+    readBy: const [_otherUid],
+  ),
+];
 
 // ── Builder ───────────────────────────────────────────────────────────────────
 
@@ -88,9 +88,9 @@ Widget _buildGolden({required double textScale}) {
       firebaseAuthStateProvider.overrideWith(
         (_) => Stream.value(_FakeFirebaseUser()),
       ),
-      dmMessagesProvider(_dmId).overrideWith(
-        (_) => Stream.value(_stubMessages()),
-      ),
+      dmMessagesProvider(
+        _dmId,
+      ).overrideWith((_) => Stream.value(_stubMessages())),
       chatActionsProvider.overrideWith(() => _StubChatActionsNotifier()),
     ],
     child: MaterialApp(

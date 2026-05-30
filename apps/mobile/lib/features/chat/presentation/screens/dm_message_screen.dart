@@ -56,9 +56,7 @@ class _DmMessageScreenState extends ConsumerState<DmMessageScreen> {
   Future<void> _markRead() async {
     final me = ref.read(firebaseAuthStateProvider).valueOrNull;
     if (me == null) return;
-    await ref
-        .read(chatActionsProvider.notifier)
-        .markRead(widget.dmId, me.uid);
+    await ref.read(chatActionsProvider.notifier).markRead(widget.dmId, me.uid);
   }
 
   void _jumpToBottom() {
@@ -78,13 +76,15 @@ class _DmMessageScreenState extends ConsumerState<DmMessageScreen> {
 
     _inputCtrl.clear();
 
-    await ref.read(chatActionsProvider.notifier).sendMessage(
-      dmId: widget.dmId,
-      senderUid: me.uid,
-      senderDisplayName: me.displayName ?? '',
-      recipientUid: widget.otherUid,
-      text: text,
-    );
+    await ref
+        .read(chatActionsProvider.notifier)
+        .sendMessage(
+          dmId: widget.dmId,
+          senderUid: me.uid,
+          senderDisplayName: me.displayName ?? '',
+          recipientUid: widget.otherUid,
+          text: text,
+        );
 
     final state = ref.read(chatActionsProvider);
     if (state.hasError && mounted) {
@@ -169,10 +169,9 @@ class _DmMessageScreenState extends ConsumerState<DmMessageScreen> {
                     padding: const EdgeInsets.symmetric(horizontal: 24),
                     child: Text(
                       'Could not load messages. Please try again.',
-                      style:
-                          Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.hint,
-                          ),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.bodyMedium?.copyWith(color: AppColors.hint),
                       textAlign: TextAlign.center,
                     ),
                   ),
@@ -298,9 +297,9 @@ class _EmptyDm extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             'Say hi to $name!',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppColors.hint,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.hint),
           ),
         ],
       ),
@@ -326,9 +325,9 @@ class _DateSeparator extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Text(
               label,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: AppColors.hint,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.labelSmall?.copyWith(color: AppColors.hint),
             ),
           ),
           const Expanded(child: Divider(color: AppColors.border)),
@@ -370,8 +369,8 @@ class _InputBar extends StatelessWidget {
               maxLength: 4000,
               buildCounter:
                   (
-                    _,
-                    {required currentLength,
+                    _, {
+                    required currentLength,
                     required isFocused,
                     maxLength,
                   }) => null,
@@ -387,10 +386,7 @@ class _InputBar extends StatelessWidget {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(24)),
-                  borderSide: BorderSide(
-                    color: AppColors.accent,
-                    width: 1.5,
-                  ),
+                  borderSide: BorderSide(color: AppColors.accent, width: 1.5),
                 ),
                 contentPadding: EdgeInsets.symmetric(
                   horizontal: 16,

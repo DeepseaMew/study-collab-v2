@@ -30,12 +30,7 @@ Widget _buildBubble({required String senderDisplayName}) {
   );
 
   return MaterialApp(
-    home: Scaffold(
-      body: DmMessageBubble(
-        message: message,
-        isMe: false,
-      ),
-    ),
+    home: Scaffold(body: DmMessageBubble(message: message, isMe: false)),
   );
 }
 
@@ -59,7 +54,8 @@ void main() {
       expect(
         find.bySemanticsLabel(RegExp(r'^View Unknown User profile')),
         findsOneWidget,
-        reason: 'Empty name must fall back to "Unknown User", '
+        reason:
+            'Empty name must fall back to "Unknown User", '
             'not produce a double-space label like "View  profile".',
       );
 
@@ -67,26 +63,23 @@ void main() {
     },
   );
 
-  testWidgets(
-    'non-empty senderDisplayName "Alice" → Semantics label is '
-    '"View Alice profile"',
-    (tester) async {
-      // Enable the semantics tree for this test.
-      final handle = tester.ensureSemantics();
+  testWidgets('non-empty senderDisplayName "Alice" → Semantics label is '
+      '"View Alice profile"', (tester) async {
+    // Enable the semantics tree for this test.
+    final handle = tester.ensureSemantics();
 
-      await tester.pumpWidget(_buildBubble(senderDisplayName: 'Alice'));
-      await tester.pumpAndSettle(const Duration(seconds: 1));
+    await tester.pumpWidget(_buildBubble(senderDisplayName: 'Alice'));
+    await tester.pumpAndSettle(const Duration(seconds: 1));
 
-      // The Semantics label merges the outer label with the child Text ('A'
-      // initial letter), producing "View Alice profile\nA".
-      // Match on the label prefix to verify the sender name is present exactly.
-      expect(
-        find.bySemanticsLabel(RegExp(r'^View Alice profile')),
-        findsOneWidget,
-        reason: 'Sender name must appear verbatim in the accessibility label.',
-      );
+    // The Semantics label merges the outer label with the child Text ('A'
+    // initial letter), producing "View Alice profile\nA".
+    // Match on the label prefix to verify the sender name is present exactly.
+    expect(
+      find.bySemanticsLabel(RegExp(r'^View Alice profile')),
+      findsOneWidget,
+      reason: 'Sender name must appear verbatim in the accessibility label.',
+    );
 
-      handle.dispose();
-    },
-  );
+    handle.dispose();
+  });
 }

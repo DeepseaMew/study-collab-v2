@@ -61,32 +61,34 @@ void main() {
       verifyNever(() => mockDatasource.createDm(any(), any(), any()));
     });
 
-    test('does NOT call datasource.sendMessage when areFriends returns false',
-        () async {
-      when(
-        () => mockDatasource.areFriends(any(), any()),
-      ).thenAnswer((_) async => false);
+    test(
+      'does NOT call datasource.sendMessage when areFriends returns false',
+      () async {
+        when(
+          () => mockDatasource.areFriends(any(), any()),
+        ).thenAnswer((_) async => false);
 
-      try {
-        await repo.sendMessage(
-          dmId: 'a_z',
-          senderUid: 'a',
-          senderDisplayName: 'Alice',
-          recipientUid: 'z',
-          text: 'Hello',
+        try {
+          await repo.sendMessage(
+            dmId: 'a_z',
+            senderUid: 'a',
+            senderDisplayName: 'Alice',
+            recipientUid: 'z',
+            text: 'Hello',
+          );
+        } catch (_) {}
+
+        verifyNever(
+          () => mockDatasource.sendMessage(
+            dmId: any(named: 'dmId'),
+            senderUid: any(named: 'senderUid'),
+            senderDisplayName: any(named: 'senderDisplayName'),
+            recipientUid: any(named: 'recipientUid'),
+            text: any(named: 'text'),
+          ),
         );
-      } catch (_) {}
-
-      verifyNever(
-        () => mockDatasource.sendMessage(
-          dmId: any(named: 'dmId'),
-          senderUid: any(named: 'senderUid'),
-          senderDisplayName: any(named: 'senderDisplayName'),
-          recipientUid: any(named: 'recipientUid'),
-          text: any(named: 'text'),
-        ),
-      );
-    });
+      },
+    );
   });
 
   // ── happy path (friends) ──────────────────────────────────────────────────
@@ -98,9 +100,9 @@ void main() {
       when(
         () => mockDatasource.areFriends(any(), any()),
       ).thenAnswer((_) async => true);
-      when(
-        () => mockDatasource.createDm(any(), any(), any()),
-      ).thenAnswer((_) async {
+      when(() => mockDatasource.createDm(any(), any(), any())).thenAnswer((
+        _,
+      ) async {
         callOrder.add('createDm');
       });
       when(
@@ -126,34 +128,36 @@ void main() {
       expect(callOrder, ['createDm', 'sendMessage']);
     });
 
-    test('passes dmId, senderUid, recipientUid to createDm unchanged',
-        () async {
-      when(
-        () => mockDatasource.areFriends(any(), any()),
-      ).thenAnswer((_) async => true);
-      when(
-        () => mockDatasource.createDm(any(), any(), any()),
-      ).thenAnswer((_) async {});
-      when(
-        () => mockDatasource.sendMessage(
-          dmId: any(named: 'dmId'),
-          senderUid: any(named: 'senderUid'),
-          senderDisplayName: any(named: 'senderDisplayName'),
-          recipientUid: any(named: 'recipientUid'),
-          text: any(named: 'text'),
-        ),
-      ).thenAnswer((_) async {});
+    test(
+      'passes dmId, senderUid, recipientUid to createDm unchanged',
+      () async {
+        when(
+          () => mockDatasource.areFriends(any(), any()),
+        ).thenAnswer((_) async => true);
+        when(
+          () => mockDatasource.createDm(any(), any(), any()),
+        ).thenAnswer((_) async {});
+        when(
+          () => mockDatasource.sendMessage(
+            dmId: any(named: 'dmId'),
+            senderUid: any(named: 'senderUid'),
+            senderDisplayName: any(named: 'senderDisplayName'),
+            recipientUid: any(named: 'recipientUid'),
+            text: any(named: 'text'),
+          ),
+        ).thenAnswer((_) async {});
 
-      await repo.sendMessage(
-        dmId: 'a_z',
-        senderUid: 'a',
-        senderDisplayName: 'Alice',
-        recipientUid: 'z',
-        text: 'Hello',
-      );
+        await repo.sendMessage(
+          dmId: 'a_z',
+          senderUid: 'a',
+          senderDisplayName: 'Alice',
+          recipientUid: 'z',
+          text: 'Hello',
+        );
 
-      verify(() => mockDatasource.createDm('a_z', 'a', 'z')).called(1);
-    });
+        verify(() => mockDatasource.createDm('a_z', 'a', 'z')).called(1);
+      },
+    );
   });
 
   // ── createDm failure ─────────────────────────────────────────────────────

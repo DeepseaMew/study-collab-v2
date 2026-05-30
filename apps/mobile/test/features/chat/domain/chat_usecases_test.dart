@@ -23,22 +23,22 @@ class _MockChatRepository extends Mock implements ChatRepository {}
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 DmConversation _stubConversation() => DmConversation(
-      dmId: 'a_z',
-      participantUids: const ['a', 'z'],
-      createdAt: DateTime(2026, 5),
-      unreadCounts: const {'a': 0, 'z': 1},
-      lastMessageText: 'Hello',
-      lastMessageAt: DateTime(2026, 5, 1, 12),
-    );
+  dmId: 'a_z',
+  participantUids: const ['a', 'z'],
+  createdAt: DateTime(2026, 5),
+  unreadCounts: const {'a': 0, 'z': 1},
+  lastMessageText: 'Hello',
+  lastMessageAt: DateTime(2026, 5, 1, 12),
+);
 
 DmMessage _stubMessage() => DmMessage(
-      messageId: 'msg-1',
-      senderUid: 'a',
-      senderDisplayName: 'Alice',
-      text: 'Hello',
-      sentAt: DateTime(2026, 5, 1, 12),
-      readBy: const ['a'],
-    );
+  messageId: 'msg-1',
+  senderUid: 'a',
+  senderDisplayName: 'Alice',
+  text: 'Hello',
+  sentAt: DateTime(2026, 5, 1, 12),
+  readBy: const ['a'],
+);
 
 void main() {
   late _MockChatRepository mockRepo;
@@ -155,7 +155,10 @@ void main() {
           text: captureAny(named: 'text'),
         ),
       ).captured;
-      expect((captured.first as String).length, SendDmMessageUseCase.maxTextLength);
+      expect(
+        (captured.first as String).length,
+        SendDmMessageUseCase.maxTextLength,
+      );
     });
 
     test('propagates NotFriendsException from repository', () async {
@@ -192,9 +195,7 @@ void main() {
     });
 
     test('delegates to repository with correct dmId and uid', () async {
-      when(
-        () => mockRepo.markRead(any(), any()),
-      ).thenAnswer((_) async {});
+      when(() => mockRepo.markRead(any(), any())).thenAnswer((_) async {});
 
       await useCase.execute('a_z', 'a');
 
@@ -278,8 +279,9 @@ void main() {
 
       await useCase.execute('a_z').first;
 
-      verify(() => mockRepo.streamMessages('a_z', limit: any(named: 'limit')))
-          .called(1);
+      verify(
+        () => mockRepo.streamMessages('a_z', limit: any(named: 'limit')),
+      ).called(1);
     });
   });
 

@@ -40,10 +40,12 @@ void main() {
       expect(ChatRemoteDatasource.buildDmId('a', 'z'), 'a_z');
     });
 
-    test('returns min_max when uidA > uidB lexicographically (order invariant)',
-        () {
-      expect(ChatRemoteDatasource.buildDmId('z', 'a'), 'a_z');
-    });
+    test(
+      'returns min_max when uidA > uidB lexicographically (order invariant)',
+      () {
+        expect(ChatRemoteDatasource.buildDmId('z', 'a'), 'a_z');
+      },
+    );
 
     test('identical uids produce uid_uid', () {
       expect(ChatRemoteDatasource.buildDmId('x', 'x'), 'x_x');
@@ -104,31 +106,33 @@ void main() {
       );
     });
 
-    test('throws ChatDataException for non-permission-denied FirebaseException',
-        () async {
-      final mockFirestore = _MockFirebaseFirestore();
-      when(() => mockFirestore.doc(any())).thenThrow(
-        FirebaseException(
-          plugin: 'cloud_firestore',
-          code: 'unavailable',
-          message: 'Service unavailable',
-        ),
-      );
-
-      final datasource = _datasource(mockFirestore);
-      // The production code calls FirebaseCrashlytics.instance which requires
-      // a real Firebase app on non-web. We catch the no-app exception OR the
-      // wrapped ChatDataException — both indicate step-1 properly stopped.
-      await expectLater(
-        () => datasource.createDm('a_z', 'a', 'z'),
-        throwsA(
-          anyOf(
-            isA<ChatDataException>(),
-            isA<Exception>(), // FirebaseException from Crashlytics.instance
+    test(
+      'throws ChatDataException for non-permission-denied FirebaseException',
+      () async {
+        final mockFirestore = _MockFirebaseFirestore();
+        when(() => mockFirestore.doc(any())).thenThrow(
+          FirebaseException(
+            plugin: 'cloud_firestore',
+            code: 'unavailable',
+            message: 'Service unavailable',
           ),
-        ),
-      );
-    });
+        );
+
+        final datasource = _datasource(mockFirestore);
+        // The production code calls FirebaseCrashlytics.instance which requires
+        // a real Firebase app on non-web. We catch the no-app exception OR the
+        // wrapped ChatDataException — both indicate step-1 properly stopped.
+        await expectLater(
+          () => datasource.createDm('a_z', 'a', 'z'),
+          throwsA(
+            anyOf(
+              isA<ChatDataException>(),
+              isA<Exception>(), // FirebaseException from Crashlytics.instance
+            ),
+          ),
+        );
+      },
+    );
   });
 
   // ── sendMessage ───────────────────────────────────────────────────────────
@@ -166,8 +170,7 @@ void main() {
       );
 
       // Read back the written message document from the messages subcollection.
-      final msgs =
-          await fakeFirestore.collection('dms/a_z/messages').get();
+      final msgs = await fakeFirestore.collection('dms/a_z/messages').get();
       expect(msgs.docs, hasLength(1));
       final data = msgs.docs.first.data();
 
@@ -180,26 +183,28 @@ void main() {
       expect(data['readBy'], ['a']);
     });
 
-    test('step-2 updates unreadCounts, lastMessageText, lastMessageAt',
-        () async {
-      final fakeFirestore = FakeFirebaseFirestore();
-      await preCreateDmDoc(fakeFirestore, 'a_z', 'a', 'z');
-      final datasource = _datasource(fakeFirestore);
+    test(
+      'step-2 updates unreadCounts, lastMessageText, lastMessageAt',
+      () async {
+        final fakeFirestore = FakeFirebaseFirestore();
+        await preCreateDmDoc(fakeFirestore, 'a_z', 'a', 'z');
+        final datasource = _datasource(fakeFirestore);
 
-      await datasource.sendMessage(
-        dmId: 'a_z',
-        senderUid: 'a',
-        senderDisplayName: 'Alice',
-        recipientUid: 'z',
-        text: 'Hello',
-      );
+        await datasource.sendMessage(
+          dmId: 'a_z',
+          senderUid: 'a',
+          senderDisplayName: 'Alice',
+          recipientUid: 'z',
+          text: 'Hello',
+        );
 
-      final dmSnap = await fakeFirestore.doc('dms/a_z').get();
-      final data = dmSnap.data()!;
-      expect(data.containsKey('lastMessageText'), isTrue);
-      expect(data['lastMessageText'], 'Hello');
-      expect(data.containsKey('lastMessageAt'), isTrue);
-    });
+        final dmSnap = await fakeFirestore.doc('dms/a_z').get();
+        final data = dmSnap.data()!;
+        expect(data.containsKey('lastMessageText'), isTrue);
+        expect(data['lastMessageText'], 'Hello');
+        expect(data.containsKey('lastMessageAt'), isTrue);
+      },
+    );
 
     test('step-2 is NOT called when step-1 throws FirebaseException', () async {
       // We inject a FirebaseFirestore mock that throws on collection() so the
@@ -263,27 +268,32 @@ void main() {
       expect(preview.endsWith('…'), isTrue);
     });
 
-    test('step-1 (messages set) is written before step-2 (dm doc update)',
-        () async {
-      // With FakeFirebaseFirestore, we verify that the message sub-collection
-      // document exists whenever the DM parent doc is updated.
-      final fakeFirestore = FakeFirebaseFirestore();
-      await preCreateDmDoc(fakeFirestore, 'a_z', 'a', 'z');
-      final datasource = _datasource(fakeFirestore);
+    test(
+      'step-1 (messages set) is written before step-2 (dm doc update)',
+      () async {
+        // With FakeFirebaseFirestore, we verify that the message sub-collection
+        // document exists whenever the DM parent doc is updated.
+        final fakeFirestore = FakeFirebaseFirestore();
+        await preCreateDmDoc(fakeFirestore, 'a_z', 'a', 'z');
+        final datasource = _datasource(fakeFirestore);
 
-      await datasource.sendMessage(
-        dmId: 'a_z',
-        senderUid: 'a',
-        senderDisplayName: 'Alice',
-        recipientUid: 'z',
-        text: 'Hello',
-      );
+        await datasource.sendMessage(
+          dmId: 'a_z',
+          senderUid: 'a',
+          senderDisplayName: 'Alice',
+          recipientUid: 'z',
+          text: 'Hello',
+        );
 
-      // Both step-1 result and step-2 result are in Firestore.
-      final msgs =
-          await fakeFirestore.collection('dms/a_z/messages').get();
-      expect(msgs.docs, hasLength(1), reason: 'step-1 must write one message');
-    });
+        // Both step-1 result and step-2 result are in Firestore.
+        final msgs = await fakeFirestore.collection('dms/a_z/messages').get();
+        expect(
+          msgs.docs,
+          hasLength(1),
+          reason: 'step-1 must write one message',
+        );
+      },
+    );
   });
 
   // ── markRead (CHAT-M2 / CHAT-M3 security fixes) ───────────────────────────
@@ -328,27 +338,29 @@ void main() {
       expect(unread['a'], 0);
     });
 
-    test('zeroing own counter does not alter the other participant counter',
-        () async {
-      final fakeFirestore = FakeFirebaseFirestore();
-      await fakeFirestore.doc('dms/a_z').set({
-        'participantUids': ['a', 'z'],
-        'createdAt': DateTime(2026),
-        'unreadCounts': {'a': 5, 'z': 2},
-        'lastMessageText': 'Hi',
-        'lastMessageAt': null,
-      });
+    test(
+      'zeroing own counter does not alter the other participant counter',
+      () async {
+        final fakeFirestore = FakeFirebaseFirestore();
+        await fakeFirestore.doc('dms/a_z').set({
+          'participantUids': ['a', 'z'],
+          'createdAt': DateTime(2026),
+          'unreadCounts': {'a': 5, 'z': 2},
+          'lastMessageText': 'Hi',
+          'lastMessageAt': null,
+        });
 
-      final datasource = _datasource(fakeFirestore);
-      await datasource.markRead('a_z', 'z');
+        final datasource = _datasource(fakeFirestore);
+        await datasource.markRead('a_z', 'z');
 
-      final snap = await fakeFirestore.doc('dms/a_z').get();
-      final data = snap.data()!;
-      final unread = data['unreadCounts'] as Map<String, dynamic>;
-      // z's counter zeroed; a's counter must be left at 5.
-      expect(unread['z'], 0);
-      expect(unread['a'], 5);
-    });
+        final snap = await fakeFirestore.doc('dms/a_z').get();
+        final data = snap.data()!;
+        final unread = data['unreadCounts'] as Map<String, dynamic>;
+        // z's counter zeroed; a's counter must be left at 5.
+        expect(unread['z'], 0);
+        expect(unread['a'], 5);
+      },
+    );
 
     test('throws ChatDataException when Firestore update throws', () async {
       // Use a FirebaseFirestore mock to force an error AFTER the existence
@@ -391,12 +403,12 @@ void main() {
   group('areFriends', () {
     test('returns true when both sides have status == accepted', () async {
       final fakeFirestore = FakeFirebaseFirestore();
-      await fakeFirestore
-          .doc('users/uidA/friends/uidB')
-          .set({'status': 'accepted'});
-      await fakeFirestore
-          .doc('users/uidB/friends/uidA')
-          .set({'status': 'accepted'});
+      await fakeFirestore.doc('users/uidA/friends/uidB').set({
+        'status': 'accepted',
+      });
+      await fakeFirestore.doc('users/uidB/friends/uidA').set({
+        'status': 'accepted',
+      });
 
       final datasource = _datasource(fakeFirestore);
       expect(await datasource.areFriends('uidA', 'uidB'), isTrue);
@@ -404,12 +416,12 @@ void main() {
 
     test('returns false when only A side is accepted', () async {
       final fakeFirestore = FakeFirebaseFirestore();
-      await fakeFirestore
-          .doc('users/uidA/friends/uidB')
-          .set({'status': 'accepted'});
-      await fakeFirestore
-          .doc('users/uidB/friends/uidA')
-          .set({'status': 'pending'});
+      await fakeFirestore.doc('users/uidA/friends/uidB').set({
+        'status': 'accepted',
+      });
+      await fakeFirestore.doc('users/uidB/friends/uidA').set({
+        'status': 'pending',
+      });
 
       final datasource = _datasource(fakeFirestore);
       expect(await datasource.areFriends('uidA', 'uidB'), isFalse);
@@ -417,12 +429,12 @@ void main() {
 
     test('returns false when only B side is accepted', () async {
       final fakeFirestore = FakeFirebaseFirestore();
-      await fakeFirestore
-          .doc('users/uidA/friends/uidB')
-          .set({'status': 'pending'});
-      await fakeFirestore
-          .doc('users/uidB/friends/uidA')
-          .set({'status': 'accepted'});
+      await fakeFirestore.doc('users/uidA/friends/uidB').set({
+        'status': 'pending',
+      });
+      await fakeFirestore.doc('users/uidB/friends/uidA').set({
+        'status': 'accepted',
+      });
 
       final datasource = _datasource(fakeFirestore);
       expect(await datasource.areFriends('uidA', 'uidB'), isFalse);
@@ -430,12 +442,12 @@ void main() {
 
     test('returns false when neither side is accepted', () async {
       final fakeFirestore = FakeFirebaseFirestore();
-      await fakeFirestore
-          .doc('users/uidA/friends/uidB')
-          .set({'status': 'pending'});
-      await fakeFirestore
-          .doc('users/uidB/friends/uidA')
-          .set({'status': 'pending'});
+      await fakeFirestore.doc('users/uidA/friends/uidB').set({
+        'status': 'pending',
+      });
+      await fakeFirestore.doc('users/uidB/friends/uidA').set({
+        'status': 'pending',
+      });
 
       final datasource = _datasource(fakeFirestore);
       expect(await datasource.areFriends('uidA', 'uidB'), isFalse);
@@ -444,33 +456,34 @@ void main() {
     test('returns false when A doc has no data (does not exist)', () async {
       final fakeFirestore = FakeFirebaseFirestore();
       // Only populate B side; A side doc does not exist.
-      await fakeFirestore
-          .doc('users/uidB/friends/uidA')
-          .set({'status': 'accepted'});
+      await fakeFirestore.doc('users/uidB/friends/uidA').set({
+        'status': 'accepted',
+      });
 
       final datasource = _datasource(fakeFirestore);
       expect(await datasource.areFriends('uidA', 'uidB'), isFalse);
     });
 
     test(
-        'returns false (or swallowed exception) on FirebaseException — '
-        'areFriends error handler catches and does not propagate to caller', (
-      ) async {
-      // FirebaseFirestore is not @sealed, so Mock is safe here.
-      final mockFirestore = _MockFirebaseFirestore();
-      when(() => mockFirestore.doc(any())).thenThrow(
-        FirebaseException(plugin: 'cloud_firestore', code: 'unavailable'),
-      );
+      'returns false (or swallowed exception) on FirebaseException — '
+      'areFriends error handler catches and does not propagate to caller',
+      () async {
+        // FirebaseFirestore is not @sealed, so Mock is safe here.
+        final mockFirestore = _MockFirebaseFirestore();
+        when(() => mockFirestore.doc(any())).thenThrow(
+          FirebaseException(plugin: 'cloud_firestore', code: 'unavailable'),
+        );
 
-      final datasource = _datasource(mockFirestore);
-      // In test environments without Firebase initialized, the Crashlytics
-      // call inside the catch block re-throws (no-app). The important
-      // guarantee is that areFriends does NOT return true.
-      final result = await datasource
-          .areFriends('uidA', 'uidB')
-          .then((_) => false) // returned false = correct
-          .onError((_, __) => false); // threw = treat as false too
-      expect(result, isFalse);
-    });
+        final datasource = _datasource(mockFirestore);
+        // In test environments without Firebase initialized, the Crashlytics
+        // call inside the catch block re-throws (no-app). The important
+        // guarantee is that areFriends does NOT return true.
+        final result = await datasource
+            .areFriends('uidA', 'uidB')
+            .then((_) => false) // returned false = correct
+            .onError((_, __) => false); // threw = treat as false too
+        expect(result, isFalse);
+      },
+    );
   });
 }

@@ -35,22 +35,22 @@ const _myUid = 'golden-me';
 const _otherUid = 'golden-other';
 
 DmConversation _stubConversation() => DmConversation(
-      dmId: 'golden-me_golden-other',
-      participantUids: const [_myUid, _otherUid],
-      createdAt: DateTime(2026, 5),
-      unreadCounts: {_myUid: 2, _otherUid: 0},
-      lastMessageText: 'Hey, are you joining the study session today?',
-      lastMessageAt: DateTime(2026, 5, 30, 14, 30),
-    );
+  dmId: 'golden-me_golden-other',
+  participantUids: const [_myUid, _otherUid],
+  createdAt: DateTime(2026, 5),
+  unreadCounts: {_myUid: 2, _otherUid: 0},
+  lastMessageText: 'Hey, are you joining the study session today?',
+  lastMessageAt: DateTime(2026, 5, 30, 14, 30),
+);
 
 FriendEntity _stubFriend() => FriendEntity(
-      friendUid: _otherUid,
-      status: 'accepted',
-      initiatorUid: _otherUid,
-      createdAt: DateTime(2026, 5),
-      updatedAt: DateTime(2026, 5),
-      friendDisplayName: 'Alice Siriporn',
-    );
+  friendUid: _otherUid,
+  status: 'accepted',
+  initiatorUid: _otherUid,
+  createdAt: DateTime(2026, 5),
+  updatedAt: DateTime(2026, 5),
+  friendDisplayName: 'Alice Siriporn',
+);
 
 // ── Builder ───────────────────────────────────────────────────────────────────
 
@@ -60,12 +60,12 @@ Widget _buildGolden({required double textScale}) {
       firebaseAuthStateProvider.overrideWith(
         (_) => Stream.value(_FakeFirebaseUser()),
       ),
-      dmConversationsProvider(_myUid).overrideWith(
-        (_) => Stream.value([_stubConversation()]),
-      ),
-      friendsProvider(_myUid).overrideWith(
-        (_) => Stream.value([_stubFriend()]),
-      ),
+      dmConversationsProvider(
+        _myUid,
+      ).overrideWith((_) => Stream.value([_stubConversation()])),
+      friendsProvider(
+        _myUid,
+      ).overrideWith((_) => Stream.value([_stubFriend()])),
     ],
     child: MaterialApp(
       locale: const Locale('th', 'TH'),

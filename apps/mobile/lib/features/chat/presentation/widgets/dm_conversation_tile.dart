@@ -68,11 +68,7 @@ class DmConversationTile extends StatelessWidget {
             ),
           ),
           if (hasUnread)
-            Positioned(
-              right: -3,
-              top: -3,
-              child: DmUnreadBadge(count: unread),
-            ),
+            Positioned(right: -3, top: -3, child: DmUnreadBadge(count: unread)),
         ],
       ),
       title: Text(

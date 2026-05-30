@@ -117,10 +117,8 @@ class _Body extends ConsumerWidget {
   final String query;
   final TextEditingController searchCtrl;
   final ValueChanged<String> onQueryChanged;
-  final List<DmConversation> Function(
-    List<DmConversation>,
-    Map<String, String>,
-  ) filtered;
+  final List<DmConversation> Function(List<DmConversation>, Map<String, String>)
+  filtered;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -159,9 +157,9 @@ class _Body extends ConsumerWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Text(
                     'Could not load conversations. Please try again.',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.hint,
-                    ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: AppColors.hint),
                     textAlign: TextAlign.center,
                   ),
                 ),

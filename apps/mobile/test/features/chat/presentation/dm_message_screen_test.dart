@@ -23,7 +23,7 @@ import 'package:mobile/features/chat/presentation/widgets/dm_message_bubble.dart
 
 class _FakeFirebaseUser extends Fake implements User {
   _FakeFirebaseUser(this._uid, {String? displayName})
-      : _displayName = displayName;
+    : _displayName = displayName;
   final String _uid;
   final String? _displayName;
 
@@ -51,11 +51,7 @@ class _StubChatActionsNotifier extends ChatActions {
     required String recipientUid,
     required String text,
   }) async {
-    sentMessages.add({
-      'dmId': dmId,
-      'senderUid': senderUid,
-      'text': text,
-    });
+    sentMessages.add({'dmId': dmId, 'senderUid': senderUid, 'text': text});
     state = const AsyncData(null);
   }
 
@@ -79,17 +75,16 @@ DmMessage _msg({
   String text = 'Hello',
   DateTime? sentAt,
 }) => DmMessage(
-      messageId: id,
-      senderUid: senderUid,
-      senderDisplayName: senderName,
-      text: text,
-      sentAt: sentAt ?? DateTime(2026, 5, 1, 10),
-      readBy: [senderUid],
-    );
+  messageId: id,
+  senderUid: senderUid,
+  senderDisplayName: senderName,
+  text: text,
+  sentAt: sentAt ?? DateTime(2026, 5, 1, 10),
+  readBy: [senderUid],
+);
 
 Widget _buildScreen({
-  AsyncValue<List<DmMessage>> messagesState =
-      const AsyncData(<DmMessage>[]),
+  AsyncValue<List<DmMessage>> messagesState = const AsyncData(<DmMessage>[]),
   String myUid = _myUid,
   _StubChatActionsNotifier? actionsNotifier,
 }) {
@@ -136,9 +131,7 @@ void main() {
           firebaseAuthStateProvider.overrideWith(
             (_) => Stream.value(_FakeFirebaseUser(_myUid)),
           ),
-          dmMessagesProvider(_dmId).overrideWith(
-            (_) => const Stream.empty(),
-          ),
+          dmMessagesProvider(_dmId).overrideWith((_) => const Stream.empty()),
           chatActionsProvider.overrideWith(() => _StubChatActionsNotifier()),
         ],
         child: const MaterialApp(
@@ -168,10 +161,7 @@ void main() {
             (_) => Stream.value(_FakeFirebaseUser(_myUid)),
           ),
           dmMessagesProvider(_dmId).overrideWith(
-            (_) => Stream.error(
-              Exception('Firestore error'),
-              StackTrace.empty,
-            ),
+            (_) => Stream.error(Exception('Firestore error'), StackTrace.empty),
           ),
           chatActionsProvider.overrideWith(() => _StubChatActionsNotifier()),
         ],
@@ -216,9 +206,7 @@ void main() {
       ),
     ];
 
-    await tester.pumpWidget(
-      _buildScreen(messagesState: AsyncData(msgs)),
-    );
+    await tester.pumpWidget(_buildScreen(messagesState: AsyncData(msgs)));
     await tester.pumpAndSettle(const Duration(seconds: 3));
 
     expect(find.byType(DmMessageBubble), findsNWidgets(2));
@@ -238,9 +226,7 @@ void main() {
       ),
     ];
 
-    await tester.pumpWidget(
-      _buildScreen(messagesState: AsyncData(msgs)),
-    );
+    await tester.pumpWidget(_buildScreen(messagesState: AsyncData(msgs)));
     await tester.pumpAndSettle(const Duration(seconds: 3));
 
     // Both messages visible
@@ -254,10 +240,7 @@ void main() {
     tester,
   ) async {
     final msgs = [
-      _msg(
-        text: 'Day one message',
-        sentAt: DateTime(2026, 5, 1, 10),
-      ),
+      _msg(text: 'Day one message', sentAt: DateTime(2026, 5, 1, 10)),
       _msg(
         id: 'msg-2',
         text: 'Day two message',
@@ -265,9 +248,7 @@ void main() {
       ),
     ];
 
-    await tester.pumpWidget(
-      _buildScreen(messagesState: AsyncData(msgs)),
-    );
+    await tester.pumpWidget(_buildScreen(messagesState: AsyncData(msgs)));
     await tester.pumpAndSettle(const Duration(seconds: 3));
 
     // Two separator dividers should appear (one per day group)
@@ -279,22 +260,20 @@ void main() {
   });
 
   testWidgets(
-      'NO date separator between two messages on the same calendar day', (
-    tester,
-  ) async {
-    final msgs = [
-      _msg(text: 'Morning', sentAt: DateTime(2026, 5, 1, 9)),
-      _msg(id: 'msg-2', text: 'Afternoon', sentAt: DateTime(2026, 5, 1, 15)),
-    ];
+    'NO date separator between two messages on the same calendar day',
+    (tester) async {
+      final msgs = [
+        _msg(text: 'Morning', sentAt: DateTime(2026, 5, 1, 9)),
+        _msg(id: 'msg-2', text: 'Afternoon', sentAt: DateTime(2026, 5, 1, 15)),
+      ];
 
-    await tester.pumpWidget(
-      _buildScreen(messagesState: AsyncData(msgs)),
-    );
-    await tester.pumpAndSettle(const Duration(seconds: 3));
+      await tester.pumpWidget(_buildScreen(messagesState: AsyncData(msgs)));
+      await tester.pumpAndSettle(const Duration(seconds: 3));
 
-    // Only one date label for that single day (not two).
-    expect(find.text('May 1, 2026'), findsOneWidget);
-  });
+      // Only one date label for that single day (not two).
+      expect(find.text('May 1, 2026'), findsOneWidget);
+    },
+  );
 
   // ── Send button / input bar ───────────────────────────────────────────────
 
@@ -325,9 +304,7 @@ void main() {
           firebaseAuthStateProvider.overrideWith(
             (_) => Stream.value(_FakeFirebaseUser(_myUid)),
           ),
-          dmMessagesProvider(_dmId).overrideWith(
-            (_) => Stream.value([]),
-          ),
+          dmMessagesProvider(_dmId).overrideWith((_) => Stream.value([])),
           chatActionsProvider.overrideWith(() => notifier),
         ],
         child: const MaterialApp(
