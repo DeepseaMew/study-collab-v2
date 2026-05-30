@@ -9,8 +9,17 @@ class CalendarDatasource {
 
   final FirebaseFirestore _firestore;
 
-  /// Streams sessions where [uid] is listed in `memberUids` and
-  /// `scheduledAt` falls within [[start], [end]] (inclusive).
+  /// Streams sessions where [uid] is a member (`memberUids`) or the host
+  /// (`hostUid`), and `scheduledAt` falls within [[start], [end]] (inclusive).
+  ///
+  /// Uses [Filter.or] so host-created sessions that predate the memberUids
+  /// seed are still returned.
+  ///
+  /// Uses [SessionModel.fromFirestore] (not [SessionModel.fromJson]) because
+  /// Firestore document fields arrive as [Timestamp] objects, not ISO-8601
+  /// strings. The generated [fromJson] calls [DateTime.parse] on the raw
+  /// field value, which throws a [TypeError] on a [Timestamp] and causes the
+  /// stream to silently error — resulting in an empty calendar.
   Stream<List<SessionModel>> watchSessionsInRange(
     String uid,
     DateTime start,
@@ -19,16 +28,39 @@ class CalendarDatasource {
     appLogger.debug(
       'calendar: querying sessions windowStart=$start windowEnd=$end',
     );
+    final startTs = Timestamp.fromDate(start.toUtc());
+    final endTs = Timestamp.fromDate(end.toUtc());
     return _firestore
         .collection(FirestorePaths.sessionsCollection)
-        .where('memberUids', arrayContains: uid)
-        .where('scheduledAt', isGreaterThanOrEqualTo: Timestamp.fromDate(start))
-        .where('scheduledAt', isLessThanOrEqualTo: Timestamp.fromDate(end))
+        .where(
+          Filter.or(
+            Filter('memberUids', arrayContains: uid),
+            Filter('hostUid', isEqualTo: uid),
+          ),
+        )
+        .where('scheduledAt', isGreaterThanOrEqualTo: startTs)
+        .where('scheduledAt', isLessThanOrEqualTo: endTs)
         .orderBy('scheduledAt')
         .snapshots()
-        .map(
-          (snap) =>
-              snap.docs.map((d) => SessionModel.fromJson(d.data())).toList(),
-        );
+        .map((snap) {
+          final models = <SessionModel>[];
+          for (final doc in snap.docs) {
+            try {
+              models.add(SessionModel.fromFirestore(doc.data()));
+            } catch (e, st) {
+              appLogger.error(
+                'calendar: failed to deserialize session doc=${doc.id}',
+                extra: {'error': e.toString()},
+              );
+              // Record non-fatal so Crashlytics sees deserialization failures.
+              // Skipping the bad document so the rest of the list still renders.
+              appLogger.error(
+                'calendar: stacktrace for doc=${doc.id}',
+                extra: {'stacktrace': st.toString()},
+              );
+            }
+          }
+          return models;
+        });
   }
 }
