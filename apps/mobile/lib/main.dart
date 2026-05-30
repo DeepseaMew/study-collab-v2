@@ -16,6 +16,7 @@ import 'package:mobile/shared/theme/app_typography.dart';
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await runZonedGuarded<Future<void>>(_bootstrap, (
     Object error,
     StackTrace stack,
@@ -34,9 +35,11 @@ Future<void> main() async {
 }
 
 Future<void> _bootstrap() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  
+  
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
 
   FirebaseFirestore.instance.settings = const Settings(
     persistenceEnabled: true,
@@ -51,17 +54,12 @@ Future<void> _bootstrap() async {
     };
   }
 
-  // Fetch and activate Remote Config before the first frame so that
-  // noteSharingEnabledProvider reads the correct server-side value on startup.
   final container = ProviderContainer();
   await container.read(remoteConfigStartupProvider.future);
   container.dispose();
 
-  appLogger.info('App bootstrap complete — launching Study Collab');
-
   runApp(const ProviderScope(child: _StudyCollabApp()));
 }
-
 // ── App widget ─────────────────────────────────────────────────────────────────
 
 class _StudyCollabApp extends ConsumerWidget {

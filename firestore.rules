@@ -114,6 +114,9 @@ service cloud.firestore {
         && (resource.data.visibility == 'public'
             || request.auth.uid in resource.data.memberUids
             || resource.data.hostUid == request.auth.uid
+            || (resource.data.visibility == 'private'
+                && resource.data.pin is string
+                && resource.data.status == 'scheduled')
             || resource.data.status == 'ended');
 
       allow create: if isKmuttUser()
@@ -150,8 +153,18 @@ service cloud.firestore {
                .hasOnly(['noteCount'])
           && (request.resource.data.noteCount == resource.data.noteCount + 1
               || request.resource.data.noteCount == resource.data.noteCount - 1)
-          && request.resource.data.noteCount >= 0);
-      // Note: the member condition intentionally omits updatedAt == request.time.
+          && request.resource.data.noteCount >= 0)
+        // Member self-removal: non-host member may remove only themselves
+        // from memberUids. updatedAt must be set server-side.
+        || (isKmuttUser()
+          && request.auth.uid in resource.data.memberUids
+          && request.auth.uid != resource.data.hostUid
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['memberUids', 'updatedAt'])
+          && request.resource.data.updatedAt == request.time
+          && request.resource.data.memberUids
+               == resource.data.memberUids.removeAll([request.auth.uid]));
+      // Note: the member noteCount condition intentionally omits updatedAt == request.time.
       // The WriteBatch for a note upload or delete does not write updatedAt on
       // the session document (ADR 0008 Amendment B).
 
@@ -257,19 +270,41 @@ service cloud.firestore {
     }
 
     // ── dms/{dmId} ──────────────────────────────────────────────────────────
+    // ADR 0011: areFriends() is NOT called here — it costs 2 get() calls and
+    // would exceed the 10-call budget on paths that also evaluate message rules.
+    // The friends gate is enforced client-side in ChatRepositoryImpl.sendMessage.
 
     match /dms/{dmId} {
       allow read: if isKmuttUser()
         && request.auth.uid in resource.data.participantUids;
 
+      // Lazy create via SetOptions(merge: true) on first send (ADR 0011 SD1).
+      // No areFriends() call (budget constraint above).
+      // No == request.time on createdAt (web constraint — ADR 0011).
       allow create: if isKmuttUser()
         && request.auth.uid in request.resource.data.participantUids
         && request.resource.data.participantUids.size() == 2
-        && areFriends(request.resource.data.participantUids[0],
-                      request.resource.data.participantUids[1])
-        && request.resource.data.createdAt == request.time;
+        && request.resource.data.keys().hasAll([
+             'participantUids', 'createdAt', 'unreadCounts'
+           ]);
 
-      allow update: if false;
+      // Only preview and unread-count fields may be updated (ADR 0011).
+      // CHAT-M2: caller may only zero their own unreadCounts entry; other
+      // participants' counters must remain unchanged unless the update also
+      // touches lastMessageText/lastMessageAt (i.e. a send, not a mark-read).
+      allow update: if isKmuttUser()
+        && request.auth.uid in resource.data.participantUids
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['unreadCounts', 'lastMessageText', 'lastMessageAt'])
+        && (
+             request.resource.data.unreadCounts[request.auth.uid]
+               == resource.data.unreadCounts[request.auth.uid]
+             ||
+             (request.resource.data.diff(resource.data).affectedKeys()
+                .hasOnly(['unreadCounts'])
+              && request.resource.data.unreadCounts[request.auth.uid] == 0)
+           );
+
       allow delete: if false;
 
       match /messages/{messageId} {
@@ -281,15 +316,21 @@ service cloud.firestore {
           && request.auth.uid in
              get(/databases/$(database)/documents/dms/$(dmId)).data.participantUids
           && request.resource.data.senderUid == request.auth.uid
-          && request.resource.data.sentAt == request.time
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 4000
           && request.resource.data.keys().hasAll([
-               'messageId', 'senderUid', 'text', 'sentAt', 'readBy'
+               'messageId', 'senderUid', 'senderDisplayName', 'text', 'sentAt', 'readBy'
+             ])
+          && request.resource.data.keys().hasOnly([
+               'messageId', 'senderUid', 'senderDisplayName', 'text', 'sentAt', 'readBy'
              ]);
 
         allow update: if isKmuttUser()
           && request.auth.uid in
              get(/databases/$(database)/documents/dms/$(dmId)).data.participantUids
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy']);
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy'])
+          && request.auth.uid in request.resource.data.readBy
+          && request.resource.data.readBy.hasAll(resource.data.readBy);
 
         allow delete: if false;
       }

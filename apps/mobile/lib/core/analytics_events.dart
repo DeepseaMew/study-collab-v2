@@ -142,6 +142,17 @@ abstract final class AnalyticsEvents {
   /// Payload: error_type (String, no PII).
   static const String ratingSubmitFailed = 'rating_submit_failed';
 
+  // ── Chat (DM) ─────────────────────────────────────────────────────────────
+
+  /// User viewed the DM conversation list screen.
+  static const String dmConversationListViewed = 'dm_conversation_list_viewed';
+
+  /// User opened a specific DM conversation thread. No PII.
+  static const String dmConversationOpened = 'dm_conversation_opened';
+
+  /// User successfully sent a DM message. No PII.
+  static const String dmMessageSent = 'dm_message_sent';
+
   // ── Calendar ───────────────────────────────────────────────────────────────
 
   /// User toggled the calendar view format (month ↔ week).

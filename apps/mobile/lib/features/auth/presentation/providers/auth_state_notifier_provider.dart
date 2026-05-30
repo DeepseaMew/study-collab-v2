@@ -60,9 +60,10 @@ class AuthStateNotifier extends _$AuthStateNotifier {
       // Firebase stream triggers build() → state updated automatically.
     } on AuthFailure catch (e, st) {
       state = AsyncValue.error(e, st);
-    } catch (e, st) {
-      state = AsyncValue.error(const AuthFailure.unknownFailure(), st);
-    }
+} catch (e, st) {
+  appLogger.error('signIn unknown error: $e', exception: e, stackTrace: st);
+  state = AsyncValue.error(AuthFailure.unknownFailure(e.toString()), st);
+}
   }
 
   Future<void> signUp({
