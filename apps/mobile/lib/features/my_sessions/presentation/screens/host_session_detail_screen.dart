@@ -741,7 +741,8 @@ class _MembersTab extends StatelessWidget {
             ),
             icon: const Icon(Icons.chat_bubble_outline, size: 18),
             label: const Text('Message group'),
-            onPressed: () {},
+            onPressed: () =>
+                context.push('/sessions/${session.sessionId}/chat'),
           ),
           const SizedBox(height: 12),
           ElevatedButton(

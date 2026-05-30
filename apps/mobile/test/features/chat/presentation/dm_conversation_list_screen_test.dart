@@ -1,12 +1,17 @@
-// Widget tests for DmConversationListScreen (ADR 0011).
+// Widget tests for DmConversationListScreen (ADR 0011, ADR 0012).
 //
-// Covers:
+// Covers (Individual tab — ADR 0011):
 //   - Smoke test: renders without exception when stream is empty
 //   - Empty state widget shown when dmConversationsProvider emits []
 //   - Conversation tile visible when stream emits one DmConversation
 //   - Unread badge visible when unreadCounts[myUid] > 0
 //   - Search field filters tiles by display name (case-insensitive)
 //   - Tapping a tile calls context.push with a path containing the other uid
+//
+// Covers (Groups tab — ADR 0012):
+//   - Tapping "Groups" tab shows GroupChatSummaryTile when summaries exist
+//   - Groups tab shows empty state when summaries stream returns []
+//   - Unread badge visible on Groups tab chip when total unread > 0
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -15,10 +20,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
 import 'package:mobile/features/chat/domain/entities/dm_conversation.dart';
+import 'package:mobile/features/chat/domain/entities/group_chat_summary.dart';
 import 'package:mobile/features/chat/presentation/providers/chat_providers.dart';
+import 'package:mobile/features/chat/presentation/providers/session_chat_providers.dart';
 import 'package:mobile/features/chat/presentation/screens/dm_conversation_list_screen.dart';
 import 'package:mobile/features/chat/presentation/widgets/dm_conversation_tile.dart';
 import 'package:mobile/features/chat/presentation/widgets/dm_unread_badge.dart';
+import 'package:mobile/features/chat/presentation/widgets/group_chat_summary_tile.dart';
 import 'package:mobile/features/friends/domain/entities/friend_entity.dart';
 import 'package:mobile/features/friends/presentation/providers/friends_provider.dart';
 
@@ -65,45 +73,81 @@ FriendEntity _stubFriend() => FriendEntity(
   friendDisplayName: 'Alice Smith',
 );
 
+GroupChatSummary _stubGroupSummary({
+  String sessionId = 'session-1',
+  String sessionTitle = 'Study Group',
+  int unreadCount = 0,
+  String? lastMessageText,
+}) => GroupChatSummary(
+  sessionId: sessionId,
+  sessionTitle: sessionTitle,
+  lastMessageText: lastMessageText ?? 'Let\'s start',
+  lastMessageAt: DateTime(2026, 5, 1, 14),
+  unreadCount: unreadCount,
+);
+
+/// Stub notifier for SessionChatActionsNotifier that records markSessionRead.
+class _StubSessionChatActionsNotifier extends SessionChatActionsNotifier {
+  @override
+  AsyncValue<void> build() => const AsyncData(null);
+
+  @override
+  Future<void> sendMessage({
+    required String sessionId,
+    required List<String> memberUids,
+    required String senderUid,
+    required String senderDisplayName,
+    required String sessionTitle,
+    required String text,
+  }) async {
+    state = const AsyncData(null);
+  }
+
+  @override
+  Future<void> markSessionRead(String sessionId, String uid) async {}
+}
+
 /// Builds the screen under test with the given provider overrides.
 ///
 /// [conversationsList] defaults to an empty stream (loading skeleton not shown
 /// because stream emits immediately).
+/// [groupSummaries] defaults to an empty list (Groups tab has no content).
 Widget _buildScreen({
   List<DmConversation> conversations = const [],
   List<FriendEntity> friends = const [],
+  List<GroupChatSummary> groupSummaries = const [],
   String myUid = _myUid,
   GoRouter? router,
 }) {
-  final screen = ProviderScope(
-    overrides: [
-      firebaseAuthStateProvider.overrideWith(
-        (_) => Stream.value(_FakeFirebaseUser(myUid, 'Me')),
-      ),
-      dmConversationsProvider(
-        myUid,
-      ).overrideWith((_) => Stream.value(conversations)),
-      friendsProvider(myUid).overrideWith((_) => Stream.value(friends)),
-    ],
-    child: const MaterialApp(home: DmConversationListScreen()),
-  );
+  final overrides = [
+    firebaseAuthStateProvider.overrideWith(
+      (_) => Stream.value(_FakeFirebaseUser(myUid, 'Me')),
+    ),
+    dmConversationsProvider(
+      myUid,
+    ).overrideWith((_) => Stream.value(conversations)),
+    friendsProvider(myUid).overrideWith((_) => Stream.value(friends)),
+    groupChatSummariesProvider(
+      myUid,
+    ).overrideWith((_) => Stream.value(groupSummaries)),
+    sessionChatActionsNotifierProvider.overrideWith(
+      () => _StubSessionChatActionsNotifier(),
+    ),
+  ];
 
   if (router != null) {
     return ProviderScope(
-      overrides: [
-        firebaseAuthStateProvider.overrideWith(
-          (_) => Stream.value(_FakeFirebaseUser(myUid, 'Me')),
-        ),
-        dmConversationsProvider(
-          myUid,
-        ).overrideWith((_) => Stream.value(conversations)),
-        friendsProvider(myUid).overrideWith((_) => Stream.value(friends)),
-      ],
+      overrides: overrides,
       child: MaterialApp.router(routerConfig: router),
     );
   }
 
-  return screen;
+  return ProviderScope(
+    overrides: overrides,
+    child: const MaterialApp(home: DmConversationListScreen()),
+  );
+
+  // (unreachable — kept for structural clarity)
 }
 
 void main() {
@@ -355,5 +399,81 @@ void main() {
     );
     await tester.pumpAndSettle(const Duration(seconds: 3));
     expect(find.text('Sign in to see your messages.'), findsOneWidget);
+  });
+
+  // ── Groups tab (ADR 0012) ─────────────────────────────────────────────────
+
+  testWidgets(
+    'tapping Groups tab shows GroupChatSummaryTile when summaries stream has data',
+    (tester) async {
+      await tester.pumpWidget(
+        _buildScreen(
+          groupSummaries: [
+            _stubGroupSummary(sessionTitle: 'Advanced Calculus'),
+          ],
+        ),
+      );
+      await tester.pumpAndSettle(const Duration(seconds: 3));
+
+      // Switch to Groups tab.
+      await tester.tap(find.text('Groups'));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+
+      expect(find.byType(GroupChatSummaryTile), findsOneWidget);
+      expect(find.text('Advanced Calculus'), findsOneWidget);
+    },
+  );
+
+  testWidgets(
+    'Groups tab shows empty state when summaries stream returns empty list',
+    (tester) async {
+      await tester.pumpWidget(_buildScreen(groupSummaries: []));
+      await tester.pumpAndSettle(const Duration(seconds: 3));
+
+      await tester.tap(find.text('Groups'));
+      await tester.pumpAndSettle(const Duration(seconds: 2));
+
+      expect(find.text('No group chats yet'), findsOneWidget);
+    },
+  );
+
+  testWidgets('unread badge visible on Groups tab chip when total unread > 0', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _buildScreen(groupSummaries: [_stubGroupSummary(unreadCount: 5)]),
+    );
+    await tester.pumpAndSettle(const Duration(seconds: 3));
+
+    // The badge ('5') should appear next to the Groups tab label.
+    expect(find.text('5'), findsOneWidget);
+  });
+
+  testWidgets('no unread badge on Groups tab chip when total unread == 0', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _buildScreen(groupSummaries: [_stubGroupSummary()]),
+    );
+    await tester.pumpAndSettle(const Duration(seconds: 3));
+
+    // No badge label '0' and no red badge container expected.
+    expect(find.text('0'), findsNothing);
+  });
+
+  testWidgets('Groups tab shows last message preview in GroupChatSummaryTile', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _buildScreen(
+        groupSummaries: [_stubGroupSummary(lastMessageText: 'See you at 3pm')],
+      ),
+    );
+    await tester.pumpAndSettle(const Duration(seconds: 3));
+
+    await tester.tap(find.text('Groups'));
+    await tester.pumpAndSettle(const Duration(seconds: 2));
+
+    expect(find.text('See you at 3pm'), findsOneWidget);
   });
 }

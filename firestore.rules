@@ -76,6 +76,29 @@ service cloud.firestore {
       // SEC-003 fix: friendDisplayName/friendPhotoUrl added to update affectedKeys.
       // High fix: friendUid/initiatorUid/createdAt immutability enforced on update.
 
+      // ── users/{uid}/groupChats/{sessionId} ──────────────────────────────
+      // ADR 0012: summary documents maintained by the session-chat send batch.
+      // Any KMUTT session member may write any member's summary (fan-out).
+      // Each user may only read their own documents.
+
+      match /groupChats/{sessionId} {
+        allow read: if isKmuttUser()
+          && request.auth.uid == uid;
+
+        allow create, update: if isKmuttUser()
+          && isMember(sessionId)
+          && request.resource.data.keys().hasAll([
+               'sessionId', 'sessionTitle', 'unreadCount'
+             ])
+          && request.resource.data.keys().hasOnly([
+               'sessionId', 'sessionTitle', 'lastMessageText',
+               'lastMessageAt', 'unreadCount'
+             ]);
+
+        allow delete: if isKmuttUser()
+          && request.auth.uid == uid;
+      }
+
       match /friends/{friendUid} {
         allow read: if isKmuttUser()
           && (request.auth.uid == uid || request.auth.uid == friendUid);
@@ -191,22 +214,43 @@ service cloud.firestore {
       }
 
       // ── sessions/{sessionId}/messages/{messageId} ────────────────────────
+      // ADR 0012: replaces original ADR 0001 block.
+      // Removed: sentAt == request.time (web constraint, ADR 0011),
+      //          readBy (ADR 0012 SD3 — unread state lives in groupChats only).
+      // Added: type, senderDisplayName, text-size validation, file_shared keys.
 
       match /messages/{messageId} {
         allow read: if isMember(sessionId);
 
         allow create: if isMember(sessionId)
           && request.resource.data.senderUid == request.auth.uid
-          && request.resource.data.sentAt == request.time
-          && request.resource.data.readBy == [request.auth.uid]
-          && request.resource.data.keys().hasAll([
-               'messageId', 'senderUid', 'text', 'sentAt', 'readBy'
-             ]);
+          && request.resource.data.type in ['text', 'file_shared']
+          && (
+               (request.resource.data.type == 'text'
+                && request.resource.data.text is string
+                && request.resource.data.text.size() > 0
+                && request.resource.data.text.size() <= 4000
+                && request.resource.data.keys().hasAll([
+                     'messageId', 'senderUid', 'senderDisplayName',
+                     'text', 'sentAt', 'type'
+                   ])
+                && request.resource.data.keys().hasOnly([
+                     'messageId', 'senderUid', 'senderDisplayName',
+                     'text', 'sentAt', 'type'
+                   ]))
+               ||
+               (request.resource.data.type == 'file_shared'
+                && request.resource.data.keys().hasAll([
+                     'messageId', 'senderUid', 'senderDisplayName',
+                     'type', 'noteId', 'fileName', 'downloadUrl', 'sentAt'
+                   ])
+                && request.resource.data.keys().hasOnly([
+                     'messageId', 'senderUid', 'senderDisplayName',
+                     'type', 'noteId', 'fileName', 'downloadUrl', 'sentAt'
+                   ]))
+             );
 
-        allow update: if isMember(sessionId)
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy'])
-          && request.auth.uid in request.resource.data.readBy;
-
+        allow update: if false;
         allow delete: if false;
       }
 

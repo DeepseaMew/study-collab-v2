@@ -20,6 +20,7 @@ import 'package:mobile/features/my_sessions/presentation/screens/member_session_
 import 'package:mobile/features/my_sessions/presentation/screens/my_sessions_screen.dart';
 import 'package:mobile/features/chat/presentation/screens/dm_conversation_list_screen.dart';
 import 'package:mobile/features/chat/presentation/screens/dm_message_screen.dart';
+import 'package:mobile/features/chat/presentation/screens/session_chat_screen.dart';
 import 'package:mobile/features/note_sharing/presentation/screens/all_files_screen.dart';
 import 'package:mobile/features/profile/presentation/screens/other_user_profile_screen.dart';
 import 'package:mobile/features/profile/presentation/screens/profile_screen.dart';
@@ -73,6 +74,9 @@ abstract final class RouteConstants {
 
   // Messages DM
   static const String messagesDm = '/messages/dm/:id';
+
+  // Session (group) chat (ADR 0012)
+  static const String sessionChat = '/sessions/:sessionId/chat';
 
   // Calendar sub-routes
   static const String calendarDay = '/calendar/day';
@@ -218,6 +222,13 @@ GoRouter router(RouterRef ref) {
             displayName: (extra?['displayName'] as String?) ?? '',
           );
         },
+      ),
+
+      // ── Session (group) chat (ADR 0012) ─────────────────────────────────
+      GoRoute(
+        path: '/sessions/:sessionId/chat',
+        builder: (_, state) =>
+            SessionChatScreen(sessionId: state.pathParameters['sessionId']!),
       ),
 
       // ── Friends routes (push over the shell) ────────────────────────────

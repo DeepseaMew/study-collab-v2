@@ -5,16 +5,22 @@ import 'package:mobile/core/analytics_events.dart';
 import 'package:mobile/core/logger.dart';
 import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
 import 'package:mobile/features/chat/domain/entities/dm_conversation.dart';
+import 'package:mobile/features/chat/domain/entities/group_chat_summary.dart';
 import 'package:mobile/features/chat/presentation/providers/chat_providers.dart';
+import 'package:mobile/features/chat/presentation/providers/session_chat_providers.dart';
 import 'package:mobile/features/chat/presentation/widgets/dm_conversation_tile.dart';
+import 'package:mobile/features/chat/presentation/widgets/group_chat_summary_tile.dart';
 import 'package:mobile/features/friends/domain/entities/friend_entity.dart';
 import 'package:mobile/features/friends/presentation/providers/friends_provider.dart';
 import 'package:mobile/shared/theme/app_colors.dart';
 
-/// The Messages tab screen — shows a searchable list of DM conversations.
+/// The Messages tab screen — shows DM conversations (Individual) and
+/// session group chats (Groups) in a two-tab layout.
 ///
 /// Route: `/messages`
-/// Analytics: [AnalyticsEvents.dmConversationListViewed] logged on first frame.
+/// Analytics:
+///   - [AnalyticsEvents.dmConversationListViewed] on first frame (Individual tab).
+///   - [AnalyticsEvents.groupsTabViewed] when Groups tab becomes active.
 class DmConversationListScreen extends ConsumerStatefulWidget {
   const DmConversationListScreen({super.key});
 
@@ -24,25 +30,41 @@ class DmConversationListScreen extends ConsumerStatefulWidget {
 }
 
 class _DmConversationListScreenState
-    extends ConsumerState<DmConversationListScreen> {
+    extends ConsumerState<DmConversationListScreen>
+    with SingleTickerProviderStateMixin {
+  late TabController _tabCtrl;
   final _searchCtrl = TextEditingController();
   String _query = '';
+  bool _groupsAnalyticsFired = false;
 
   @override
   void initState() {
     super.initState();
+    _tabCtrl = TabController(length: 2, vsync: this);
+    _tabCtrl.addListener(_onTabChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       appLogger.info(AnalyticsEvents.dmConversationListViewed);
     });
   }
 
+  void _onTabChanged() {
+    if (_tabCtrl.index == 1 && !_groupsAnalyticsFired) {
+      _groupsAnalyticsFired = true;
+      appLogger.info(AnalyticsEvents.groupsTabViewed);
+    }
+    // Rebuild to update tab badge display.
+    if (mounted) setState(() {});
+  }
+
   @override
   void dispose() {
+    _tabCtrl.removeListener(_onTabChanged);
+    _tabCtrl.dispose();
     _searchCtrl.dispose();
     super.dispose();
   }
 
-  List<DmConversation> _filtered(
+  List<DmConversation> _filteredDms(
     List<DmConversation> all,
     Map<String, String> nameMap,
   ) {
@@ -54,9 +76,18 @@ class _DmConversationListScreenState
     }).toList();
   }
 
+  List<GroupChatSummary> _filteredGroups(List<GroupChatSummary> all) {
+    if (_query.isEmpty) return all;
+    final q = _query.toLowerCase();
+    return all.where((s) => s.sessionTitle.toLowerCase().contains(q)).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     final me = ref.watch(firebaseAuthStateProvider).valueOrNull;
+    final unreadGroupTotal = me != null
+        ? ref.watch(unreadGroupTotalProvider(me.uid))
+        : 0;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -83,6 +114,48 @@ class _DmConversationListScreenState
             fontWeight: FontWeight.w700,
           ),
         ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(92),
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 6),
+                child: TextField(
+                  controller: _searchCtrl,
+                  onChanged: (v) => setState(() => _query = v),
+                  decoration: const InputDecoration(
+                    hintText: 'Search conversations...',
+                    prefixIcon: Icon(Icons.search, size: 20),
+                    contentPadding: EdgeInsets.symmetric(vertical: 10),
+                    fillColor: Colors.white,
+                    filled: true,
+                  ),
+                ),
+              ),
+              TabBar(
+                controller: _tabCtrl,
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.white70,
+                indicatorColor: Colors.white,
+                tabs: [
+                  const Tab(text: 'Individual'),
+                  Tab(
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Text('Groups'),
+                        if (unreadGroupTotal > 0) ...[
+                          const SizedBox(width: 6),
+                          _UnreadBadge(count: unreadGroupTotal),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
       body: me == null
           ? const Center(
@@ -91,129 +164,209 @@ class _DmConversationListScreenState
                 style: TextStyle(color: AppColors.hint, fontSize: 14),
               ),
             )
-          : _Body(
-              myUid: me.uid,
-              query: _query,
-              searchCtrl: _searchCtrl,
-              onQueryChanged: (v) => setState(() => _query = v),
-              filtered: _filtered,
+          : TabBarView(
+              controller: _tabCtrl,
+              children: [
+                _IndividualTab(
+                  myUid: me.uid,
+                  query: _query,
+                  filteredDms: _filteredDms,
+                ),
+                _GroupsTab(
+                  myUid: me.uid,
+                  query: _query,
+                  filteredGroups: _filteredGroups,
+                ),
+              ],
             ),
     );
   }
 }
 
-// ── Body ──────────────────────────────────────────────────────────────────────
+// ── Unread badge ──────────────────────────────────────────────────────────────
 
-class _Body extends ConsumerWidget {
-  const _Body({
+class _UnreadBadge extends StatelessWidget {
+  const _UnreadBadge({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: AppColors.error,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        '${count > 99 ? '99+' : count}',
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
+// ── Individual tab ────────────────────────────────────────────────────────────
+
+class _IndividualTab extends ConsumerWidget {
+  const _IndividualTab({
     required this.myUid,
     required this.query,
-    required this.searchCtrl,
-    required this.onQueryChanged,
-    required this.filtered,
+    required this.filteredDms,
   });
 
   final String myUid;
   final String query;
-  final TextEditingController searchCtrl;
-  final ValueChanged<String> onQueryChanged;
   final List<DmConversation> Function(List<DmConversation>, Map<String, String>)
-  filtered;
+  filteredDms;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final convosAsync = ref.watch(dmConversationsProvider(myUid));
     final friendsAsync = ref.watch(friendsProvider(myUid));
 
-    return Column(
-      children: [
-        // ── Search bar ──────────────────────────────────────────────────────
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-          child: TextField(
-            controller: searchCtrl,
-            onChanged: onQueryChanged,
-            decoration: const InputDecoration(
-              hintText: 'Search conversations...',
-              prefixIcon: Icon(Icons.search, size: 20),
-              contentPadding: EdgeInsets.symmetric(vertical: 10),
+    return convosAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, st) {
+        appLogger.error(
+          'DmConversationListScreen load error',
+          exception: e,
+          stackTrace: st,
+        );
+        return Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Text(
+              'Could not load conversations. Please try again.',
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.hint),
+              textAlign: TextAlign.center,
             ),
           ),
-        ),
-        const Divider(height: 1, color: AppColors.border),
+        );
+      },
+      data: (convos) {
+        final friends = friendsAsync.asData?.value ?? <FriendEntity>[];
+        final nameMap = <String, String>{
+          for (final f in friends) f.friendUid: f.friendDisplayName,
+        };
+        final dmNameMap = <String, String>{
+          for (final c in convos) c.dmId: nameMap[c.otherUid(myUid)] ?? '',
+        };
 
-        // ── Conversation list ───────────────────────────────────────────────
-        Expanded(
-          child: convosAsync.when(
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (e, st) {
-              appLogger.error(
-                'DmConversationListScreen load error',
-                exception: e,
-                stackTrace: st,
-              );
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: Text(
-                    'Could not load conversations. Please try again.',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.copyWith(color: AppColors.hint),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              );
-            },
-            data: (convos) {
-              // Build a UID→displayName map from the friends list.
-              final friends = friendsAsync.asData?.value ?? <FriendEntity>[];
-              final nameMap = <String, String>{
-                for (final f in friends) f.friendUid: f.friendDisplayName,
-              };
-              // Map dmId → displayName for the other participant.
-              final dmNameMap = <String, String>{
-                for (final c in convos)
-                  c.dmId: nameMap[c.otherUid(myUid)] ?? '',
-              };
+        final items = filteredDms(convos, dmNameMap);
 
-              final items = filtered(convos, dmNameMap);
+        if (items.isEmpty) {
+          return _EmptyState(
+            icon: Icons.chat_bubble_outline,
+            title: query.isNotEmpty ? 'No results found' : 'No messages yet',
+            subtitle: query.isNotEmpty
+                ? 'Try a different name'
+                : "Start a conversation from someone's profile",
+          );
+        }
 
-              if (items.isEmpty) {
-                return _EmptyState(hasQuery: query.isNotEmpty);
-              }
+        return ListView.separated(
+          itemCount: items.length,
+          separatorBuilder: (_, __) =>
+              const Divider(height: 1, indent: 76, color: AppColors.border),
+          itemBuilder: (ctx, i) {
+            final convo = items[i];
+            final name = dmNameMap[convo.dmId] ?? '';
+            return DmConversationTile(
+              conversation: convo,
+              myUid: myUid,
+              displayName: name,
+              onTap: () {
+                appLogger.info(AnalyticsEvents.dmConversationOpened);
+                ctx.push(
+                  '/messages/dm/${convo.dmId}',
+                  extra: {
+                    'otherUid': convo.otherUid(myUid),
+                    'displayName': name,
+                  },
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+}
 
-              return ListView.separated(
-                itemCount: items.length,
-                separatorBuilder: (_, __) => const Divider(
-                  height: 1,
-                  indent: 76,
-                  color: AppColors.border,
-                ),
-                itemBuilder: (ctx, i) {
-                  final convo = items[i];
-                  final name = dmNameMap[convo.dmId] ?? '';
-                  return DmConversationTile(
-                    conversation: convo,
-                    myUid: myUid,
-                    displayName: name,
-                    onTap: () {
-                      appLogger.info(AnalyticsEvents.dmConversationOpened);
-                      context.push(
-                        '/messages/dm/${convo.dmId}',
-                        extra: {
-                          'otherUid': convo.otherUid(myUid),
-                          'displayName': name,
-                        },
-                      );
-                    },
-                  );
-                },
-              );
-            },
+// ── Groups tab ────────────────────────────────────────────────────────────────
+
+class _GroupsTab extends ConsumerWidget {
+  const _GroupsTab({
+    required this.myUid,
+    required this.query,
+    required this.filteredGroups,
+  });
+
+  final String myUid;
+  final String query;
+  final List<GroupChatSummary> Function(List<GroupChatSummary>) filteredGroups;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final summariesAsync = ref.watch(groupChatSummariesProvider(myUid));
+
+    return summariesAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, st) {
+        appLogger.error('GroupsTab load error', exception: e, stackTrace: st);
+        return Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Text(
+              'Could not load group chats. Please try again.',
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.hint),
+              textAlign: TextAlign.center,
+            ),
           ),
-        ),
-      ],
+        );
+      },
+      data: (summaries) {
+        final items = filteredGroups(summaries);
+
+        if (items.isEmpty) {
+          return _EmptyState(
+            icon: Icons.group_outlined,
+            title: query.isNotEmpty ? 'No results found' : 'No group chats yet',
+            subtitle: query.isNotEmpty
+                ? 'Try a different session name'
+                : 'Join a session to access its group chat',
+          );
+        }
+
+        return ListView.separated(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          itemCount: items.length,
+          separatorBuilder: (_, __) =>
+              const Divider(height: 1, indent: 76, color: AppColors.border),
+          itemBuilder: (ctx, i) {
+            final summary = items[i];
+            return GroupChatSummaryTile(
+              summary: summary,
+              onTap: () {
+                // Mark read fire-and-forget.
+                ref
+                    .read(sessionChatActionsNotifierProvider.notifier)
+                    .markSessionRead(summary.sessionId, myUid);
+                ctx.push('/sessions/${summary.sessionId}/chat');
+              },
+            );
+          },
+        );
+      },
     );
   }
 }
@@ -221,9 +374,15 @@ class _Body extends ConsumerWidget {
 // ── Empty state ───────────────────────────────────────────────────────────────
 
 class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.hasQuery});
+  const _EmptyState({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
 
-  final bool hasQuery;
+  final IconData icon;
+  final String title;
+  final String subtitle;
 
   @override
   Widget build(BuildContext context) {
@@ -239,22 +398,13 @@ class _EmptyState extends StatelessWidget {
               color: AppColors.secondary,
               borderRadius: BorderRadius.circular(40),
             ),
-            child: const Icon(
-              Icons.chat_bubble_outline,
-              size: 36,
-              color: AppColors.accent,
-            ),
+            child: Icon(icon, size: 36, color: AppColors.accent),
           ),
           const SizedBox(height: 16),
-          Text(
-            hasQuery ? 'No results found' : 'No messages yet',
-            style: tt.displaySmall,
-          ),
+          Text(title, style: tt.displaySmall),
           const SizedBox(height: 6),
           Text(
-            hasQuery
-                ? 'Try a different name'
-                : "Start a conversation from someone's profile",
+            subtitle,
             style: tt.bodyMedium?.copyWith(color: AppColors.hint),
             textAlign: TextAlign.center,
           ),

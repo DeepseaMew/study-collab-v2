@@ -16,10 +16,9 @@ import 'package:mobile/features/note_sharing/domain/repositories/note_repository
 /// (ADR 0008 sub-decision 2).
 ///
 /// Upload sequence:
-///   (a) Read `users/{uploaderUid}.displayName` from Firestore.
-///   (b) Upload bytes to Storage via [NoteDatasource.uploadFile].
-///   (c) Commit [WriteBatch] via [NoteDatasource.writeNoteBatch].
-///   (d) On batch failure: delete orphan Storage object and throw
+///   (a) Upload bytes to Storage via [NoteDatasource.uploadFile].
+///   (b) Commit [WriteBatch] via [NoteDatasource.writeNoteBatch].
+///   (c) On batch failure: delete orphan Storage object and throw
 ///       [NoteError.uploadFailed].
 class NoteRepositoryImpl implements NoteRepository {
   NoteRepositoryImpl({
@@ -53,8 +52,7 @@ class NoteRepositoryImpl implements NoteRepository {
     }
     final uploaderUid = currentUser.uid;
 
-    // (a) Read uploader display name from Firestore (no UserDatasource exists).
-    final uploaderDisplayName = await _fetchDisplayName(uploaderUid);
+    final uploaderDisplayName = _auth.currentUser?.displayName ?? '';
 
     // Auto-generate the Firestore document ID upfront so the Storage path
     // and the Firestore document share the same noteId.
@@ -86,8 +84,23 @@ class NoteRepositoryImpl implements NoteRepository {
       uploadedAt: DateTime.now(),
     );
 
+    // Fetch session metadata needed for the file_shared message fan-out (ADR 0012).
+    final sessionSnap = await _firestore
+        .doc(FirestorePaths.sessionDoc(sessionId))
+        .get();
+    final sessionData = sessionSnap.data();
+    final memberUids =
+        (sessionData?['memberUids'] as List<dynamic>?)?.cast<String>() ??
+        <String>[];
+    final sessionTitle = (sessionData?['title'] as String?) ?? '';
+
     try {
-      await _datasource.writeNoteBatch(sessionId, model);
+      await _datasource.writeNoteBatch(
+        sessionId,
+        model,
+        memberUids: memberUids,
+        sessionTitle: sessionTitle,
+      );
     } catch (e, st) {
       // (d) WriteBatch failed — delete orphan Storage object.
       appLogger.error(
@@ -173,18 +186,5 @@ class NoteRepositoryImpl implements NoteRepository {
       startAfter: startAfter,
     );
     return models.map((m) => m.toEntity()).toList();
-  }
-
-  // ── Helpers ────────────────────────────────────────────────────────────────
-
-  /// Reads `users/{uid}.displayName` directly from Firestore.
-  /// Returns an empty string if the document or field is missing.
-  Future<String> _fetchDisplayName(String uid) async {
-    try {
-      final doc = await _firestore.doc(FirestorePaths.userDoc(uid)).get();
-      return (doc.data()?['displayName'] as String?) ?? '';
-    } catch (_) {
-      return '';
-    }
   }
 }
