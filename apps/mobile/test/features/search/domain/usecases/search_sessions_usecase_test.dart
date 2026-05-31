@@ -34,8 +34,8 @@ SessionEntity _stubSession({String id = 's1'}) => SessionEntity(
   location: 'Room 101',
   capacity: 10,
   hostDisplayName: 'Alice',
-  createdAt: DateTime(2026, 1, 1),
-  updatedAt: DateTime(2026, 1, 1),
+  createdAt: DateTime(2026, 1, 1), // ignore: avoid_redundant_argument_values
+  updatedAt: DateTime(2026, 1, 1), // ignore: avoid_redundant_argument_values
 );
 
 void main() {

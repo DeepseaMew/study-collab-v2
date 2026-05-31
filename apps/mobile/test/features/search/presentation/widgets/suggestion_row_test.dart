@@ -31,7 +31,7 @@ void main() {
     testWidgets('renders Icons.tag leading icon for hashtag type', (
       tester,
     ) async {
-      final suggestion = SearchSuggestion(
+      const suggestion = SearchSuggestion(
         displayText: 'mathematics',
         type: SuggestionType.hashtag,
       );
@@ -44,7 +44,7 @@ void main() {
     testWidgets('renders Icons.history leading icon for recent type', (
       tester,
     ) async {
-      final suggestion = SearchSuggestion(
+      const suggestion = SearchSuggestion(
         displayText: 'calculus study',
         type: SuggestionType.recent,
       );
@@ -57,7 +57,7 @@ void main() {
     testWidgets('renders Icons.search leading icon for sessionName type', (
       tester,
     ) async {
-      final suggestion = SearchSuggestion(
+      const suggestion = SearchSuggestion(
         displayText: 'Advanced Algorithms',
         type: SuggestionType.sessionName,
       );
@@ -70,7 +70,7 @@ void main() {
     testWidgets('renders Icons.search leading icon for host type', (
       tester,
     ) async {
-      final suggestion = SearchSuggestion(
+      const suggestion = SearchSuggestion(
         displayText: '@alice',
         type: SuggestionType.host,
       );
@@ -85,7 +85,7 @@ void main() {
     testWidgets('renders trailing Icons.north_east for recent type', (
       tester,
     ) async {
-      final suggestion = SearchSuggestion(
+      const suggestion = SearchSuggestion(
         displayText: 'past search term',
         type: SuggestionType.recent,
       );
@@ -98,7 +98,7 @@ void main() {
     testWidgets('does NOT render trailing arrow for hashtag type', (
       tester,
     ) async {
-      final suggestion = SearchSuggestion(
+      const suggestion = SearchSuggestion(
         displayText: 'physics',
         type: SuggestionType.hashtag,
       );
@@ -111,7 +111,7 @@ void main() {
     testWidgets(
       'renders subject chip as trailing widget when suggestion has subject',
       (tester) async {
-        final suggestion = SearchSuggestion(
+        const suggestion = SearchSuggestion(
           displayText: 'Calculus Study Group',
           type: SuggestionType.sessionName,
           subject: 'mathematics',
@@ -128,7 +128,7 @@ void main() {
   group('SuggestionRowWidget — tap interaction', () {
     testWidgets('calls onTap when row is tapped', (tester) async {
       var tapped = false;
-      final suggestion = SearchSuggestion(
+      const suggestion = SearchSuggestion(
         displayText: 'calculus',
         type: SuggestionType.recent,
       );
@@ -146,7 +146,7 @@ void main() {
 
     testWidgets('onTap is called for hashtag suggestion', (tester) async {
       var tapped = false;
-      final suggestion = SearchSuggestion(
+      const suggestion = SearchSuggestion(
         displayText: '#mathematics',
         type: SuggestionType.hashtag,
       );
@@ -165,7 +165,7 @@ void main() {
 
   group('SuggestionRowWidget — display text', () {
     testWidgets('renders suggestion displayText', (tester) async {
-      final suggestion = SearchSuggestion(
+      const suggestion = SearchSuggestion(
         displayText: 'linear algebra',
         type: SuggestionType.recent,
       );
@@ -177,7 +177,7 @@ void main() {
     });
 
     testWidgets('has Semantics label based on displayText', (tester) async {
-      final suggestion = SearchSuggestion(
+      const suggestion = SearchSuggestion(
         displayText: 'thermodynamics',
         type: SuggestionType.hashtag,
       );

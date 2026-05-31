@@ -23,21 +23,21 @@ void main() {
   });
 
   // Helper to stub a read returning null (no stored data).
-  void _stubEmptyRead(String uid) {
+  void stubEmptyRead(String uid) {
     when(
       () => mockStorage.read(key: 'search_recent_$uid'),
     ).thenAnswer((_) async => null);
   }
 
   // Helper to stub a read returning a specific JSON string.
-  void _stubRead(String uid, String json) {
+  void stubRead(String uid, String json) {
     when(
       () => mockStorage.read(key: 'search_recent_$uid'),
     ).thenAnswer((_) async => json);
   }
 
   // Helper to stub a write call.
-  void _stubWrite(String uid) {
+  void stubWrite(String uid) {
     when(
       () => mockStorage.write(
         key: 'search_recent_$uid',
@@ -48,7 +48,7 @@ void main() {
 
   group('getRecentSearches', () {
     test('returns empty list when storage key does not exist', () async {
-      _stubEmptyRead('uid-1');
+      stubEmptyRead('uid-1');
 
       final result = await datasource.getRecentSearches('uid-1');
 
@@ -56,7 +56,7 @@ void main() {
     });
 
     test('returns empty list when storage value is empty string', () async {
-      _stubRead('uid-1', '');
+      stubRead('uid-1', '');
 
       final result = await datasource.getRecentSearches('uid-1');
 
@@ -64,7 +64,7 @@ void main() {
     });
 
     test('returns list of strings from stored JSON array', () async {
-      _stubRead('uid-1', '["math","physics","calculus"]');
+      stubRead('uid-1', '["math","physics","calculus"]');
 
       final result = await datasource.getRecentSearches('uid-1');
 
@@ -72,7 +72,7 @@ void main() {
     });
 
     test('returns empty list on malformed JSON (error recovery)', () async {
-      _stubRead('uid-1', 'not-valid-json');
+      stubRead('uid-1', 'not-valid-json');
 
       final result = await datasource.getRecentSearches('uid-1');
 
@@ -82,8 +82,8 @@ void main() {
 
   group('addRecentSearch', () {
     test('prepends new term to empty list', () async {
-      _stubEmptyRead('uid-1');
-      _stubWrite('uid-1');
+      stubEmptyRead('uid-1');
+      stubWrite('uid-1');
 
       await datasource.addRecentSearch('uid-1', 'calculus');
 
@@ -97,8 +97,8 @@ void main() {
     });
 
     test('prepends to existing list', () async {
-      _stubRead('uid-1', '["physics","chemistry"]');
-      _stubWrite('uid-1');
+      stubRead('uid-1', '["physics","chemistry"]');
+      stubWrite('uid-1');
 
       await datasource.addRecentSearch('uid-1', 'mathematics');
 
@@ -119,8 +119,8 @@ void main() {
     test('caps list at 10 entries with FIFO eviction', () async {
       // Start with 10 existing entries
       final existing = List.generate(10, (i) => 'term$i');
-      _stubRead('uid-1', '[${existing.map((t) => '"$t"').join(',')}]');
-      _stubWrite('uid-1');
+      stubRead('uid-1', '[${existing.map((t) => '"$t"').join(',')}]');
+      stubWrite('uid-1');
 
       await datasource.addRecentSearch('uid-1', 'new-term');
 
@@ -144,8 +144,8 @@ void main() {
     test(
       'deduplicates: moves existing term to front rather than duplicating',
       () async {
-        _stubRead('uid-1', '["physics","mathematics","chemistry"]');
-        _stubWrite('uid-1');
+        stubRead('uid-1', '["physics","mathematics","chemistry"]');
+        stubWrite('uid-1');
 
         await datasource.addRecentSearch('uid-1', 'mathematics');
 
@@ -169,10 +169,10 @@ void main() {
 
   group('UID-scoped storage isolation', () {
     test('different UIDs use separate storage keys', () async {
-      _stubEmptyRead('uid-alice');
-      _stubEmptyRead('uid-bob');
-      _stubWrite('uid-alice');
-      _stubWrite('uid-bob');
+      stubEmptyRead('uid-alice');
+      stubEmptyRead('uid-bob');
+      stubWrite('uid-alice');
+      stubWrite('uid-bob');
 
       await datasource.addRecentSearch('uid-alice', 'linear algebra');
       await datasource.addRecentSearch('uid-bob', 'thermodynamics');
@@ -199,8 +199,8 @@ void main() {
     });
 
     test('getRecentSearches reads from UID-specific key only', () async {
-      _stubRead('uid-alice', '["study-group"]');
-      _stubEmptyRead('uid-bob');
+      stubRead('uid-alice', '["study-group"]');
+      stubEmptyRead('uid-bob');
 
       final aliceResults = await datasource.getRecentSearches('uid-alice');
       final bobResults = await datasource.getRecentSearches('uid-bob');

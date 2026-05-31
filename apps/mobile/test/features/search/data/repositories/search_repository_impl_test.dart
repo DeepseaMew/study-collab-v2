@@ -51,8 +51,8 @@ SessionEntity _session({
   location: 'Room 101',
   capacity: 10,
   hostDisplayName: hostDisplayName,
-  createdAt: DateTime(2026, 1, 1),
-  updatedAt: DateTime(2026, 1, 1),
+  createdAt: DateTime(2026, 1, 1), // ignore: avoid_redundant_argument_values
+  updatedAt: DateTime(2026, 1, 1), // ignore: avoid_redundant_argument_values
 );
 
 // ---------------------------------------------------------------------------
@@ -160,14 +160,14 @@ void main() {
     });
 
     test('rejects past-scheduled session even when status is scheduled', () {
-      final session = _session(status: 'scheduled', scheduledAt: _pastDate);
+      final session = _session(scheduledAt: _pastDate);
       expect(_matchesFilter(session, const SearchFilter(), now), isFalse);
     });
   });
 
   group('_matchesFilter — keyword (title) search', () {
     test('matches title substring case-insensitively (lower input)', () {
-      final session = _session(title: 'Calculus Study Group');
+      final session = _session();
       expect(
         _matchesFilter(session, const SearchFilter(query: 'calculus'), now),
         isTrue,
@@ -175,7 +175,7 @@ void main() {
     });
 
     test('matches title substring case-insensitively (mixed case)', () {
-      final session = _session(title: 'Calculus Study Group');
+      final session = _session();
       expect(
         _matchesFilter(session, const SearchFilter(query: 'CALCULUS'), now),
         isTrue,
@@ -306,7 +306,7 @@ void main() {
     test('empty subjects set (null) passes without filtering', () {
       final session = _session(hashtags: ['mathematics']);
       expect(
-        _matchesFilter(session, const SearchFilter(subjects: null), now),
+        _matchesFilter(session, const SearchFilter(), now),
         isTrue,
       );
     });
@@ -409,7 +409,7 @@ void main() {
       () {
         // myLevel is resolved to academicLevel before filter reaches here;
         // the dateRange.myLevel case is a no-op.
-        final session = _session(academicLevel: 'undergraduate');
+        final session = _session();
         expect(
           _matchesFilter(
             session,
@@ -427,7 +427,7 @@ void main() {
 
   group('_matchesFilter — academicLevel and studentYear', () {
     test('passes when academicLevel matches', () {
-      final session = _session(academicLevel: 'undergraduate');
+      final session = _session();
       expect(
         _matchesFilter(
           session,
@@ -439,7 +439,7 @@ void main() {
     });
 
     test('rejects when academicLevel does not match', () {
-      final session = _session(academicLevel: 'undergraduate');
+      final session = _session();
       expect(
         _matchesFilter(
           session,
@@ -459,7 +459,7 @@ void main() {
     });
 
     test('rejects when studentYear does not match', () {
-      final session = _session(studentYear: 2);
+      final session = _session();
       expect(
         _matchesFilter(session, const SearchFilter(studentYear: 4), now),
         isFalse,
