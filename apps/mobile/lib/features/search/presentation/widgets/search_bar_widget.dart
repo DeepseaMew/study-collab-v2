@@ -37,11 +37,7 @@ class SearchBarWidget extends StatelessWidget {
         decoration: InputDecoration(
           hintText: 'Search sessions, #hashtags...',
           hintStyle: const TextStyle(color: AppColors.hint, fontSize: 14),
-          prefixIcon: const Icon(
-            Icons.search,
-            color: _kPurple,
-            size: 20,
-          ),
+          prefixIcon: const Icon(Icons.search, color: _kPurple, size: 20),
           suffixIcon: ListenableBuilder(
             listenable: controller,
             builder: (_, __) {
@@ -50,7 +46,11 @@ class SearchBarWidget extends StatelessWidget {
                 label: 'Clear search text',
                 button: true,
                 child: IconButton(
-                  icon: const Icon(Icons.cancel, size: 18, color: AppColors.hint),
+                  icon: const Icon(
+                    Icons.cancel,
+                    size: 18,
+                    color: AppColors.hint,
+                  ),
                   onPressed: () {
                     controller.clear();
                     onChanged('');

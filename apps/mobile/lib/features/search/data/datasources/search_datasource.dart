@@ -19,7 +19,7 @@ class SearchDatasource {
   SearchDatasource(this._firestore);
 
   SearchDatasource.withDefaultFirestore()
-      : _firestore = FirebaseFirestore.instance;
+    : _firestore = FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
 
@@ -28,11 +28,14 @@ class SearchDatasource {
   /// Never throws [SearchError] directly — lets Firestore exceptions propagate
   /// to [SearchRepositoryImpl] for mapping.
   Future<List<SessionModel>> searchSessions(SearchFilter filter) async {
-    appLogger.debug('SearchDatasource.searchSessions', extra: {
-      'hasHashtag': filter.hashtag != null,
-      'hasAcademicLevel': filter.academicLevel != null,
-      'hasStudentYear': filter.studentYear != null,
-    });
+    appLogger.debug(
+      'SearchDatasource.searchSessions',
+      extra: {
+        'hasHashtag': filter.hashtag != null,
+        'hasAcademicLevel': filter.academicLevel != null,
+        'hasStudentYear': filter.studentYear != null,
+      },
+    );
 
     Query<Map<String, dynamic>> query = _firestore
         .collection(FirestorePaths.sessionsCollection)

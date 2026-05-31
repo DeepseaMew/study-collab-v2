@@ -88,20 +88,26 @@ void main() {
       final hasActivePurple = containers.any(
         (c) =>
             c.decoration is BoxDecoration &&
-            (c.decoration as BoxDecoration).color ==
-                const Color(0xFF7C3AED),
+            (c.decoration as BoxDecoration).color == const Color(0xFF7C3AED),
       );
-      expect(hasActivePurple, isTrue,
-          reason: 'Expected All chip Container with purple active color');
+      expect(
+        hasActivePurple,
+        isTrue,
+        reason: 'Expected All chip Container with purple active color',
+      );
     });
   });
 
   group('SubjectFilterChipsWidget — tap interactions', () {
     testWidgets('tapping a subject chip calls onFilterChanged', (tester) async {
       var callCount = 0;
-      await tester.pumpWidget(_buildSubjectChips(onFilterChanged: () {
-        callCount++;
-      }));
+      await tester.pumpWidget(
+        _buildSubjectChips(
+          onFilterChanged: () {
+            callCount++;
+          },
+        ),
+      );
       await tester.pumpAndSettle(const Duration(seconds: 1));
 
       await tester.tap(find.text('mathematics'));
@@ -122,36 +128,46 @@ void main() {
       expect(find.text('Clear all'), findsOneWidget);
     });
 
-    testWidgets('tapping "All" chip clears selection and calls onFilterChanged',
-        (tester) async {
-      var callCount = 0;
-      await tester.pumpWidget(_buildSubjectChips(onFilterChanged: () {
-        callCount++;
-      }));
-      await tester.pumpAndSettle(const Duration(seconds: 1));
+    testWidgets(
+      'tapping "All" chip clears selection and calls onFilterChanged',
+      (tester) async {
+        var callCount = 0;
+        await tester.pumpWidget(
+          _buildSubjectChips(
+            onFilterChanged: () {
+              callCount++;
+            },
+          ),
+        );
+        await tester.pumpAndSettle(const Duration(seconds: 1));
 
-      // First select a subject
-      await tester.tap(find.text('chemistry'));
-      await tester.pumpAndSettle(const Duration(seconds: 1));
-      expect(find.text('Clear all'), findsOneWidget);
+        // First select a subject
+        await tester.tap(find.text('chemistry'));
+        await tester.pumpAndSettle(const Duration(seconds: 1));
+        expect(find.text('Clear all'), findsOneWidget);
 
-      final callsBefore = callCount;
+        final callsBefore = callCount;
 
-      // Tap All to clear
-      await tester.tap(find.text('All'));
-      await tester.pumpAndSettle(const Duration(seconds: 1));
+        // Tap All to clear
+        await tester.tap(find.text('All'));
+        await tester.pumpAndSettle(const Duration(seconds: 1));
 
-      expect(callCount, greaterThan(callsBefore));
-      expect(find.text('Clear all'), findsNothing);
-    });
+        expect(callCount, greaterThan(callsBefore));
+        expect(find.text('Clear all'), findsNothing);
+      },
+    );
 
     testWidgets('"Clear all" tap clears selection and calls onFilterChanged', (
       tester,
     ) async {
       var callCount = 0;
-      await tester.pumpWidget(_buildSubjectChips(onFilterChanged: () {
-        callCount++;
-      }));
+      await tester.pumpWidget(
+        _buildSubjectChips(
+          onFilterChanged: () {
+            callCount++;
+          },
+        ),
+      );
       await tester.pumpAndSettle(const Duration(seconds: 1));
 
       await tester.tap(find.text('biology'));

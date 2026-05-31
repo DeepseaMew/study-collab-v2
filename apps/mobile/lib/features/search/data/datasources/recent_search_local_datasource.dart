@@ -15,7 +15,7 @@ class RecentSearchLocalDatasource {
   RecentSearchLocalDatasource(this._storage);
 
   RecentSearchLocalDatasource.withDefaults()
-      : _storage = const FlutterSecureStorage();
+    : _storage = const FlutterSecureStorage();
 
   final FlutterSecureStorage _storage;
 
@@ -50,10 +50,7 @@ class RecentSearchLocalDatasource {
         term,
         ...current.where((t) => t != term),
       ].take(_maxEntries).toList();
-      await _storage.write(
-        key: _storageKey(uid),
-        value: jsonEncode(updated),
-      );
+      await _storage.write(key: _storageKey(uid), value: jsonEncode(updated));
       appLogger.debug(
         'RecentSearchLocalDatasource.addRecentSearch',
         extra: {'entryCount': updated.length},

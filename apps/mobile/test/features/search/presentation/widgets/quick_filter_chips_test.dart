@@ -61,10 +61,7 @@ void main() {
         ),
       );
       expect(friendsTooltip.message, isNotNull);
-      expect(
-        friendsTooltip.message!.toLowerCase(),
-        contains('coming soon'),
-      );
+      expect(friendsTooltip.message!.toLowerCase(), contains('coming soon'));
     });
 
     testWidgets('all chips start as inactive (no active chip by default)', (
@@ -105,9 +102,13 @@ void main() {
   group('QuickFilterChipsWidget — tap interactions', () {
     testWidgets('tapping Today chip calls onFilterChanged', (tester) async {
       var callCount = 0;
-      await tester.pumpWidget(_buildQuickChips(onFilterChanged: () {
-        callCount++;
-      }));
+      await tester.pumpWidget(
+        _buildQuickChips(
+          onFilterChanged: () {
+            callCount++;
+          },
+        ),
+      );
       await tester.pumpAndSettle(const Duration(seconds: 1));
 
       await tester.tap(find.text('Today'));
@@ -118,9 +119,13 @@ void main() {
 
     testWidgets('tapping This Week chip calls onFilterChanged', (tester) async {
       var callCount = 0;
-      await tester.pumpWidget(_buildQuickChips(onFilterChanged: () {
-        callCount++;
-      }));
+      await tester.pumpWidget(
+        _buildQuickChips(
+          onFilterChanged: () {
+            callCount++;
+          },
+        ),
+      );
       await tester.pumpAndSettle(const Duration(seconds: 1));
 
       await tester.tap(find.text('This Week'));
@@ -131,9 +136,13 @@ void main() {
 
     testWidgets('tapping My Level chip calls onFilterChanged', (tester) async {
       var callCount = 0;
-      await tester.pumpWidget(_buildQuickChips(onFilterChanged: () {
-        callCount++;
-      }));
+      await tester.pumpWidget(
+        _buildQuickChips(
+          onFilterChanged: () {
+            callCount++;
+          },
+        ),
+      );
       await tester.pumpAndSettle(const Duration(seconds: 1));
 
       await tester.tap(find.text('My Level'));
@@ -144,9 +153,13 @@ void main() {
 
     testWidgets('tapping Friends chip calls onFilterChanged', (tester) async {
       var callCount = 0;
-      await tester.pumpWidget(_buildQuickChips(onFilterChanged: () {
-        callCount++;
-      }));
+      await tester.pumpWidget(
+        _buildQuickChips(
+          onFilterChanged: () {
+            callCount++;
+          },
+        ),
+      );
       await tester.pumpAndSettle(const Duration(seconds: 1));
 
       // Tap the Friends text directly (inside the Tooltip)
@@ -265,8 +278,11 @@ void main() {
             (c.decoration as BoxDecoration).color ==
                 const Color(0xFF16A34A), // today activeColor
       );
-      expect(hasActiveGreen, isTrue,
-          reason: 'Expected at least one Container with today activeColor');
+      expect(
+        hasActiveGreen,
+        isTrue,
+        reason: 'Expected at least one Container with today activeColor',
+      );
     });
   });
 }
@@ -274,8 +290,8 @@ void main() {
 /// Stub notifier with one chip pre-activated.
 class _PreactiveQuickFilter extends QuickFilterNotifier {
   _PreactiveQuickFilter({bool today = false, bool thisWeek = false})
-      : _today = today,
-        _thisWeek = thisWeek;
+    : _today = today,
+      _thisWeek = thisWeek;
 
   final bool _today;
   final bool _thisWeek;

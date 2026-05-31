@@ -120,20 +120,12 @@ class ActiveFilterSummaryWidget extends ConsumerWidget {
       width: double.infinity,
       decoration: const BoxDecoration(
         color: _kBg,
-        border: Border(
-          bottom: BorderSide(color: _kBorder),
-        ),
+        border: Border(bottom: BorderSide(color: _kBorder)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
         children: [
-          Expanded(
-            child: Wrap(
-              spacing: 6,
-              runSpacing: 4,
-              children: pills,
-            ),
-          ),
+          Expanded(child: Wrap(spacing: 6, runSpacing: 4, children: pills)),
           const SizedBox(width: 8),
           GestureDetector(
             onTap: onResetAll,

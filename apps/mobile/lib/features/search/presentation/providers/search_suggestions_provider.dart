@@ -130,10 +130,7 @@ List<SearchSuggestion> _buildLiveSuggestions(
     for (final tag in session.hashtags) {
       if (tag.contains(tagQuery)) {
         addUnique(
-          SearchSuggestion(
-            displayText: '#$tag',
-            type: SuggestionType.hashtag,
-          ),
+          SearchSuggestion(displayText: '#$tag', type: SuggestionType.hashtag),
           tag.startsWith(tagQuery),
         );
       }

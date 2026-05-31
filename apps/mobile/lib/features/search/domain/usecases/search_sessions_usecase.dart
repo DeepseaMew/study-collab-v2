@@ -22,18 +22,18 @@ class SearchSessionsUseCase {
   /// Executes the search with normalised filter values.
   Future<List<SessionEntity>> call(SearchFilter filter) {
     final rawQuery = filter.query?.trim();
-    final normalisedQuery =
-        (rawQuery != null && rawQuery.isNotEmpty) ? rawQuery.toLowerCase() : null;
+    final normalisedQuery = (rawQuery != null && rawQuery.isNotEmpty)
+        ? rawQuery.toLowerCase()
+        : null;
 
     if (normalisedQuery != null && normalisedQuery.length < 2) {
       throw const SearchError.queryTooShort();
     }
 
     final rawHashtag = filter.hashtag?.trim();
-    final normalisedHashtag =
-        (rawHashtag != null && rawHashtag.isNotEmpty)
-            ? rawHashtag.toLowerCase()
-            : null;
+    final normalisedHashtag = (rawHashtag != null && rawHashtag.isNotEmpty)
+        ? rawHashtag.toLowerCase()
+        : null;
 
     final normalisedFilter = filter.copyWith(
       query: normalisedQuery,

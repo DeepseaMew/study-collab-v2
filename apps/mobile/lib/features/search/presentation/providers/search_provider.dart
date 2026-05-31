@@ -44,8 +44,9 @@ class SearchNotifier extends _$SearchNotifier {
     state = await AsyncValue.guard(() async {
       final currentUid =
           ref.read(firebaseAuthStateProvider).valueOrNull?.uid ?? '';
-      final results =
-          await ref.read(searchSessionsUseCaseProvider).call(filter);
+      final results = await ref
+          .read(searchSessionsUseCaseProvider)
+          .call(filter);
       // Host search (@handle) must not suppress sessions the user already
       // joined — the user may want to browse a host's full session list.
       final isHostSearch = filter.query?.startsWith('@') ?? false;
@@ -53,8 +54,7 @@ class SearchNotifier extends _$SearchNotifier {
       return results
           .where(
             (s) =>
-                s.hostUid != currentUid &&
-                !s.memberUids.contains(currentUid),
+                s.hostUid != currentUid && !s.memberUids.contains(currentUid),
           )
           .toList();
     });

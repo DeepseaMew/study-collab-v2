@@ -36,9 +36,7 @@ class HashtagChip extends StatelessWidget {
           ),
         ),
         backgroundColor: selected ? AppColors.accent : AppColors.secondary,
-        side: BorderSide(
-          color: selected ? AppColors.accent : AppColors.border,
-        ),
+        side: BorderSide(color: selected ? AppColors.accent : AppColors.border),
         padding: const EdgeInsets.symmetric(horizontal: 4),
         materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         visualDensity: VisualDensity.compact,

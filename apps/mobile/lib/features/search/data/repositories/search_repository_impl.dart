@@ -89,7 +89,9 @@ class SearchRepositoryImpl implements SearchRepository {
         }
       } else {
         // Keyword: match title (case-insensitive substring).
-        if (!session.title.toLowerCase().contains(filter.query!.toLowerCase())) {
+        if (!session.title.toLowerCase().contains(
+          filter.query!.toLowerCase(),
+        )) {
           return false;
         }
       }

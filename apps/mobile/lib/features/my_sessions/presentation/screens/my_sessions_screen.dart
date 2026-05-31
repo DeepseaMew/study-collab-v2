@@ -94,22 +94,19 @@ class _MySessionsScreenState extends ConsumerState<MySessionsScreen>
     // ── Collect hashtags from all loaded streams for the suggestion dropdown ──
     final allHashtags = <String>{};
     if (me != null) {
-      for (final session in ref
-              .watch(upcomingSessionsProvider(me.uid))
-              .valueOrNull ??
-          <SessionEntity>[]) {
+      for (final session
+          in ref.watch(upcomingSessionsProvider(me.uid)).valueOrNull ??
+              <SessionEntity>[]) {
         allHashtags.addAll(session.hashtags);
       }
-      for (final session in ref
-              .watch(completedSessionsProvider(me.uid))
-              .valueOrNull ??
-          <SessionEntity>[]) {
+      for (final session
+          in ref.watch(completedSessionsProvider(me.uid)).valueOrNull ??
+              <SessionEntity>[]) {
         allHashtags.addAll(session.hashtags);
       }
-      for (final session in ref
-              .watch(hostedSessionsProvider(me.uid))
-              .valueOrNull ??
-          <SessionEntity>[]) {
+      for (final session
+          in ref.watch(hostedSessionsProvider(me.uid)).valueOrNull ??
+              <SessionEntity>[]) {
         allHashtags.addAll(session.hashtags);
       }
     }
@@ -119,9 +116,7 @@ class _MySessionsScreenState extends ConsumerState<MySessionsScreen>
     final hashtagSuggestions = rawQuery.isEmpty
         ? <String>[]
         : allHashtags
-              .where(
-                (h) => h.contains(rawQuery.toLowerCase()),
-              )
+              .where((h) => h.contains(rawQuery.toLowerCase()))
               .take(6)
               .toList();
 
@@ -255,10 +250,7 @@ class _MySessionsScreenState extends ConsumerState<MySessionsScreen>
                               color: Color(0xFF7C3AED),
                             ),
                             const SizedBox(width: 8),
-                            Text(
-                              tag,
-                              style: const TextStyle(fontSize: 13),
-                            ),
+                            Text(tag, style: const TextStyle(fontSize: 13)),
                           ],
                         ),
                       ),
@@ -313,18 +305,16 @@ class _MySessionsScreenState extends ConsumerState<MySessionsScreen>
                     Builder(
                       builder: (_) {
                         final colors = subjectColor(subject);
-                        final isSelected =
-                            _selectedSubjects.contains(subject);
+                        final isSelected = _selectedSubjects.contains(subject);
                         return GestureDetector(
                           onTap: () {
                             setState(() {
                               if (isSelected) {
-                                _selectedSubjects =
-                                    Set.from(_selectedSubjects)
-                                      ..remove(subject);
+                                _selectedSubjects = Set.from(_selectedSubjects)
+                                  ..remove(subject);
                               } else {
-                                _selectedSubjects =
-                                    Set.from(_selectedSubjects)..add(subject);
+                                _selectedSubjects = Set.from(_selectedSubjects)
+                                  ..add(subject);
                               }
                             });
                           },
@@ -486,13 +476,13 @@ class _SessionListState extends ConsumerState<_SessionList> {
       data: (sessions) {
         final filtered = sessions.where((s) {
           final rawQuery = widget.query.replaceFirst('#', '');
-          final matchesQuery = rawQuery.isEmpty ||
+          final matchesQuery =
+              rawQuery.isEmpty ||
               s.title.toLowerCase().contains(rawQuery) ||
               s.hashtags.any((h) => h.contains(rawQuery));
-          final matchesSubjects = widget.selectedSubjects.isEmpty ||
-              widget.selectedSubjects.every(
-                (sub) => s.hashtags.contains(sub),
-              );
+          final matchesSubjects =
+              widget.selectedSubjects.isEmpty ||
+              widget.selectedSubjects.every((sub) => s.hashtags.contains(sub));
           return matchesQuery && matchesSubjects;
         }).toList();
 
@@ -525,10 +515,7 @@ class _SessionListState extends ConsumerState<_SessionList> {
             if (mounted) setState(() => _page = 0);
           });
         }
-        final totalPages = max(
-          1,
-          (filtered.length / _kPageSize).ceil(),
-        );
+        final totalPages = max(1, (filtered.length / _kPageSize).ceil());
         final pageItems = filtered.sublist(
           _page * _kPageSize,
           min((_page + 1) * _kPageSize, filtered.length),
@@ -545,8 +532,9 @@ class _SessionListState extends ConsumerState<_SessionList> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     TextButton.icon(
-                      onPressed:
-                          _page > 0 ? () => setState(() => _page--) : null,
+                      onPressed: _page > 0
+                          ? () => setState(() => _page--)
+                          : null,
                       icon: const Icon(Icons.chevron_left, size: 18),
                       label: const Text('Prev'),
                     ),

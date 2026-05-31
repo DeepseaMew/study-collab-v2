@@ -44,7 +44,9 @@ class SuggestionRowWidget extends StatelessWidget {
                 const SizedBox(width: 12),
 
                 // ── Suggestion text ─────────────────────────────────────────
-                Expanded(child: _SuggestionText(suggestion: suggestion, query: query)),
+                Expanded(
+                  child: _SuggestionText(suggestion: suggestion, query: query),
+                ),
 
                 const SizedBox(width: 8),
 

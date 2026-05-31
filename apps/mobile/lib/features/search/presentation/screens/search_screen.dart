@@ -165,8 +165,10 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     if (quickFilters.myLevel) {
       final uid = ref.read(firebaseAuthStateProvider).valueOrNull?.uid;
       if (uid != null) {
-        resolvedAcademicLevel =
-            ref.read(userProvider(uid)).valueOrNull?.academicLevel;
+        resolvedAcademicLevel = ref
+            .read(userProvider(uid))
+            .valueOrNull
+            ?.academicLevel;
       }
     }
 
@@ -445,10 +447,7 @@ class _ResultsListState extends ConsumerState<_ResultsList> {
 
   @override
   Widget build(BuildContext context) {
-    final totalPages = max(
-      1,
-      (widget.sessions.length / _kPageSize).ceil(),
-    );
+    final totalPages = max(1, (widget.sessions.length / _kPageSize).ceil());
     final pageItems = widget.sessions.sublist(
       _page * _kPageSize,
       min((_page + 1) * _kPageSize, widget.sessions.length),
@@ -464,17 +463,13 @@ class _ResultsListState extends ConsumerState<_ResultsList> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 TextButton.icon(
-                  onPressed:
-                      _page > 0 ? () => setState(() => _page--) : null,
+                  onPressed: _page > 0 ? () => setState(() => _page--) : null,
                   icon: const Icon(Icons.chevron_left, size: 18),
                   label: const Text('Prev'),
                 ),
                 Text(
                   '${_page + 1} / $totalPages',
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: AppColors.hint,
-                  ),
+                  style: const TextStyle(fontSize: 13, color: AppColors.hint),
                 ),
                 TextButton.icon(
                   onPressed: _page < totalPages - 1
@@ -490,9 +485,7 @@ class _ResultsListState extends ConsumerState<_ResultsList> {
         final session = pageItems[i];
         final isPending =
             ref
-                .watch(
-                  myPendingRequestProvider(session.sessionId, widget.uid),
-                )
+                .watch(myPendingRequestProvider(session.sessionId, widget.uid))
                 .valueOrNull ??
             false;
         return SessionCard(
@@ -670,7 +663,8 @@ class _HostSearchResultsState extends ConsumerState<_HostSearchResults> {
     // 4 fixed header slots: profile card, spacer, section label, spacer.
     const headerCount = 4;
     final showPagination = totalPages > 1;
-    final totalCount = headerCount + pageItems.length + (showPagination ? 1 : 0);
+    final totalCount =
+        headerCount + pageItems.length + (showPagination ? 1 : 0);
 
     return ListView.builder(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
@@ -737,8 +731,10 @@ class _HostSearchResultsState extends ConsumerState<_HostSearchResults> {
           onTap: () {
             appLogger.debug(AnalyticsEvents.searchResultTapped);
             context.push(
-              RouteConstants.sessionDetail
-                  .replaceFirst(':id', session.sessionId),
+              RouteConstants.sessionDetail.replaceFirst(
+                ':id',
+                session.sessionId,
+              ),
             );
           },
           onJoinTap: isPending
@@ -746,8 +742,10 @@ class _HostSearchResultsState extends ConsumerState<_HostSearchResults> {
               : () {
                   appLogger.debug(AnalyticsEvents.searchResultTapped);
                   context.push(
-                    RouteConstants.sessionDetail
-                        .replaceFirst(':id', session.sessionId),
+                    RouteConstants.sessionDetail.replaceFirst(
+                      ':id',
+                      session.sessionId,
+                    ),
                   );
                 },
         );
@@ -801,10 +799,9 @@ class _HostProfileCard extends ConsumerWidget {
                 child: CircleAvatar(
                   radius: 28,
                   backgroundColor: AppColors.secondary,
-                  backgroundImage:
-                      photoUrl != null && photoUrl!.isNotEmpty
-                          ? CachedNetworkImageProvider(photoUrl!)
-                          : null,
+                  backgroundImage: photoUrl != null && photoUrl!.isNotEmpty
+                      ? CachedNetworkImageProvider(photoUrl!)
+                      : null,
                   child: photoUrl == null || photoUrl!.isEmpty
                       ? Text(
                           displayName.isNotEmpty

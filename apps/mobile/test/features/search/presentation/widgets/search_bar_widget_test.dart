@@ -47,10 +47,7 @@ void main() {
       await tester.pumpAndSettle(const Duration(seconds: 1));
 
       // The clear button icon is Icons.cancel — should not be present
-      expect(
-        find.bySemanticsLabel('Clear search text'),
-        findsNothing,
-      );
+      expect(find.bySemanticsLabel('Clear search text'), findsNothing);
       handle.dispose();
     });
 
@@ -66,10 +63,7 @@ void main() {
       await tester.enterText(find.byType(TextField), 'calculus');
       await tester.pumpAndSettle(const Duration(seconds: 1));
 
-      expect(
-        find.bySemanticsLabel('Clear search text'),
-        findsOneWidget,
-      );
+      expect(find.bySemanticsLabel('Clear search text'), findsOneWidget);
       handle.dispose();
     });
 

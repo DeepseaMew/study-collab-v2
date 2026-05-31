@@ -15,20 +15,17 @@ import 'package:mobile/shared/theme/app_colors.dart';
 import 'package:mobile/shared/theme/app_typography.dart';
 
 ThemeData _theme() => ThemeData(
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: AppColors.accent,
-        primary: AppColors.accent,
-        error: AppColors.error,
-        surface: AppColors.background,
-      ),
-      textTheme: AppTypography.textTheme,
-      useMaterial3: true,
-    );
+  colorScheme: ColorScheme.fromSeed(
+    seedColor: AppColors.accent,
+    primary: AppColors.accent,
+    error: AppColors.error,
+    surface: AppColors.background,
+  ),
+  textTheme: AppTypography.textTheme,
+  useMaterial3: true,
+);
 
-Widget _buildGolden({
-  double textScale = 1.0,
-  Set<String> selected = const {},
-}) {
+Widget _buildGolden({double textScale = 1.0, Set<String> selected = const {}}) {
   return ProviderScope(
     overrides: [
       if (selected.isNotEmpty)
@@ -80,9 +77,7 @@ void main() {
     });
 
     testWidgets('one subject selected state scale_1.0_th', (tester) async {
-      await tester.pumpWidget(
-        _buildGolden(selected: {'mathematics'}),
-      );
+      await tester.pumpWidget(_buildGolden(selected: {'mathematics'}));
       await tester.pumpAndSettle(const Duration(seconds: 3));
       await expectLater(
         find.byType(SubjectFilterChipsWidget),

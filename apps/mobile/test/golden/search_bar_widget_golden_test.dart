@@ -13,20 +13,17 @@ import 'package:mobile/shared/theme/app_colors.dart';
 import 'package:mobile/shared/theme/app_typography.dart';
 
 ThemeData _theme() => ThemeData(
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: AppColors.accent,
-        primary: AppColors.accent,
-        error: AppColors.error,
-        surface: AppColors.background,
-      ),
-      textTheme: AppTypography.textTheme,
-      useMaterial3: true,
-    );
+  colorScheme: ColorScheme.fromSeed(
+    seedColor: AppColors.accent,
+    primary: AppColors.accent,
+    error: AppColors.error,
+    surface: AppColors.background,
+  ),
+  textTheme: AppTypography.textTheme,
+  useMaterial3: true,
+);
 
-Widget _buildGolden({
-  double textScale = 1.0,
-  String initialText = '',
-}) {
+Widget _buildGolden({double textScale = 1.0, String initialText = ''}) {
   final controller = TextEditingController(text: initialText);
   final focusNode = FocusNode();
 
@@ -76,9 +73,7 @@ void main() {
       await tester.pumpAndSettle(const Duration(seconds: 3));
       await expectLater(
         find.byType(SearchBarWidget),
-        matchesGoldenFile(
-          'goldens/search_bar_with_text_scale_1.0_th.png',
-        ),
+        matchesGoldenFile('goldens/search_bar_with_text_scale_1.0_th.png'),
       );
     });
 
@@ -89,9 +84,7 @@ void main() {
       await tester.pumpAndSettle(const Duration(seconds: 3));
       await expectLater(
         find.byType(SearchBarWidget),
-        matchesGoldenFile(
-          'goldens/search_bar_with_text_scale_1.5_th.png',
-        ),
+        matchesGoldenFile('goldens/search_bar_with_text_scale_1.5_th.png'),
       );
     });
   });

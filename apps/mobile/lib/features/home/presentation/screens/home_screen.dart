@@ -261,9 +261,7 @@ class _HomeBodyState extends ConsumerState<_HomeBody> {
                     min((_page + 1) * _kPageSize, filtered.length),
                   );
                   return ListView.builder(
-                    padding: const EdgeInsets.fromLTRB(
-                      16, 8, 16, 88,
-                    ),
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
                     itemCount: pageItems.length + (totalPages > 1 ? 1 : 0),
                     itemBuilder: (_, i) {
                       if (i == pageItems.length) {
@@ -276,10 +274,7 @@ class _HomeBodyState extends ConsumerState<_HomeBody> {
                                 onPressed: _page > 0
                                     ? () => setState(() => _page--)
                                     : null,
-                                icon: const Icon(
-                                  Icons.chevron_left,
-                                  size: 18,
-                                ),
+                                icon: const Icon(Icons.chevron_left, size: 18),
                                 label: const Text('Prev'),
                               ),
                               Text(
@@ -293,10 +288,7 @@ class _HomeBodyState extends ConsumerState<_HomeBody> {
                                 onPressed: _page < totalPages - 1
                                     ? () => setState(() => _page++)
                                     : null,
-                                icon: const Icon(
-                                  Icons.chevron_right,
-                                  size: 18,
-                                ),
+                                icon: const Icon(Icons.chevron_right, size: 18),
                                 label: const Text('Next'),
                               ),
                             ],

@@ -24,13 +24,14 @@ class SearchFilterNotifier extends _$SearchFilterNotifier {
   /// user's [academicLevel] and injects it into [filter.academicLevel].
   void updateFilter(SearchFilter filter) {
     if (filter.dateRange == SearchDateRange.myLevel) {
-      final uid =
-          ref.read(firebaseAuthStateProvider).valueOrNull?.uid;
+      final uid = ref.read(firebaseAuthStateProvider).valueOrNull?.uid;
       final academicLevel = uid != null
           ? ref.read(userProvider(uid)).valueOrNull?.academicLevel
           : null;
 
-      state = filter.copyWith(academicLevel: academicLevel ?? filter.academicLevel);
+      state = filter.copyWith(
+        academicLevel: academicLevel ?? filter.academicLevel,
+      );
     } else {
       state = filter;
     }

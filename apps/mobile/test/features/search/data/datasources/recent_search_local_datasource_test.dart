@@ -24,14 +24,16 @@ void main() {
 
   // Helper to stub a read returning null (no stored data).
   void _stubEmptyRead(String uid) {
-    when(() => mockStorage.read(key: 'search_recent_$uid'))
-        .thenAnswer((_) async => null);
+    when(
+      () => mockStorage.read(key: 'search_recent_$uid'),
+    ).thenAnswer((_) async => null);
   }
 
   // Helper to stub a read returning a specific JSON string.
   void _stubRead(String uid, String json) {
-    when(() => mockStorage.read(key: 'search_recent_$uid'))
-        .thenAnswer((_) async => json);
+    when(
+      () => mockStorage.read(key: 'search_recent_$uid'),
+    ).thenAnswer((_) async => json);
   }
 
   // Helper to stub a write call.
@@ -108,7 +110,10 @@ void main() {
       ).captured;
       final written = captured.first as String;
       // mathematics should appear before physics in the JSON
-      expect(written.indexOf('mathematics') < written.indexOf('physics'), isTrue);
+      expect(
+        written.indexOf('mathematics') < written.indexOf('physics'),
+        isTrue,
+      );
     });
 
     test('caps list at 10 entries with FIFO eviction', () async {
@@ -136,28 +141,30 @@ void main() {
       expect(written.contains('term9'), isFalse);
     });
 
-    test('deduplicates: moves existing term to front rather than duplicating',
-        () async {
-      _stubRead('uid-1', '["physics","mathematics","chemistry"]');
-      _stubWrite('uid-1');
+    test(
+      'deduplicates: moves existing term to front rather than duplicating',
+      () async {
+        _stubRead('uid-1', '["physics","mathematics","chemistry"]');
+        _stubWrite('uid-1');
 
-      await datasource.addRecentSearch('uid-1', 'mathematics');
+        await datasource.addRecentSearch('uid-1', 'mathematics');
 
-      final captured = verify(
-        () => mockStorage.write(
-          key: 'search_recent_uid-1',
-          value: captureAny(named: 'value'),
-        ),
-      ).captured;
-      final written = captured.first as String;
-      // 'mathematics' should appear exactly once
-      expect('mathematics'.allMatches(written).length, equals(1));
-      // 'mathematics' is now at the front
-      expect(
-        written.indexOf('mathematics') < written.indexOf('physics'),
-        isTrue,
-      );
-    });
+        final captured = verify(
+          () => mockStorage.write(
+            key: 'search_recent_uid-1',
+            value: captureAny(named: 'value'),
+          ),
+        ).captured;
+        final written = captured.first as String;
+        // 'mathematics' should appear exactly once
+        expect('mathematics'.allMatches(written).length, equals(1));
+        // 'mathematics' is now at the front
+        expect(
+          written.indexOf('mathematics') < written.indexOf('physics'),
+          isTrue,
+        );
+      },
+    );
   });
 
   group('UID-scoped storage isolation', () {

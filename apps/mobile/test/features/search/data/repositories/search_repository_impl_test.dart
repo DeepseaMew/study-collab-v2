@@ -35,26 +35,25 @@ SessionEntity _session({
   List<String> hashtags = const ['mathematics'],
   String academicLevel = 'undergraduate',
   int studentYear = 2,
-}) =>
-    SessionEntity(
-      sessionId: id,
-      hostUid: 'host-uid',
-      hostFaculty: 'Engineering',
-      title: title,
-      hashtags: hashtags,
-      academicLevel: academicLevel,
-      studentYear: studentYear,
-      visibility: 'public',
-      memberUids: const ['host-uid'],
-      noteCount: 0,
-      status: status,
-      scheduledAt: scheduledAt ?? _futureDate,
-      location: 'Room 101',
-      capacity: 10,
-      hostDisplayName: hostDisplayName,
-      createdAt: DateTime(2026, 1, 1),
-      updatedAt: DateTime(2026, 1, 1),
-    );
+}) => SessionEntity(
+  sessionId: id,
+  hostUid: 'host-uid',
+  hostFaculty: 'Engineering',
+  title: title,
+  hashtags: hashtags,
+  academicLevel: academicLevel,
+  studentYear: studentYear,
+  visibility: 'public',
+  memberUids: const ['host-uid'],
+  noteCount: 0,
+  status: status,
+  scheduledAt: scheduledAt ?? _futureDate,
+  location: 'Room 101',
+  capacity: 10,
+  hostDisplayName: hostDisplayName,
+  createdAt: DateTime(2026, 1, 1),
+  updatedAt: DateTime(2026, 1, 1),
+);
 
 // ---------------------------------------------------------------------------
 // Inline re-implementation of _matchesFilter for isolated unit testing.
@@ -64,11 +63,7 @@ SessionEntity _session({
 // If the production implementation diverges, this test will catch the gap.
 // ---------------------------------------------------------------------------
 
-bool _matchesFilter(
-  SessionEntity session,
-  SearchFilter filter,
-  DateTime now,
-) {
+bool _matchesFilter(SessionEntity session, SearchFilter filter, DateTime now) {
   if (session.status != 'scheduled') return false;
   if (session.scheduledAt.isBefore(now)) return false;
 
@@ -246,7 +241,11 @@ void main() {
     test('exact hashtag match passes', () {
       final session = _session(hashtags: ['mathematics', 'calculus']);
       expect(
-        _matchesFilter(session, const SearchFilter(hashtag: 'mathematics'), now),
+        _matchesFilter(
+          session,
+          const SearchFilter(hashtag: 'mathematics'),
+          now,
+        ),
         isTrue,
       );
     });
@@ -262,24 +261,26 @@ void main() {
     test('hashtag filter is exact equality (not substring)', () {
       final session = _session(hashtags: ['math']);
       expect(
-        _matchesFilter(session, const SearchFilter(hashtag: 'mathematics'), now),
+        _matchesFilter(
+          session,
+          const SearchFilter(hashtag: 'mathematics'),
+          now,
+        ),
         isFalse,
       );
     });
 
     test('null hashtag filter ignores hashtag dimension', () {
       final session = _session(hashtags: ['mathematics']);
-      expect(
-        _matchesFilter(session, const SearchFilter(), now),
-        isTrue,
-      );
+      expect(_matchesFilter(session, const SearchFilter(), now), isTrue);
     });
   });
 
   group('_matchesFilter — subjects AND logic', () {
     test('session with all selected subjects passes', () {
-      final session =
-          _session(hashtags: ['mathematics', 'physics', 'computer science']);
+      final session = _session(
+        hashtags: ['mathematics', 'physics', 'computer science'],
+      );
       expect(
         _matchesFilter(
           session,
@@ -366,7 +367,9 @@ void main() {
       final weekStart = DateTime(now.year, now.month, now.day - weekdayOffset);
       // Put session in the middle of the week, in the future
       final midWeek = weekStart.add(const Duration(days: 3, hours: 14));
-      final effectiveDate = midWeek.isAfter(now) ? midWeek : weekStart.add(const Duration(days: 6, hours: 10));
+      final effectiveDate = midWeek.isAfter(now)
+          ? midWeek
+          : weekStart.add(const Duration(days: 6, hours: 10));
       if (effectiveDate.isAfter(now)) {
         final session = _session(scheduledAt: effectiveDate);
         expect(
@@ -401,22 +404,25 @@ void main() {
   });
 
   group('_matchesFilter — dateRange.myLevel', () {
-    test('myLevel date range does nothing — academicLevel filter handles it', () {
-      // myLevel is resolved to academicLevel before filter reaches here;
-      // the dateRange.myLevel case is a no-op.
-      final session = _session(academicLevel: 'undergraduate');
-      expect(
-        _matchesFilter(
-          session,
-          const SearchFilter(
-            dateRange: SearchDateRange.myLevel,
-            academicLevel: 'undergraduate',
+    test(
+      'myLevel date range does nothing — academicLevel filter handles it',
+      () {
+        // myLevel is resolved to academicLevel before filter reaches here;
+        // the dateRange.myLevel case is a no-op.
+        final session = _session(academicLevel: 'undergraduate');
+        expect(
+          _matchesFilter(
+            session,
+            const SearchFilter(
+              dateRange: SearchDateRange.myLevel,
+              academicLevel: 'undergraduate',
+            ),
+            now,
           ),
-          now,
-        ),
-        isTrue,
-      );
-    });
+          isTrue,
+        );
+      },
+    );
   });
 
   group('_matchesFilter — academicLevel and studentYear', () {
@@ -478,10 +484,7 @@ void main() {
     });
 
     test('keyword AND hashtag: passes keyword but fails hashtag', () {
-      final session = _session(
-        title: 'Calculus Study',
-        hashtags: ['physics'],
-      );
+      final session = _session(title: 'Calculus Study', hashtags: ['physics']);
       expect(
         _matchesFilter(
           session,

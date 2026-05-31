@@ -98,7 +98,8 @@ class _OtherProfileBody extends ConsumerWidget {
     final sessionCount = sessions.length;
     // completedSessionsProvider is owner-scoped; fall back to counting ended
     // sessions from the public list when it errors (permission denied).
-    final completedCount = completedAsync.valueOrNull?.length ??
+    final completedCount =
+        completedAsync.valueOrNull?.length ??
         sessions.where((s) => s.status == 'ended').length;
 
     return Scaffold(
@@ -160,12 +161,13 @@ class _OtherProfileBody extends ConsumerWidget {
                   Container(width: 1, height: 36, color: AppColors.border),
                   _StatItem(
                     label: 'Friends',
-                    value: (ref
-                                .watch(friendsProvider(user.uid))
-                                .valueOrNull
-                                ?.length ??
-                            0)
-                        .toString(),
+                    value:
+                        (ref
+                                    .watch(friendsProvider(user.uid))
+                                    .valueOrNull
+                                    ?.length ??
+                                0)
+                            .toString(),
                   ),
                   Container(width: 1, height: 36, color: AppColors.border),
                   ProfileScoreWidget(

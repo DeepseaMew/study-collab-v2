@@ -15,20 +15,17 @@ import 'package:mobile/shared/theme/app_colors.dart';
 import 'package:mobile/shared/theme/app_typography.dart';
 
 ThemeData _theme() => ThemeData(
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: AppColors.accent,
-        primary: AppColors.accent,
-        error: AppColors.error,
-        surface: AppColors.background,
-      ),
-      textTheme: AppTypography.textTheme,
-      useMaterial3: true,
-    );
+  colorScheme: ColorScheme.fromSeed(
+    seedColor: AppColors.accent,
+    primary: AppColors.accent,
+    error: AppColors.error,
+    surface: AppColors.background,
+  ),
+  textTheme: AppTypography.textTheme,
+  useMaterial3: true,
+);
 
-Widget _buildGolden({
-  double textScale = 1.0,
-  bool todayActive = false,
-}) {
+Widget _buildGolden({double textScale = 1.0, bool todayActive = false}) {
   return ProviderScope(
     overrides: [
       if (todayActive)

@@ -35,9 +35,7 @@ void main() {
         displayText: 'mathematics',
         type: SuggestionType.hashtag,
       );
-      await tester.pumpWidget(
-        _buildSuggestionRow(suggestion: suggestion),
-      );
+      await tester.pumpWidget(_buildSuggestionRow(suggestion: suggestion));
       await tester.pumpAndSettle(const Duration(seconds: 1));
 
       expect(find.byIcon(Icons.tag), findsOneWidget);
@@ -50,9 +48,7 @@ void main() {
         displayText: 'calculus study',
         type: SuggestionType.recent,
       );
-      await tester.pumpWidget(
-        _buildSuggestionRow(suggestion: suggestion),
-      );
+      await tester.pumpWidget(_buildSuggestionRow(suggestion: suggestion));
       await tester.pumpAndSettle(const Duration(seconds: 1));
 
       expect(find.byIcon(Icons.history), findsOneWidget);
@@ -65,9 +61,7 @@ void main() {
         displayText: 'Advanced Algorithms',
         type: SuggestionType.sessionName,
       );
-      await tester.pumpWidget(
-        _buildSuggestionRow(suggestion: suggestion),
-      );
+      await tester.pumpWidget(_buildSuggestionRow(suggestion: suggestion));
       await tester.pumpAndSettle(const Duration(seconds: 1));
 
       expect(find.byIcon(Icons.search), findsOneWidget);
@@ -80,9 +74,7 @@ void main() {
         displayText: '@alice',
         type: SuggestionType.host,
       );
-      await tester.pumpWidget(
-        _buildSuggestionRow(suggestion: suggestion),
-      );
+      await tester.pumpWidget(_buildSuggestionRow(suggestion: suggestion));
       await tester.pumpAndSettle(const Duration(seconds: 1));
 
       expect(find.byIcon(Icons.search), findsOneWidget);
@@ -97,9 +89,7 @@ void main() {
         displayText: 'past search term',
         type: SuggestionType.recent,
       );
-      await tester.pumpWidget(
-        _buildSuggestionRow(suggestion: suggestion),
-      );
+      await tester.pumpWidget(_buildSuggestionRow(suggestion: suggestion));
       await tester.pumpAndSettle(const Duration(seconds: 1));
 
       expect(find.byIcon(Icons.north_east), findsOneWidget);
@@ -112,31 +102,27 @@ void main() {
         displayText: 'physics',
         type: SuggestionType.hashtag,
       );
-      await tester.pumpWidget(
-        _buildSuggestionRow(suggestion: suggestion),
-      );
+      await tester.pumpWidget(_buildSuggestionRow(suggestion: suggestion));
       await tester.pumpAndSettle(const Duration(seconds: 1));
 
       expect(find.byIcon(Icons.north_east), findsNothing);
     });
 
     testWidgets(
-        'renders subject chip as trailing widget when suggestion has subject', (
-      tester,
-    ) async {
-      final suggestion = SearchSuggestion(
-        displayText: 'Calculus Study Group',
-        type: SuggestionType.sessionName,
-        subject: 'mathematics',
-      );
-      await tester.pumpWidget(
-        _buildSuggestionRow(suggestion: suggestion),
-      );
-      await tester.pumpAndSettle(const Duration(seconds: 1));
+      'renders subject chip as trailing widget when suggestion has subject',
+      (tester) async {
+        final suggestion = SearchSuggestion(
+          displayText: 'Calculus Study Group',
+          type: SuggestionType.sessionName,
+          subject: 'mathematics',
+        );
+        await tester.pumpWidget(_buildSuggestionRow(suggestion: suggestion));
+        await tester.pumpAndSettle(const Duration(seconds: 1));
 
-      // Subject chip displays the subject text
-      expect(find.text('mathematics'), findsAtLeastNWidgets(1));
-    });
+        // Subject chip displays the subject text
+        expect(find.text('mathematics'), findsAtLeastNWidgets(1));
+      },
+    );
   });
 
   group('SuggestionRowWidget — tap interaction', () {
@@ -148,10 +134,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        _buildSuggestionRow(
-          suggestion: suggestion,
-          onTap: () => tapped = true,
-        ),
+        _buildSuggestionRow(suggestion: suggestion, onTap: () => tapped = true),
       );
       await tester.pumpAndSettle(const Duration(seconds: 1));
 
@@ -169,10 +152,7 @@ void main() {
       );
 
       await tester.pumpWidget(
-        _buildSuggestionRow(
-          suggestion: suggestion,
-          onTap: () => tapped = true,
-        ),
+        _buildSuggestionRow(suggestion: suggestion, onTap: () => tapped = true),
       );
       await tester.pumpAndSettle(const Duration(seconds: 1));
 
@@ -190,9 +170,7 @@ void main() {
         type: SuggestionType.recent,
       );
 
-      await tester.pumpWidget(
-        _buildSuggestionRow(suggestion: suggestion),
-      );
+      await tester.pumpWidget(_buildSuggestionRow(suggestion: suggestion));
       await tester.pumpAndSettle(const Duration(seconds: 1));
 
       expect(find.text('linear algebra'), findsOneWidget);
@@ -204,15 +182,15 @@ void main() {
         type: SuggestionType.hashtag,
       );
 
-      await tester.pumpWidget(
-        _buildSuggestionRow(suggestion: suggestion),
-      );
+      await tester.pumpWidget(_buildSuggestionRow(suggestion: suggestion));
       await tester.pumpAndSettle(const Duration(seconds: 1));
 
       // The Semantics node wraps the InkWell with label '<displayText>, suggestion'.
       // Note: find.bySemanticsLabel may fail if semantics merging absorbs the label.
       // Verify via the Semantics widget existence and display text as fallback.
-      final semanticsFinder = find.bySemanticsLabel('thermodynamics, suggestion');
+      final semanticsFinder = find.bySemanticsLabel(
+        'thermodynamics, suggestion',
+      );
       if (semanticsFinder.evaluate().isNotEmpty) {
         expect(semanticsFinder, findsOneWidget);
       } else {

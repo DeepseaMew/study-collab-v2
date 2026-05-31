@@ -63,12 +63,12 @@ class QuickFilterChipsWidget extends ConsumerWidget {
     final notifier = ref.read(quickFilterNotifierProvider.notifier);
 
     bool isActive(String key) => switch (key) {
-          'today' => state.today,
-          'thisWeek' => state.thisWeek,
-          'myLevel' => state.myLevel,
-          'friends' => state.friends,
-          _ => false,
-        };
+      'today' => state.today,
+      'thisWeek' => state.thisWeek,
+      'myLevel' => state.myLevel,
+      'friends' => state.friends,
+      _ => false,
+    };
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
