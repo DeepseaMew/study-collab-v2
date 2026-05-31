@@ -1,7 +1,5 @@
 import 'dart:math' show max, min;
 
-import 'package:firebase_crashlytics/firebase_crashlytics.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -332,21 +330,6 @@ class _HomeBodyState extends ConsumerState<_HomeBody> {
           ),
         ],
       ),
-      // Debug-only test crash FAB — verifies Crashlytics is receiving data.
-      floatingActionButton: kDebugMode
-          ? FloatingActionButton.extended(
-              heroTag: null,
-              onPressed: () {
-                appLogger.warning(
-                  'Debug test crash triggered — intentional Crashlytics check',
-                );
-                FirebaseCrashlytics.instance.crash();
-              },
-              label: const Text('Test Crash'),
-              icon: const Icon(Icons.bug_report),
-              backgroundColor: AppColors.error,
-            )
-          : null,
     );
   }
 }
