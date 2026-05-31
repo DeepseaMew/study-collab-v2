@@ -99,6 +99,38 @@ service cloud.firestore {
           && request.auth.uid == uid;
       }
 
+      // ── users/{uid}/notifications/{notifId} ─────────────────────────────
+      // ADR 0013: actor writes to recipient's subcollection; owner reads.
+      // No == request.time on createdAt (web constraint — ADR 0011).
+
+      match /notifications/{notifId} {
+        allow get, list: if isKmuttUser() && request.auth.uid == uid;
+
+        allow create: if isKmuttUser()
+          && request.resource.data.keys().hasOnly([
+               'notifId', 'type', 'actorUid', 'actorDisplayName',
+               'sessionId', 'sessionTitle', 'isRead', 'createdAt'
+             ])
+          && request.resource.data.keys().hasAll([
+               'notifId', 'type', 'actorUid', 'actorDisplayName', 'isRead', 'createdAt'
+             ])
+          && request.resource.data.type in [
+               'friend_request', 'friend_accepted', 'join_request',
+               'join_approved', 'join_declined', 'rating_available'
+             ]
+          && request.resource.data.actorUid == request.auth.uid
+          && request.resource.data.isRead == false
+          && request.resource.data.actorDisplayName is string
+          && request.resource.data.actorDisplayName.size() > 0;
+
+        allow update: if isKmuttUser()
+          && request.auth.uid == uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead'])
+          && request.resource.data.isRead == true;
+
+        allow delete: if isKmuttUser() && request.auth.uid == uid;
+      }
+
       match /friends/{friendUid} {
         allow read: if isKmuttUser();
 

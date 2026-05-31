@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile/core/logger.dart';
 import 'package:mobile/core/router/app_router.dart';
 import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
+import 'package:mobile/features/notifications/presentation/widgets/notification_bell_badge.dart';
 import 'package:mobile/features/profile/presentation/providers/user_provider.dart';
 import 'package:mobile/features/sessions/presentation/providers/join_requests_provider.dart';
 import 'package:mobile/features/sessions/presentation/providers/pin_provider.dart';
@@ -140,14 +141,11 @@ class _HomeBodyState extends ConsumerState<_HomeBody> {
               ),
             ),
           ),
-          const Padding(
-            padding: EdgeInsets.only(right: 16),
-            child: IconButton(
-              icon: Icon(Icons.notifications_outlined),
-              // TODO(notifications-adr): wire when Notifications feature lands
-              onPressed: null,
+          if (widget.uid != null)
+            Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: NotificationBellBadge(uid: widget.uid!),
             ),
-          ),
         ],
       ),
       body: Column(

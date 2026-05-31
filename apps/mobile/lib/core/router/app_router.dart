@@ -22,7 +22,9 @@ import 'package:mobile/features/chat/presentation/screens/dm_conversation_list_s
 import 'package:mobile/features/chat/presentation/screens/dm_message_screen.dart';
 import 'package:mobile/features/chat/presentation/screens/session_chat_screen.dart';
 import 'package:mobile/features/note_sharing/presentation/screens/all_files_screen.dart';
+import 'package:mobile/features/notifications/presentation/screens/notification_panel_screen.dart';
 import 'package:mobile/features/profile/presentation/screens/other_user_profile_screen.dart';
+import 'package:mobile/features/settings/presentation/screens/settings_screen.dart';
 import 'package:mobile/features/search/presentation/screens/search_screen.dart';
 import 'package:mobile/features/profile/presentation/screens/profile_screen.dart';
 import 'package:mobile/features/sessions/domain/entities/session_entity.dart';
@@ -31,8 +33,6 @@ import 'package:mobile/features/sessions/presentation/screens/edit_session_scree
 import 'package:mobile/features/sessions/presentation/screens/members_list_screen.dart';
 import 'package:mobile/features/sessions/presentation/screens/requests_screen.dart';
 import 'package:mobile/features/sessions/presentation/screens/session_detail_screen.dart';
-import 'package:mobile/shared/theme/app_colors.dart';
-import 'package:mobile/shared/theme/app_typography.dart';
 import 'package:mobile/shared/widgets/main_shell.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -72,6 +72,9 @@ abstract final class RouteConstants {
 
   // Settings
   static const String settings = '/settings';
+
+  // Notifications
+  static const String notifications = '/notifications';
 
   // Messages DM
   static const String messagesDm = '/messages/dm/:id';
@@ -142,17 +145,6 @@ class _RouterNotifier extends ChangeNotifier {
   }
 }
 
-Widget _comingSoonScreen(String label) => Scaffold(
-  body: Center(
-    child: Text(
-      'Coming soon',
-      style: AppTypography.textTheme.displaySmall?.copyWith(
-        color: AppColors.hint,
-      ),
-    ),
-  ),
-);
-
 /// Thin ConsumerWidget wrapper so [FriendRequestsScreen] can read the current
 /// user's UID from Riverpod without requiring GoRouter builder callbacks to
 /// receive a BuildContext that is part of a ProviderScope descendant.
@@ -167,6 +159,20 @@ class _FriendRequestsRouteWrapper extends ConsumerWidget {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     return FriendRequestsScreen(currentUid: uid);
+  }
+}
+
+/// Thin ConsumerWidget wrapper so [NotificationPanelScreen] can read the
+/// current user's UID from Riverpod without GoRouter builder callbacks needing
+/// a ProviderScope descendant [BuildContext].
+class _NotificationPanelRouteWrapper extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final uid = ref.watch(firebaseAuthStateProvider).valueOrNull?.uid;
+    if (uid == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+    return NotificationPanelScreen(uid: uid);
   }
 }
 
@@ -209,10 +215,19 @@ GoRouter router(RouterRef ref) {
             OtherUserProfileScreen(userId: state.pathParameters['userId']!),
       ),
 
-      // ── Settings (stub) ─────────────────────────────────────────────────
+      // ── Settings ────────────────────────────────────────────────────────
       GoRoute(
         path: RouteConstants.settings,
-        builder: (_, __) => _comingSoonScreen('Settings'),
+        builder: (_, __) => const SettingsScreen(),
+      ),
+
+      // ── Notifications (ADR 0013) ─────────────────────────────────────────
+      GoRoute(
+        path: RouteConstants.notifications,
+        builder: (_, __) {
+          // UID is sourced inside the screen from firebaseAuthStateProvider.
+          return _NotificationPanelRouteWrapper();
+        },
       ),
 
       // ── Messages DM ─────────────────────────────────────────────────────
