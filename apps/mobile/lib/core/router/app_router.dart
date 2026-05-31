@@ -18,6 +18,9 @@ import 'package:mobile/features/home/presentation/screens/home_screen.dart';
 import 'package:mobile/features/my_sessions/presentation/screens/host_session_detail_screen.dart';
 import 'package:mobile/features/my_sessions/presentation/screens/member_session_detail_screen.dart';
 import 'package:mobile/features/my_sessions/presentation/screens/my_sessions_screen.dart';
+import 'package:mobile/features/chat/presentation/screens/dm_conversation_list_screen.dart';
+import 'package:mobile/features/chat/presentation/screens/dm_message_screen.dart';
+import 'package:mobile/features/chat/presentation/screens/session_chat_screen.dart';
 import 'package:mobile/features/note_sharing/presentation/screens/all_files_screen.dart';
 import 'package:mobile/features/profile/presentation/screens/other_user_profile_screen.dart';
 import 'package:mobile/features/search/presentation/screens/search_screen.dart';
@@ -72,6 +75,9 @@ abstract final class RouteConstants {
 
   // Messages DM
   static const String messagesDm = '/messages/dm/:id';
+
+  // Session (group) chat (ADR 0012)
+  static const String sessionChat = '/sessions/:sessionId/chat';
 
   // Calendar sub-routes
   static const String calendarDay = '/calendar/day';
@@ -209,10 +215,24 @@ GoRouter router(RouterRef ref) {
         builder: (_, __) => _comingSoonScreen('Settings'),
       ),
 
-      // ── Messages DM stub ────────────────────────────────────────────────
+      // ── Messages DM ─────────────────────────────────────────────────────
       GoRoute(
         path: '/messages/dm/:id',
-        builder: (_, __) => _comingSoonScreen('Messages'),
+        builder: (_, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return DmMessageScreen(
+            dmId: state.pathParameters['id']!,
+            otherUid: (extra?['otherUid'] as String?) ?? '',
+            displayName: (extra?['displayName'] as String?) ?? '',
+          );
+        },
+      ),
+
+      // ── Session (group) chat (ADR 0012) ─────────────────────────────────
+      GoRoute(
+        path: '/sessions/:sessionId/chat',
+        builder: (_, state) =>
+            SessionChatScreen(sessionId: state.pathParameters['sessionId']!),
       ),
 
       // ── Friends routes (push over the shell) ────────────────────────────
@@ -311,8 +331,7 @@ GoRouter router(RouterRef ref) {
             routes: [
               GoRoute(
                 path: RouteConstants.messages,
-                // TODO(messages-adr): replace when Messages ADR is accepted.
-                builder: (_, __) => _comingSoonScreen('Messages'),
+                builder: (_, __) => const DmConversationListScreen(),
               ),
             ],
           ),

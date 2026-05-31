@@ -52,4 +52,12 @@ abstract final class FirestorePaths {
 
   static String userFriendDoc(String uid, String friendUid) =>
       'users/$uid/friends/$friendUid';
+
+  // ── Group chats ────────────────────────────────────────────────────────────
+  /// `users/{uid}/groupChats` — summary documents for the Groups tab (ADR 0012).
+  static String userGroupChatsCollection(String uid) => 'users/$uid/groupChats';
+
+  /// `users/{uid}/groupChats/{sessionId}` — individual summary document.
+  static String userGroupChatDoc(String uid, String sessionId) =>
+      'users/$uid/groupChats/$sessionId';
 }

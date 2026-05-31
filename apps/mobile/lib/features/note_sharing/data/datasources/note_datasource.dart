@@ -87,11 +87,24 @@ class NoteDatasource {
     }
   }
 
-  /// Commits a [WriteBatch]: creates the note document and increments
-  /// `noteCount` by 1 on the parent session document.
-  Future<void> writeNoteBatch(String sessionId, NoteModel model) async {
+  /// Commits a [WriteBatch]:
+  ///   1. Creates the note document at `sessions/{sessionId}/notes/{noteId}`.
+  ///   2. Increments `noteCount` by 1 on the parent session document.
+  ///   3. Writes a `file_shared` message to `sessions/{sessionId}/messages`.
+  ///   4. Fan-out: updates every member's
+  ///      `users/{uid}/groupChats/{sessionId}` summary document (ADR 0012 SD1).
+  ///
+  /// [memberUids] must be the full list of session member UIDs.
+  /// [sessionTitle] is denormalized onto each groupChats summary document.
+  Future<void> writeNoteBatch(
+    String sessionId,
+    NoteModel model, {
+    required List<String> memberUids,
+    required String sessionTitle,
+  }) async {
     final batch = _firestore.batch();
 
+    // Write 1: note document.
     final noteRef = _firestore.doc(
       FirestorePaths.sessionNoteDoc(sessionId, model.noteId),
     );
@@ -103,8 +116,42 @@ class NoteDatasource {
       'uploadedAt': FieldValue.serverTimestamp(),
     });
 
+    // Write 2: noteCount increment on the session document.
     final sessionRef = _firestore.doc(FirestorePaths.sessionDoc(sessionId));
     batch.update(sessionRef, {'noteCount': FieldValue.increment(1)});
+
+    // Write 3: file_shared message (ADR 0012 SD4 — downloadUrl denormalized).
+    final messageRef = _firestore
+        .collection(FirestorePaths.sessionMessagesCollection(sessionId))
+        .doc();
+    final messageId = messageRef.id;
+    final preview = '📎 ${model.fileName}';
+    batch.set(messageRef, {
+      'messageId': messageId,
+      'type': 'file_shared',
+      'senderUid': model.uploaderUid,
+      'senderDisplayName': model.uploaderDisplayName,
+      'noteId': model.noteId,
+      'fileName': model.fileName,
+      'downloadUrl': model.downloadUrl,
+      'sentAt': FieldValue.serverTimestamp(),
+    });
+
+    // Write 4..N: groupChats fan-out for each member.
+    for (final memberUid in memberUids) {
+      final summaryRef = _firestore.doc(
+        FirestorePaths.userGroupChatDoc(memberUid, sessionId),
+      );
+      batch.set(summaryRef, {
+        'sessionId': sessionId,
+        'sessionTitle': sessionTitle,
+        'lastMessageText': preview,
+        'lastMessageAt': FieldValue.serverTimestamp(),
+        'unreadCount': memberUid == model.uploaderUid
+            ? 0
+            : FieldValue.increment(1),
+      }, SetOptions(merge: true));
+    }
 
     await batch.commit();
   }
