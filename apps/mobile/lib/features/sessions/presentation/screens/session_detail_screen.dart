@@ -1018,9 +1018,7 @@ class _JoinActionRow extends ConsumerWidget {
           foregroundColor: AppColors.hint,
           minimumSize: const Size(double.infinity, 48),
         ),
-        onPressed: () {
-          // Chat screen not yet implemented; placeholder.
-        },
+        onPressed: () => context.push('/sessions/${session.sessionId}/chat'),
         icon: const Icon(Icons.message_outlined, size: 18),
         label: const Text('Message Group'),
       );

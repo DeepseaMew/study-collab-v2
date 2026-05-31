@@ -164,6 +164,31 @@ abstract final class AnalyticsEvents {
 
   /// User tapped the Retry button on the search error state. No payload.
   static const String searchRetryTapped = 'search_retry_tapped';
+  // ── Chat (Session / Group) ────────────────────────────────────────────────
+
+  /// User opened a session (group) chat thread. No PII.
+  static const String sessionChatOpened = 'session_chat_opened';
+
+  /// User successfully sent a session chat message. No PII.
+  static const String sessionChatMessageSent = 'session_chat_message_sent';
+
+  /// User tapped a file_shared message in a session chat. No PII.
+  static const String sessionChatFileMessageTapped =
+      'session_chat_file_message_tapped';
+
+  /// User viewed the Groups tab in the Messages screen.
+  static const String groupsTabViewed = 'groups_tab_viewed';
+
+  // ── Chat (DM) ─────────────────────────────────────────────────────────────
+
+  /// User viewed the DM conversation list screen.
+  static const String dmConversationListViewed = 'dm_conversation_list_viewed';
+
+  /// User opened a specific DM conversation thread. No PII.
+  static const String dmConversationOpened = 'dm_conversation_opened';
+
+  /// User successfully sent a DM message. No PII.
+  static const String dmMessageSent = 'dm_message_sent';
 
   // ── Calendar ───────────────────────────────────────────────────────────────
 
