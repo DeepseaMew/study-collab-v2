@@ -7,4 +7,8 @@ abstract final class FeatureFlags {
   /// Set to [true] only after the GCal OAuth consent screen has been reviewed
   /// and approved for the production Firebase project.
   static const bool gcalSyncEnabled = true;
+
+  /// Whether search enhancements (hashtag, academic level, student year filters)
+  /// are available to users.
+  static const bool searchEnhancementsEnabled = true;
 }
