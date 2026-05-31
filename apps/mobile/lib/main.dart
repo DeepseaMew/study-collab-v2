@@ -7,7 +7,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile/core/logger.dart';
-import 'package:mobile/core/remote_config_startup.dart';
 import 'package:mobile/core/router/app_router.dart';
 import 'package:mobile/firebase_options.dart';
 import 'package:mobile/shared/theme/app_colors.dart';
@@ -50,9 +49,7 @@ Future<void> _bootstrap() async {
     };
   }
 
-  final container = ProviderContainer();
-  await container.read(remoteConfigStartupProvider.future);
-  container.dispose();
+  appLogger.info('App bootstrap complete — launching Study Collab');
 
   runApp(const ProviderScope(child: _StudyCollabApp()));
 }

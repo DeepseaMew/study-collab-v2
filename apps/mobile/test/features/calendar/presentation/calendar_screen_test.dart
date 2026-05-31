@@ -174,14 +174,14 @@ void main() {
       });
     });
 
-    testWidgets('gcal sync icon is NOT visible when feature flag is off', (
+    testWidgets('gcal sync icon is visible when feature flag is on', (
       tester,
     ) async {
       await mockNetworkImagesFor(() async {
         await tester.pumpWidget(_buildCalendarScreen());
         await tester.pumpAndSettle(const Duration(seconds: 3));
-        // FeatureFlags.gcalSyncEnabled = false → sync icon absent.
-        expect(find.byIcon(Icons.sync), findsNothing);
+        // FeatureFlags.gcalSyncEnabled = true → sync icon present.
+        expect(find.byIcon(Icons.sync), findsOneWidget);
       });
     });
 

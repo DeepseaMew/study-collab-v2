@@ -4,7 +4,10 @@ import 'package:intl/intl.dart';
 import 'package:mobile/core/errors/calendar_sync_error.dart';
 import 'package:mobile/core/feature_flags.dart';
 import 'package:mobile/core/logger.dart';
+import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
+import 'package:mobile/features/calendar/presentation/providers/calendar_sessions_provider.dart';
 import 'package:mobile/features/calendar/presentation/providers/calendar_sync_provider.dart';
+import 'package:mobile/features/calendar/presentation/providers/calendar_window_provider.dart';
 import 'package:mobile/shared/theme/app_colors.dart';
 
 /// Google Calendar sync settings screen.
@@ -27,6 +30,17 @@ class CalendarSyncSettingsScreen extends ConsumerWidget {
     final syncState = ref.watch(calendarSyncNotifierProvider);
     final tt = Theme.of(context).textTheme;
     final lastSynced = syncState.valueOrNull?.syncedAt;
+    // isConnected = we have a SyncResult (non-null value), meaning at least one
+    // successful sync has completed. AsyncData(null) means disconnected.
+    final isConnected = syncState.valueOrNull != null;
+
+    final uid = ref.watch(firebaseAuthStateProvider).valueOrNull?.uid ?? '';
+    final window = ref.watch(calendarWindowProvider);
+    final sessions =
+        ref
+            .watch(calendarSessionsProvider(uid, window.start, window.end))
+            .valueOrNull ??
+        const [];
 
     return Scaffold(
       appBar: AppBar(title: const Text('Google Calendar Sync')),
@@ -37,77 +51,67 @@ class CalendarSyncSettingsScreen extends ConsumerWidget {
           _ConnectionStatusTile(syncState: syncState),
           const SizedBox(height: 16),
 
-          // ── Error banner ───────────────────────────────────────────────────
-          if (syncState.hasError) ...[
-            _ErrorBanner(error: syncState.error),
-            const SizedBox(height: 16),
+          // ── While loading: status tile is sufficient — no buttons ──────────
+          if (syncState.isLoading) ...[
+            // intentionally empty: _ConnectionStatusTile shows "Syncing…"
+          ] else if (isConnected) ...[
+            // ── Connected: show last sync timestamp + Disconnect button ───────
+            if (lastSynced != null) ...[
+              Text(
+                'Last synced: ${DateFormat('d MMM yyyy, HH:mm').format(lastSynced)}',
+                style: tt.bodySmall?.copyWith(color: AppColors.hint),
+              ),
+              const SizedBox(height: 24),
+            ] else
+              const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.error,
+                  side: const BorderSide(color: AppColors.error),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  minimumSize: const Size(double.infinity, 48),
+                ),
+                icon: const Icon(Icons.link_off),
+                label: const Text('Disconnect'),
+                onPressed: () {
+                  ref.read(calendarSyncNotifierProvider.notifier).disconnect();
+                  appLogger.info('gcal_sync: disconnect button tapped');
+                },
+              ),
+            ),
+          ] else ...[
+            // ── Disconnected: show error banner (if any) + Connect button ─────
+            if (syncState.hasError) ...[
+              _ErrorBanner(error: syncState.error),
+              const SizedBox(height: 16),
+            ],
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.accent,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  minimumSize: const Size(double.infinity, 48),
+                ),
+                icon: const Icon(Icons.link),
+                label: const Text('Connect Google Calendar'),
+                onPressed: () {
+                  ref
+                      .read(calendarSyncNotifierProvider.notifier)
+                      .connect(sessions);
+                  appLogger.info('gcal_sync: connect button tapped');
+                },
+              ),
+            ),
           ],
-
-          // ── Last sync timestamp ────────────────────────────────────────────
-          if (lastSynced != null)
-            Text(
-              'Last synced: ${DateFormat('d MMM yyyy, HH:mm').format(lastSynced)}',
-              style: tt.bodySmall?.copyWith(color: AppColors.hint),
-            ),
-          const SizedBox(height: 24),
-
-          // ── Connect button ────────────────────────────────────────────────
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.accent,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                minimumSize: const Size(double.infinity, 48),
-              ),
-              icon: syncState.isLoading
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Icon(Icons.link),
-              label: const Text('Connect Google Calendar'),
-              onPressed: syncState.isLoading
-                  ? null
-                  : () {
-                      ref.read(calendarSyncNotifierProvider.notifier).connect();
-                      appLogger.info('gcal_sync: connect button tapped');
-                    },
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // ── Disconnect button ─────────────────────────────────────────────
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppColors.error,
-                side: const BorderSide(color: AppColors.error),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                minimumSize: const Size(double.infinity, 48),
-              ),
-              icon: const Icon(Icons.link_off),
-              label: const Text('Disconnect'),
-              onPressed: syncState.isLoading
-                  ? null
-                  : () {
-                      ref
-                          .read(calendarSyncNotifierProvider.notifier)
-                          .disconnect();
-                      appLogger.info('gcal_sync: disconnect button tapped');
-                    },
-            ),
-          ),
         ],
       ),
     );
