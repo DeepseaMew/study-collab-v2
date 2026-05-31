@@ -61,8 +61,9 @@ class CalendarSyncNotifier extends _$CalendarSyncNotifier {
   Future<void> _tryReconnectSilently() async {
     bool isConnected;
     try {
-      isConnected =
-          await ref.read(calendarSyncRepositoryProvider).isConnected();
+      isConnected = await ref
+          .read(calendarSyncRepositoryProvider)
+          .isConnected();
     } catch (e) {
       // Firebase or provider not yet initialised (e.g. in test environment).
       appLogger.info('gcal_sync: silent reconnect skipped — ${e.runtimeType}');
@@ -85,7 +86,9 @@ class CalendarSyncNotifier extends _$CalendarSyncNotifier {
           .read(calendarSessionsProvider(uid, window.start, window.end).future)
           .timeout(const Duration(seconds: 5));
     } on TimeoutException {
-      appLogger.info('gcal_sync: sessions stream timed out — skipping auto-sync');
+      appLogger.info(
+        'gcal_sync: sessions stream timed out — skipping auto-sync',
+      );
       return;
     } catch (e) {
       appLogger.info('gcal_sync: sessions stream error — skipping auto-sync');
@@ -123,9 +126,7 @@ class CalendarSyncNotifier extends _$CalendarSyncNotifier {
     // Auto-sync immediately after a successful connect so the user's sessions
     // appear in Google Calendar without requiring a separate manual sync.
     if (state is AsyncData) {
-      appLogger.info(
-        'gcal_sync: auto-sync sessions count=${sessions.length}',
-      );
+      appLogger.info('gcal_sync: auto-sync sessions count=${sessions.length}');
       await syncNow(sessions);
     }
   }

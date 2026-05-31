@@ -78,9 +78,7 @@ class CalendarSyncSettingsScreen extends ConsumerWidget {
                 icon: const Icon(Icons.link_off),
                 label: const Text('Disconnect'),
                 onPressed: () {
-                  ref
-                      .read(calendarSyncNotifierProvider.notifier)
-                      .disconnect();
+                  ref.read(calendarSyncNotifierProvider.notifier).disconnect();
                   appLogger.info('gcal_sync: disconnect button tapped');
                 },
               ),
