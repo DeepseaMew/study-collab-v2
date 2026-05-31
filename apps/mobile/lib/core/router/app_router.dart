@@ -23,6 +23,7 @@ import 'package:mobile/features/chat/presentation/screens/dm_message_screen.dart
 import 'package:mobile/features/chat/presentation/screens/session_chat_screen.dart';
 import 'package:mobile/features/note_sharing/presentation/screens/all_files_screen.dart';
 import 'package:mobile/features/profile/presentation/screens/other_user_profile_screen.dart';
+import 'package:mobile/features/search/presentation/screens/search_screen.dart';
 import 'package:mobile/features/profile/presentation/screens/profile_screen.dart';
 import 'package:mobile/features/sessions/domain/entities/session_entity.dart';
 import 'package:mobile/features/sessions/presentation/screens/create_session_screen.dart';
@@ -81,6 +82,9 @@ abstract final class RouteConstants {
   // Calendar sub-routes
   static const String calendarDay = '/calendar/day';
   static const String calendarSyncSettings = '/calendar/sync-settings';
+
+  // Search route (ADR 0010)
+  static const String search = '/search';
 }
 
 // ── Router change notifier ────────────────────────────────────────────────────
@@ -275,6 +279,12 @@ GoRouter router(RouterRef ref) {
         path: '/sessions/:id/edit',
         builder: (_, state) =>
             EditSessionScreen(sessionId: state.pathParameters['id']!),
+      ),
+
+      // ── Search route (ADR 0010) ─────────────────────────────────────────
+      GoRoute(
+        path: RouteConstants.search,
+        builder: (_, __) => const SearchScreen(),
       ),
 
       StatefulShellRoute.indexedStack(

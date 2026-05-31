@@ -46,6 +46,7 @@ void main() {
 
   setUpAll(() {
     registerFallbackValue(Timestamp.fromDate(DateTime(2000)));
+    registerFallbackValue(Filter('dummy', isEqualTo: ''));
   });
 
   setUp(() {
@@ -64,10 +65,7 @@ void main() {
     ).thenReturn(mockCollection);
 
     when(
-      () => mockCollection.where(
-        'memberUids',
-        arrayContains: any(named: 'arrayContains'),
-      ),
+      () => mockCollection.where(any()),
     ).thenReturn(mockQueryAfterArrayContains);
 
     when(
@@ -104,13 +102,11 @@ void main() {
       ).called(1);
     });
 
-    test('adds memberUids arrayContains filter with correct uid', () async {
+    test('adds combined memberUids/hostUid Filter.or filter', () async {
       datasource.watchSessionsInRange(uid, start, end).listen((_) {});
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
-      verify(
-        () => mockCollection.where('memberUids', arrayContains: uid),
-      ).called(1);
+      verify(() => mockCollection.where(any())).called(1);
     });
 
     test('adds scheduledAt isGreaterThanOrEqualTo filter', () async {

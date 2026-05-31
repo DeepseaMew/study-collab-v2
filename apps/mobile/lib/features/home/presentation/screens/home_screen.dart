@@ -1,3 +1,5 @@
+import 'dart:math' show max, min;
+
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -47,6 +49,8 @@ class _HomeBody extends ConsumerStatefulWidget {
 
 class _HomeBodyState extends ConsumerState<_HomeBody> {
   bool _pinLoading = false;
+  int _page = 0;
+  static const _kPageSize = 4;
 
   String _greeting() {
     final hour = DateTime.now().hour;
@@ -58,9 +62,7 @@ class _HomeBodyState extends ConsumerState<_HomeBody> {
   Future<void> _onRefresh() async {}
 
   void _openSearch(BuildContext context) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Search coming soon')));
+    context.push(RouteConstants.search);
   }
 
   Future<void> _joinWithPin(BuildContext context) async {
@@ -245,14 +247,55 @@ class _HomeBodyState extends ConsumerState<_HomeBody> {
                       )
                       .toList();
                   if (filtered.isEmpty) return const _EmptyState();
+                  if (_page * _kPageSize >= filtered.length) {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (mounted) setState(() => _page = 0);
+                    });
+                  }
+                  final totalPages = max(
+                    1,
+                    (filtered.length / _kPageSize).ceil(),
+                  );
+                  final pageItems = filtered.sublist(
+                    _page * _kPageSize,
+                    min((_page + 1) * _kPageSize, filtered.length),
+                  );
                   return ListView.builder(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
-                    itemCount: filtered.length,
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 88),
+                    itemCount: pageItems.length + (totalPages > 1 ? 1 : 0),
                     itemBuilder: (_, i) {
-                      final session = filtered[i];
+                      if (i == pageItems.length) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              TextButton.icon(
+                                onPressed: _page > 0
+                                    ? () => setState(() => _page--)
+                                    : null,
+                                icon: const Icon(Icons.chevron_left, size: 18),
+                                label: const Text('Prev'),
+                              ),
+                              Text(
+                                '${_page + 1} / $totalPages',
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  color: AppColors.hint,
+                                ),
+                              ),
+                              TextButton.icon(
+                                onPressed: _page < totalPages - 1
+                                    ? () => setState(() => _page++)
+                                    : null,
+                                icon: const Icon(Icons.chevron_right, size: 18),
+                                label: const Text('Next'),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                      final session = pageItems[i];
                       final isPending =
                           ref
                               .watch(

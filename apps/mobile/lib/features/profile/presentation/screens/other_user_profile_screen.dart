@@ -86,14 +86,21 @@ class _OtherProfileBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tt = Theme.of(context).textTheme;
+    // Public sessions only — memberUids arrayContains queries on another user's
+    // private sessions are denied by Firestore rules, so we use the safe
+    // public-only provider and derive completedCount from it client-side.
     final sessionsAsync = ref.watch(sessionsByUserProvider(user.uid));
+    final completedAsync = ref.watch(completedSessionsProvider(user.uid));
     final currentUserId =
         ref.watch(firebaseAuthStateProvider).valueOrNull?.uid ?? '';
-    final completedAsync = ref.watch(completedSessionsProvider(user.uid));
 
-    // Derive session count for the stats row; use 0 while loading or on error.
-    final sessionCount = sessionsAsync.valueOrNull?.length ?? 0;
-    final completedCount = completedAsync.valueOrNull?.length ?? 0;
+    final sessions = sessionsAsync.valueOrNull ?? [];
+    final sessionCount = sessions.length;
+    // completedSessionsProvider is owner-scoped; fall back to counting ended
+    // sessions from the public list when it errors (permission denied).
+    final completedCount =
+        completedAsync.valueOrNull?.length ??
+        sessions.where((s) => s.status == 'ended').length;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -152,7 +159,16 @@ class _OtherProfileBody extends ConsumerWidget {
                 children: [
                   _StatItem(label: 'Sessions', value: sessionCount.toString()),
                   Container(width: 1, height: 36, color: AppColors.border),
-                  const _StatItem(label: 'Friends', value: '0'),
+                  _StatItem(
+                    label: 'Friends',
+                    value:
+                        (ref
+                                    .watch(friendsProvider(user.uid))
+                                    .valueOrNull
+                                    ?.length ??
+                                0)
+                            .toString(),
+                  ),
                   Container(width: 1, height: 36, color: AppColors.border),
                   ProfileScoreWidget(
                     profileScore: user.profileScore,
@@ -174,7 +190,7 @@ class _OtherProfileBody extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
 
-            // Sessions list — loading / error / empty / populated
+            // Sessions list — loading / error / empty / populated.
             sessionsAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, st) {

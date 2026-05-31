@@ -7,4 +7,9 @@ abstract final class FeatureFlags {
   /// Set to [true] only after the GCal OAuth consent screen has been reviewed
   /// and approved for the production Firebase project.
   static const bool gcalSyncEnabled = false;
+
+  /// Whether the enhanced search UI (subject chips, quick-filter chips,
+  /// active-filter summary, result count, tips bar) is shown on the search
+  /// screen. Set to [true] to activate all search enhancements.
+  static const bool searchEnhancementsEnabled = true;
 }
