@@ -15,6 +15,7 @@ import 'package:mobile/shared/theme/app_typography.dart';
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await runZonedGuarded<Future<void>>(_bootstrap, (
     Object error,
     StackTrace stack,
@@ -25,14 +26,14 @@ Future<void> main() async {
       stackTrace: stack,
     );
     if (!kIsWeb) {
-      FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      try {
+        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+      } catch (_) {}
     }
   });
 }
 
 Future<void> _bootstrap() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   FirebaseFirestore.instance.settings = const Settings(
@@ -52,7 +53,6 @@ Future<void> _bootstrap() async {
 
   runApp(const ProviderScope(child: _StudyCollabApp()));
 }
-
 // ── App widget ─────────────────────────────────────────────────────────────────
 
 class _StudyCollabApp extends ConsumerWidget {

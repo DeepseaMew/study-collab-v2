@@ -17,8 +17,9 @@ import 'package:mobile/features/friends/presentation/providers/incoming_requests
 import 'package:mobile/features/friends/presentation/providers/outgoing_requests_provider.dart';
 import 'package:mobile/features/profile/presentation/providers/user_provider.dart';
 import 'package:mobile/features/profile/presentation/screens/other_user_profile_screen.dart';
+import 'package:mobile/features/my_sessions/presentation/providers/completed_sessions_provider.dart';
+import 'package:mobile/features/my_sessions/presentation/providers/upcoming_sessions_provider.dart';
 import 'package:mobile/features/sessions/domain/entities/session_entity.dart';
-import 'package:mobile/features/sessions/presentation/providers/session_provider.dart';
 import 'package:mobile/shared/theme/app_colors.dart';
 import 'package:mobile/shared/theme/app_typography.dart';
 import 'package:network_image_mock/network_image_mock.dart';
@@ -69,13 +70,19 @@ Widget _buildScreen(double textScale) {
       friendsProvider(
         _viewerUid,
       ).overrideWith((_) => Stream<List<FriendEntity>>.value(const [])),
+      friendsProvider(
+        _targetUid,
+      ).overrideWith((_) => Stream<List<FriendEntity>>.value(const [])),
       incomingRequestsProvider(
         _viewerUid,
       ).overrideWith((_) => Stream<List<FriendEntity>>.value(const [])),
       outgoingRequestsProvider(
         _viewerUid,
       ).overrideWith((_) => Stream<List<FriendEntity>>.value(const [])),
-      sessionsByUserProvider(
+      upcomingSessionsProvider(
+        _targetUid,
+      ).overrideWith((_) => Stream<List<SessionEntity>>.value(const [])),
+      completedSessionsProvider(
         _targetUid,
       ).overrideWith((_) => Stream<List<SessionEntity>>.value(const [])),
     ],

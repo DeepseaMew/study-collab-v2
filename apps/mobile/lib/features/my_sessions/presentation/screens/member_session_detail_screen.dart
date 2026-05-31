@@ -2,12 +2,15 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:mobile/core/analytics_events.dart';
 import 'package:mobile/core/logger.dart';
 import 'package:mobile/core/router/app_router.dart';
 import 'package:mobile/core/utils/date_formatter.dart';
 import 'package:mobile/features/auth/domain/entities/user_entity.dart';
 import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
+import 'package:mobile/features/note_sharing/presentation/widgets/files_tab.dart';
+import 'package:mobile/features/rating/presentation/providers/has_rated_provider.dart';
+import 'package:mobile/features/rating/presentation/widgets/rating_banner_widget.dart';
+import 'package:mobile/features/rating/presentation/widgets/rating_bottom_sheet.dart';
 import 'package:mobile/features/sessions/domain/entities/session_entity.dart';
 import 'package:mobile/features/sessions/presentation/providers/session_members_provider.dart';
 import 'package:mobile/features/sessions/presentation/providers/session_provider.dart';
@@ -15,20 +18,26 @@ import 'package:mobile/shared/theme/app_colors.dart';
 
 /// Post-join member view of a session.
 ///
-/// Two tabs: Members and Notes (placeholder, Notes ADR pending).
+/// Two tabs: Members and Files (ADR 0008).
 /// `ref.listen` on the session stream triggers the rating bottom sheet once
 /// when `status` transitions to 'ended'.
 ///
 /// Route: `/my-sessions/session/:id/member`
+/// Extra: `{'isCompleted': bool, 'initialTabIndex': int}` (both optional).
 class MemberSessionDetailScreen extends ConsumerStatefulWidget {
   const MemberSessionDetailScreen({
     super.key,
     required this.sessionId,
     this.isCompleted = false,
+    this.initialTabIndex = 0,
   });
 
   final String sessionId;
   final bool isCompleted;
+
+  /// Tab index to open on creation. Defaults to 0 (Members).
+  /// Pass 1 to open directly at the Files tab.
+  final int initialTabIndex;
 
   @override
   ConsumerState<MemberSessionDetailScreen> createState() =>
@@ -40,12 +49,16 @@ class _MemberSessionDetailScreenState
     with SingleTickerProviderStateMixin {
   late final TabController _tab;
   bool _sessionEndedPopupShown = false;
-  bool _ratingShownForCompleted = false;
+  bool _ratingSheetOpen = false;
 
   @override
   void initState() {
     super.initState();
-    _tab = TabController(length: 2, vsync: this);
+    _tab = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: widget.initialTabIndex.clamp(0, 1),
+    );
   }
 
   @override
@@ -54,22 +67,25 @@ class _MemberSessionDetailScreenState
     super.dispose();
   }
 
-  void _showRatingSheet(
+  Future<void> _showRatingSheet(
     SessionEntity session,
     List<UserEntity> members,
     String currentUserId,
-  ) {
-    showModalBottomSheet<void>(
+  ) async {
+    if (_ratingSheetOpen) return;
+    setState(() => _ratingSheetOpen = true);
+    await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      isDismissible: false,
-      builder: (_) => _RatingBottomSheet(
-        session: session,
+      builder: (_) => RatingBottomSheet(
+        sessionId: session.sessionId,
         members: members,
         currentUserId: currentUserId,
+        hostUid: session.hostUid,
       ),
     );
+    if (mounted) setState(() => _ratingSheetOpen = false);
   }
 
   void _showLeaveDialog(String currentUserId) {
@@ -172,20 +188,32 @@ class _MemberSessionDetailScreenState
       sessionStreamProvider(widget.sessionId),
       (prev, next) {
         final session = next.asData?.value;
-        if (session != null &&
-            session.status == 'ended' &&
-            !_sessionEndedPopupShown) {
-          setState(() => _sessionEndedPopupShown = true);
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) {
-              _showRatingSheet(
-                session,
-                membersAsync.asData?.value ?? [],
-                me?.uid ?? '',
-              );
-            }
-          });
+        if (session == null ||
+            session.status != 'ended' ||
+            _sessionEndedPopupShown) {
+          return;
         }
+
+        // Guard: members must be loaded before opening the sheet.
+        final members =
+            ref.read(sessionMembersProvider(widget.sessionId)).asData?.value ??
+            [];
+        if (members.isEmpty) return;
+
+        final currentUid =
+            ref.read(firebaseAuthStateProvider).valueOrNull?.uid ?? '';
+        if (currentUid.isEmpty) return;
+
+        // Guard: skip if already rated (e.g. rated on another device).
+        final hasRated = ref
+            .read(hasRatedProvider(widget.sessionId, currentUid))
+            .valueOrNull;
+        if (hasRated == true) return;
+
+        setState(() => _sessionEndedPopupShown = true);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) _showRatingSheet(session, members, currentUid);
+        });
       },
     );
 
@@ -270,16 +298,6 @@ class _MemberSessionDetailScreenState
           }
           final members = membersAsync.asData?.value ?? [];
 
-          // Show rating sheet once on open for completed sessions.
-          if (widget.isCompleted && !_ratingShownForCompleted) {
-            _ratingShownForCompleted = true;
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (mounted) {
-                _showRatingSheet(session, members, me?.uid ?? '');
-              }
-            });
-          }
-
           return Column(
             children: [
               _SessionInfoCard(
@@ -289,6 +307,13 @@ class _MemberSessionDetailScreenState
                     ? AppColors.accent
                     : AppColors.success,
                 showCheckIcon: true,
+              ),
+              RatingBannerWidget(
+                sessionId: widget.sessionId,
+                currentUserId: me?.uid ?? '',
+                members: members,
+                hostUid: session.hostUid,
+                sessionStatus: session.status,
               ),
               TabBar(
                 controller: _tab,
@@ -305,7 +330,7 @@ class _MemberSessionDetailScreenState
                 ),
                 tabs: const [
                   Tab(text: 'Members'),
-                  Tab(text: 'Notes'),
+                  Tab(text: 'Files'),
                 ],
               ),
               Expanded(
@@ -318,7 +343,11 @@ class _MemberSessionDetailScreenState
                       currentUserId: me?.uid ?? '',
                       isCompleted: widget.isCompleted,
                     ),
-                    const _NotesTab(),
+                    FilesTab(
+                      sessionId: widget.sessionId,
+                      currentUserId: me?.uid ?? '',
+                      hostUid: session.hostUid,
+                    ),
                   ],
                 ),
               ),
@@ -621,7 +650,8 @@ class _MembersTab extends StatelessWidget {
               ),
               icon: const Icon(Icons.chat_bubble_outline, size: 18),
               label: const Text('Message group'),
-              onPressed: () {},
+              onPressed: () =>
+                  context.push('/sessions/${session.sessionId}/chat'),
             ),
           ],
         ],
@@ -672,369 +702,7 @@ class _HostRow extends StatelessWidget {
   }
 }
 
-// ── Tab 2: Notes placeholder ───────────────────────────────────────────────────
-
-class _NotesTab extends StatelessWidget {
-  const _NotesTab();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-      child: Column(
-        children: [
-          TextField(
-            decoration: InputDecoration(
-              hintText: 'Search notes...',
-              prefixIcon: const Icon(
-                Icons.search_outlined,
-                color: AppColors.hint,
-              ),
-              filled: true,
-              fillColor: AppColors.surface,
-              contentPadding: const EdgeInsets.symmetric(vertical: 12),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.border),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.border),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.accent, width: 2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          const Expanded(
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.description_outlined,
-                    size: 64,
-                    color: AppColors.secondary,
-                  ),
-                  SizedBox(height: 12),
-                  Text(
-                    'No notes uploaded yet',
-                    style: TextStyle(color: AppColors.hint, fontSize: 14),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          OutlinedButton.icon(
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.accent,
-              minimumSize: const Size(double.infinity, 48),
-              side: const BorderSide(color: AppColors.accent),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            icon: const Icon(Icons.upload_file_outlined, size: 18),
-            label: const Text('Upload Note'),
-            onPressed: () {},
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ── Rating bottom sheet ────────────────────────────────────────────────────────
-
-class _RatingBottomSheet extends StatefulWidget {
-  const _RatingBottomSheet({
-    required this.session,
-    required this.members,
-    required this.currentUserId,
-  });
-
-  final SessionEntity session;
-  final List<UserEntity> members;
-  final String currentUserId;
-
-  @override
-  State<_RatingBottomSheet> createState() => _RatingBottomSheetState();
-}
-
-class _RatingBottomSheetState extends State<_RatingBottomSheet> {
-  final Map<String, bool> _thumbsUp = {};
-  String _searchQuery = '';
-
-  List<UserEntity> get _sorted {
-    final host = widget.members
-        .where((m) => m.uid == widget.session.hostUid)
-        .toList();
-    final self = widget.members
-        .where(
-          (m) =>
-              m.uid == widget.currentUserId && m.uid != widget.session.hostUid,
-        )
-        .toList();
-    final others = widget.members
-        .where(
-          (m) =>
-              m.uid != widget.session.hostUid && m.uid != widget.currentUserId,
-        )
-        .toList();
-    return [...host, ...self, ...others];
-  }
-
-  List<UserEntity> get _filtered {
-    final q = _searchQuery.toLowerCase();
-    if (q.isEmpty) return _sorted;
-    return _sorted
-        .where((m) => m.displayName.toLowerCase().contains(q))
-        .toList();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final filtered = _filtered;
-    final thumbsUpCount = _thumbsUp.values.where((v) => v).length;
-
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 8),
-                decoration: BoxDecoration(
-                  color: AppColors.border,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              Row(
-                children: [
-                  const Spacer(),
-                  const Text(
-                    'Session Ended',
-                    style: TextStyle(
-                      color: AppColors.text,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: AppColors.hint),
-                    onPressed: () => Navigator.pop(context),
-                    visualDensity: VisualDensity.compact,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                widget.session.title,
-                style: const TextStyle(color: AppColors.hint, fontSize: 14),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'There were ${widget.members.length} people in this room. '
-                  "Give a quick thumbs up to anyone you'd like to study with again.",
-                  style: const TextStyle(color: AppColors.text, fontSize: 13),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                onChanged: (v) => setState(() => _searchQuery = v),
-                decoration: InputDecoration(
-                  hintText: 'Search participants by name',
-                  prefixIcon: const Icon(
-                    Icons.search_outlined,
-                    color: AppColors.hint,
-                  ),
-                  filled: true,
-                  fillColor: AppColors.background,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: AppColors.border),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: AppColors.border),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(
-                      color: AppColors.accent,
-                      width: 2,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 8),
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.3,
-                ),
-                child: filtered.isEmpty
-                    ? const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        child: Text(
-                          'No participants found.',
-                          style: TextStyle(color: AppColors.hint, fontSize: 13),
-                        ),
-                      )
-                    : ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: filtered.length,
-                        itemBuilder: (_, i) {
-                          final m = filtered[i];
-                          final isHost = m.uid == widget.session.hostUid;
-                          final isSelf = m.uid == widget.currentUserId;
-                          if (isHost) {
-                            return _BadgeTile(
-                              member: m,
-                              badge: 'Host',
-                              badgeColor: AppColors.accent,
-                            );
-                          }
-                          if (isSelf) {
-                            return _BadgeTile(
-                              member: m,
-                              badge: 'ME',
-                              badgeColor: AppColors.hint,
-                            );
-                          }
-                          final liked = _thumbsUp[m.uid] ?? false;
-                          return ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            leading: _Avatar(
-                              displayName: m.displayName,
-                              photoUrl: m.photoUrl,
-                              radius: 20,
-                            ),
-                            title: Text(
-                              m.displayName,
-                              style: const TextStyle(
-                                color: AppColors.text,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            trailing: IconButton(
-                              icon: Icon(
-                                liked
-                                    ? Icons.thumb_up
-                                    : Icons.thumb_up_outlined,
-                                color: liked
-                                    ? AppColors.accent
-                                    : AppColors.hint,
-                              ),
-                              onPressed: () =>
-                                  setState(() => _thumbsUp[m.uid] = !liked),
-                            ),
-                          );
-                        },
-                      ),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.accent,
-                  foregroundColor: Colors.white,
-                  minimumSize: const Size(double.infinity, 48),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                onPressed: () {
-                  appLogger.info(
-                    'Member rating submitted',
-                    extra: {'thumbsUpCount': thumbsUpCount},
-                  );
-                  appLogger.debug(AnalyticsEvents.sessionRatingSubmitted);
-                  Navigator.pop(context);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Ratings submitted!'),
-                      backgroundColor: AppColors.success,
-                    ),
-                  );
-                },
-                child: const Text('Submit Rating'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Badge tile (Host / ME — no thumbs-up toggle) ───────────────────────────────
-
-class _BadgeTile extends StatelessWidget {
-  const _BadgeTile({
-    required this.member,
-    required this.badge,
-    required this.badgeColor,
-  });
-
-  final UserEntity member;
-  final String badge;
-  final Color badgeColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: _Avatar(
-        displayName: member.displayName,
-        photoUrl: member.photoUrl,
-        radius: 20,
-      ),
-      title: Text(
-        member.displayName,
-        style: const TextStyle(
-          color: AppColors.text,
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      trailing: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-        decoration: BoxDecoration(
-          color: badgeColor,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          badge,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-    );
-  }
-}
+// ── Tab 1: Files is now FilesTab (ADR 0008) ────────────────────────────────────
 
 // ── Avatar helper ──────────────────────────────────────────────────────────────
 

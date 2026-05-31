@@ -106,6 +106,90 @@ abstract final class AnalyticsEvents {
   /// No PII.
   static const String avatarUploadFailed = 'avatar_upload_failed';
 
+  // ── Note-Sharing ──────────────────────────────────────────────────────────
+
+  /// A note file was successfully uploaded.
+  /// Payload: mime_type (String, no PII), size_bytes (int).
+  static const String noteUploaded = 'note_uploaded';
+
+  /// A note file was successfully deleted. No payload.
+  static const String noteDeleted = 'note_deleted';
+
+  /// A note file was opened (url_launcher). No payload.
+  static const String noteFileOpened = 'note_file_opened';
+
+  /// A note upload failed at any step.
+  /// Payload: error_type (String, no PII —
+  ///   'file_too_large' | 'unsupported_mime' | 'upload_failed' | 'cap_reached').
+  static const String noteUploadFailed = 'note_upload_failed';
+
+  /// The "See All" button was tapped to open AllFilesScreen. No payload.
+  static const String noteSeeAllOpened = 'note_see_all_opened';
+
+  // ── Rating ────────────────────────────────────────────────────────────────
+
+  /// User successfully submitted ratings after a session ended.
+  /// Payload: ratee_count (int). No PII.
+  static const String ratingSubmitted = 'rating_submitted';
+
+  /// User dismissed the rating sheet without submitting. No payload.
+  static const String ratingSkipped = 'rating_skipped';
+
+  /// User tapped the rating banner card to open the rating sheet. No payload.
+  static const String ratingBannerTapped = 'rating_banner_tapped';
+
+  /// Rating submission failed.
+  /// Payload: error_type (String, no PII).
+  static const String ratingSubmitFailed = 'rating_submit_failed';
+
+  // ── Search ────────────────────────────────────────────────────────────────
+
+  /// User submitted a search query (keyword, hashtag, or filter chip).
+  /// Payload: has_keyword (bool), has_hashtag (bool), has_level_filter (bool),
+  ///          has_year_filter (bool), result_count (int). No PII.
+  static const String searchPerformed = 'search_performed';
+
+  /// User applied a filter chip (subject, quick-filter, academic level, etc.).
+  /// Payload: filter_type (String — 'academic_level' | 'student_year' |
+  ///          'hashtag' | 'today' | 'this_week' | 'my_level' | 'subject').
+  /// No PII.
+  static const String searchFilterApplied = 'search_filter_applied';
+
+  /// User cleared all active search filters. No payload.
+  static const String searchFilterCleared = 'search_filter_cleared';
+
+  /// User tapped a session result card on the search screen. No payload.
+  /// Session ID must not be logged.
+  static const String searchResultTapped = 'search_result_tapped';
+
+  /// User tapped the Retry button on the search error state. No payload.
+  static const String searchRetryTapped = 'search_retry_tapped';
+  // ── Chat (Session / Group) ────────────────────────────────────────────────
+
+  /// User opened a session (group) chat thread. No PII.
+  static const String sessionChatOpened = 'session_chat_opened';
+
+  /// User successfully sent a session chat message. No PII.
+  static const String sessionChatMessageSent = 'session_chat_message_sent';
+
+  /// User tapped a file_shared message in a session chat. No PII.
+  static const String sessionChatFileMessageTapped =
+      'session_chat_file_message_tapped';
+
+  /// User viewed the Groups tab in the Messages screen.
+  static const String groupsTabViewed = 'groups_tab_viewed';
+
+  // ── Chat (DM) ─────────────────────────────────────────────────────────────
+
+  /// User viewed the DM conversation list screen.
+  static const String dmConversationListViewed = 'dm_conversation_list_viewed';
+
+  /// User opened a specific DM conversation thread. No PII.
+  static const String dmConversationOpened = 'dm_conversation_opened';
+
+  /// User successfully sent a DM message. No PII.
+  static const String dmMessageSent = 'dm_message_sent';
+
   // ── Calendar ───────────────────────────────────────────────────────────────
 
   /// User toggled the calendar view format (month ↔ week).

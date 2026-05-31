@@ -12,6 +12,7 @@ import 'package:mobile/features/profile/presentation/providers/user_provider.dar
 import 'package:mobile/features/sessions/domain/entities/session_entity.dart';
 import 'package:mobile/features/sessions/presentation/providers/session_provider.dart';
 import 'package:mobile/shared/theme/app_colors.dart';
+import 'package:mobile/shared/theme/subject_colors.dart';
 
 /// Three-step form shared by Create Session and Edit Session screens.
 ///
@@ -181,6 +182,13 @@ class _SessionFormState extends ConsumerState<SessionForm>
       return;
     }
 
+    // Capture router before the async gap. If the stream emits a transient
+    // null during the Firestore optimistic-write pending state, the parent
+    // may briefly swap SessionForm out, making `mounted` false and silently
+    // dropping the navigation call. Using the router reference directly
+    // avoids that race condition for the edit path.
+    final router = GoRouter.of(context);
+
     setState(() => _submitting = true);
 
     // Merge selected subject (lowercase) as first hashtag, avoid duplicates.
@@ -248,7 +256,11 @@ class _SessionFormState extends ConsumerState<SessionForm>
         appLogger.debug(AnalyticsEvents.sessionCreated);
       }
 
-      if (mounted) context.pop();
+      if (_isEditing) {
+        router.go('/my-sessions');
+      } else if (mounted) {
+        context.pop();
+      }
     } catch (e, st) {
       appLogger.error(
         'Session form submit failed',
@@ -658,6 +670,7 @@ const List<String> _subjects = [
   'Biology',
   'Economics',
   'English',
+  'Other',
 ];
 
 class _SubjectChipGrid extends StatelessWidget {
@@ -673,6 +686,7 @@ class _SubjectChipGrid extends StatelessWidget {
       runSpacing: 10,
       children: _subjects.map((subject) {
         final isActive = subject == selected;
+        final chipColor = subjectColor(subject);
         return Semantics(
           label: subject,
           selected: isActive,
@@ -683,19 +697,17 @@ class _SubjectChipGrid extends StatelessWidget {
               duration: const Duration(milliseconds: 180),
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
               decoration: BoxDecoration(
-                color: isActive
-                    ? AppColors.accent.withValues(alpha: 0.18)
-                    : AppColors.secondary,
+                color: isActive ? chipColor.background : AppColors.secondary,
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: isActive ? AppColors.accent : Colors.transparent,
+                  color: isActive ? chipColor.border : Colors.transparent,
                   width: 1.5,
                 ),
               ),
               child: Text(
                 subject,
                 style: TextStyle(
-                  color: isActive ? AppColors.accent : AppColors.hint,
+                  color: isActive ? chipColor.text : AppColors.hint,
                   fontSize: 13,
                   fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
                 ),

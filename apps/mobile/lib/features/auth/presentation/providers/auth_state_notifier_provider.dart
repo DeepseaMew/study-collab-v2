@@ -61,7 +61,8 @@ class AuthStateNotifier extends _$AuthStateNotifier {
     } on AuthFailure catch (e, st) {
       state = AsyncValue.error(e, st);
     } catch (e, st) {
-      state = AsyncValue.error(const AuthFailure.unknownFailure(), st);
+      appLogger.error('signIn unknown error: $e', exception: e, stackTrace: st);
+      state = AsyncValue.error(AuthFailure.unknownFailure(e.toString()), st);
     }
   }
 

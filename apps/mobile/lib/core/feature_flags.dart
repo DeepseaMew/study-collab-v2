@@ -8,7 +8,8 @@ abstract final class FeatureFlags {
   /// and approved for the production Firebase project.
   static const bool gcalSyncEnabled = true;
 
-  /// Whether search enhancements (hashtag, academic level, student year filters)
-  /// are available to users.
+  /// Whether the enhanced search UI (subject chips, quick-filter chips,
+  /// active-filter summary, result count, tips bar) is shown on the search
+  /// screen. Set to [true] to activate all search enhancements.
   static const bool searchEnhancementsEnabled = true;
 }

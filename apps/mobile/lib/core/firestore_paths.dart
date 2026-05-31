@@ -26,11 +26,10 @@ abstract final class FirestorePaths {
   static String sessionRequestDoc(String sessionId, String uid) =>
       'sessions/$sessionId/requests/$uid';
 
-  static String sessionRatingsCollection(String sessionId) =>
-      'sessions/$sessionId/ratings';
+  static String ratings(String sessionId) => 'sessions/$sessionId/ratings';
 
-  static String sessionRatingDoc(String sessionId, String raterUid) =>
-      'sessions/$sessionId/ratings/$raterUid';
+  static String rating(String sessionId, String raterUid, String rateeUid) =>
+      'sessions/$sessionId/ratings/${raterUid}_$rateeUid';
 
   static String sessionNotesCollection(String sessionId) =>
       'sessions/$sessionId/notes';
@@ -53,4 +52,12 @@ abstract final class FirestorePaths {
 
   static String userFriendDoc(String uid, String friendUid) =>
       'users/$uid/friends/$friendUid';
+
+  // ── Group chats ────────────────────────────────────────────────────────────
+  /// `users/{uid}/groupChats` — summary documents for the Groups tab (ADR 0012).
+  static String userGroupChatsCollection(String uid) => 'users/$uid/groupChats';
+
+  /// `users/{uid}/groupChats/{sessionId}` — individual summary document.
+  static String userGroupChatDoc(String uid, String sessionId) =>
+      'users/$uid/groupChats/$sessionId';
 }

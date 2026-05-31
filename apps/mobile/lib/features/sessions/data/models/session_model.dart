@@ -26,19 +26,56 @@ abstract class SessionModel with _$SessionModel {
     required List<String> memberUids,
     required int noteCount,
     required String status,
-    @TimestampConverter() required DateTime scheduledAt,
-    @NullableTimestampConverter() DateTime? scheduledEndAt,
-    @NullableTimestampConverter() DateTime? endedAt,
+    required DateTime scheduledAt,
+    DateTime? scheduledEndAt,
+    DateTime? endedAt,
     required String location,
     required int capacity,
     required String hostDisplayName,
     String? hostPhotoUrl,
-    @TimestampConverter() required DateTime createdAt,
-    @TimestampConverter() required DateTime updatedAt,
+    required DateTime createdAt,
+    required DateTime updatedAt,
   }) = _SessionModel;
 
   factory SessionModel.fromJson(Map<String, dynamic> json) =>
       _$SessionModelFromJson(json);
+
+  /// Deserializes a Firestore document map into a [SessionModel].
+  ///
+  /// Uses explicit [Timestamp] type checks instead of generated casts so the
+  /// method is safe on Flutter Web, where the Firestore JS SDK returns dynamic
+  /// objects that cannot be directly cast to the Dart [Timestamp] type.
+  static SessionModel fromFirestore(Map<String, dynamic> data) {
+    Timestamp? ts(dynamic v) => v is Timestamp ? v : null;
+    Timestamp tsRequired(dynamic v) {
+      if (v is Timestamp) return v;
+      throw ArgumentError('Expected Timestamp but got ${v?.runtimeType}: $v');
+    }
+
+    return SessionModel(
+      sessionId: data['sessionId'] as String,
+      hostUid: data['hostUid'] as String,
+      hostFaculty: data['hostFaculty'] as String,
+      title: data['title'] as String,
+      description: data['description'] as String?,
+      hashtags: List<String>.from(data['hashtags'] as List),
+      academicLevel: data['academicLevel'] as String,
+      studentYear: (data['studentYear'] as num).toInt(),
+      visibility: data['visibility'] as String,
+      memberUids: List<String>.from(data['memberUids'] as List),
+      noteCount: (data['noteCount'] as num).toInt(),
+      status: data['status'] as String,
+      scheduledAt: tsRequired(data['scheduledAt']).toDate(),
+      scheduledEndAt: ts(data['scheduledEndAt'])?.toDate(),
+      endedAt: ts(data['endedAt'])?.toDate(),
+      location: data['location'] as String,
+      capacity: (data['capacity'] as num).toInt(),
+      hostDisplayName: data['hostDisplayName'] as String,
+      hostPhotoUrl: data['hostPhotoUrl'] as String?,
+      createdAt: tsRequired(data['createdAt']).toDate(),
+      updatedAt: tsRequired(data['updatedAt']).toDate(),
+    );
+  }
 
   /// Converts to the domain [SessionEntity], computing derived fields.
   SessionEntity toEntity() => SessionEntity(
@@ -67,24 +104,38 @@ abstract class SessionModel with _$SessionModel {
 }
 
 /// Converts Firestore [Timestamp] ↔ [DateTime].
-class TimestampConverter implements JsonConverter<DateTime, Timestamp> {
+///
+/// Uses [Object] as the JSON type so the generated cast is `as Object`
+/// rather than `as Timestamp`, which avoids a runtime failure on Flutter Web
+/// where Firestore returns JavaScript objects that cannot be directly cast
+/// to the Dart [Timestamp] type.
+class TimestampConverter implements JsonConverter<DateTime, Object> {
   const TimestampConverter();
 
   @override
-  DateTime fromJson(Timestamp ts) => ts.toDate();
+  DateTime fromJson(Object ts) {
+    if (ts is Timestamp) return ts.toDate();
+    throw ArgumentError('Expected Timestamp, got ${ts.runtimeType}');
+  }
 
   @override
-  Timestamp toJson(DateTime dt) => Timestamp.fromDate(dt);
+  Object toJson(DateTime dt) => Timestamp.fromDate(dt);
 }
 
 /// Converts nullable Firestore [Timestamp] ↔ nullable [DateTime].
-class NullableTimestampConverter
-    implements JsonConverter<DateTime?, Timestamp?> {
+///
+/// Uses [Object?] as the JSON type for the same web-compatibility reason
+/// as [TimestampConverter].
+class NullableTimestampConverter implements JsonConverter<DateTime?, Object?> {
   const NullableTimestampConverter();
 
   @override
-  DateTime? fromJson(Timestamp? ts) => ts?.toDate();
+  DateTime? fromJson(Object? ts) {
+    if (ts == null) return null;
+    if (ts is Timestamp) return ts.toDate();
+    return null;
+  }
 
   @override
-  Timestamp? toJson(DateTime? dt) => dt == null ? null : Timestamp.fromDate(dt);
+  Object? toJson(DateTime? dt) => dt == null ? null : Timestamp.fromDate(dt);
 }

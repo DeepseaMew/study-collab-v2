@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile/core/analytics_events.dart';
@@ -8,24 +9,39 @@ import 'package:mobile/core/router/app_router.dart';
 import 'package:mobile/core/utils/date_formatter.dart';
 import 'package:mobile/features/auth/domain/entities/user_entity.dart';
 import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
+import 'package:mobile/features/note_sharing/presentation/widgets/files_tab.dart';
+import 'package:mobile/features/rating/presentation/providers/has_rated_provider.dart';
+import 'package:mobile/features/rating/presentation/providers/rating_flag_provider.dart';
+import 'package:mobile/features/rating/presentation/widgets/rating_banner_widget.dart';
+import 'package:mobile/features/rating/presentation/widgets/rating_bottom_sheet.dart';
 import 'package:mobile/features/sessions/domain/entities/join_request_entity.dart';
 import 'package:mobile/features/sessions/domain/entities/session_entity.dart';
 import 'package:mobile/features/sessions/presentation/providers/join_requests_provider.dart';
 import 'package:mobile/features/sessions/presentation/providers/session_members_provider.dart';
 import 'package:mobile/features/sessions/presentation/providers/session_provider.dart';
 import 'package:mobile/shared/theme/app_colors.dart';
+import 'package:mobile/shared/theme/subject_colors.dart';
 
 enum _HostAction { edit, delete }
 
 /// Host management view of a session.
 ///
-/// Three tabs: Members (with End Session), Notes (placeholder), Requests.
+/// Three tabs: Members (with End Session), Files (ADR 0008), Requests.
 ///
 /// Route: `/my-sessions/session/:id/host`
+/// Extra: `{'initialTabIndex': int}` (optional).
 class HostSessionDetailScreen extends ConsumerStatefulWidget {
-  const HostSessionDetailScreen({super.key, required this.sessionId});
+  const HostSessionDetailScreen({
+    super.key,
+    required this.sessionId,
+    this.initialTabIndex = 0,
+  });
 
   final String sessionId;
+
+  /// Tab index to open on creation. Defaults to 0 (Members).
+  /// Pass 1 to open directly at the Files tab.
+  final int initialTabIndex;
 
   @override
   ConsumerState<HostSessionDetailScreen> createState() =>
@@ -36,11 +52,16 @@ class _HostSessionDetailScreenState
     extends ConsumerState<HostSessionDetailScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tab;
+  SessionEntity? _lastKnownSession;
 
   @override
   void initState() {
     super.initState();
-    _tab = TabController(length: 3, vsync: this);
+    _tab = TabController(
+      length: 3,
+      vsync: this,
+      initialIndex: widget.initialTabIndex.clamp(0, 2),
+    );
   }
 
   @override
@@ -61,8 +82,35 @@ class _HostSessionDetailScreenState
       isDismissible: false,
       builder: (_) => _EndSessionSheet(
         session: session,
+        currentUserId: hostUid,
+        onEndSessionConfirmed: () =>
+            _onEndSessionConfirmed(session, members, hostUid),
+      ),
+    );
+  }
+
+  void _onEndSessionConfirmed(
+    SessionEntity session,
+    List<UserEntity> members,
+    String hostUid,
+  ) {
+    final isEnabled = ref.read(ratingEnabledProvider);
+    if (!isEnabled) return;
+
+    final hasRatedValue = ref
+        .read(hasRatedProvider(session.sessionId, hostUid))
+        .valueOrNull;
+    if (hasRatedValue == true) return;
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => RatingBottomSheet(
+        sessionId: session.sessionId,
         members: members,
         currentUserId: hostUid,
+        hostUid: hostUid,
       ),
     );
   }
@@ -168,7 +216,9 @@ class _HostSessionDetailScreenState
     final requestsAsync = ref.watch(joinRequestsProvider(widget.sessionId));
     final me = ref.watch(firebaseAuthStateProvider).valueOrNull;
 
-    final session = sessionAsync.asData?.value;
+    final streamSession = sessionAsync.asData?.value;
+    if (streamSession != null) _lastKnownSession = streamSession;
+    final session = streamSession ?? _lastKnownSession;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -238,7 +288,8 @@ class _HostSessionDetailScreenState
             ),
           );
         },
-        data: (session) {
+        data: (streamValue) {
+          final session = streamValue ?? _lastKnownSession;
           if (session == null) {
             return const Center(
               child: Text(
@@ -252,6 +303,13 @@ class _HostSessionDetailScreenState
           return Column(
             children: [
               _SessionInfoCard(session: session, currentUserId: me?.uid ?? ''),
+              RatingBannerWidget(
+                sessionId: widget.sessionId,
+                currentUserId: me?.uid ?? '',
+                members: members,
+                hostUid: session.hostUid,
+                sessionStatus: session.status,
+              ),
               TabBar(
                 controller: _tab,
                 indicatorColor: AppColors.accent,
@@ -267,7 +325,7 @@ class _HostSessionDetailScreenState
                 ),
                 tabs: const [
                   Tab(text: 'Members'),
-                  Tab(text: 'Notes'),
+                  Tab(text: 'Files'),
                   Tab(text: 'Requests'),
                 ],
               ),
@@ -283,7 +341,11 @@ class _HostSessionDetailScreenState
                           : () =>
                                 _showEndSessionSheet(session, members, me.uid),
                     ),
-                    const _NotesTab(),
+                    FilesTab(
+                      sessionId: widget.sessionId,
+                      currentUserId: me?.uid ?? '',
+                      hostUid: session.hostUid,
+                    ),
                     _RequestsTab(
                       session: session,
                       requests: requests,
@@ -372,6 +434,7 @@ class _SessionInfoCardState extends ConsumerState<_SessionInfoCard> {
     final subjectLabel = session.hashtags.isNotEmpty
         ? session.hashtags.first
         : session.academicLevel;
+    final subjectChipColor = subjectColor(subjectLabel);
 
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
@@ -398,16 +461,14 @@ class _SessionInfoCardState extends ConsumerState<_SessionInfoCard> {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.accent.withValues(alpha: 0.12),
+                  color: subjectChipColor.background,
                   borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: AppColors.accent.withValues(alpha: 0.25),
-                  ),
+                  border: Border.all(color: subjectChipColor.border),
                 ),
                 child: Text(
                   subjectLabel,
-                  style: const TextStyle(
-                    color: AppColors.accent,
+                  style: TextStyle(
+                    color: subjectChipColor.text,
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                   ),
@@ -552,7 +613,7 @@ class _SessionInfoCardState extends ConsumerState<_SessionInfoCard> {
                     ),
                   ),
                 const Spacer(),
-                if (!_pinLoading)
+                if (!_pinLoading) ...[
                   IconButton(
                     visualDensity: VisualDensity.compact,
                     padding: EdgeInsets.zero,
@@ -566,6 +627,30 @@ class _SessionInfoCardState extends ConsumerState<_SessionInfoCard> {
                     ),
                     onPressed: _togglePin,
                   ),
+                  if (_pinRevealed && _fetchedPin != null) ...[
+                    const SizedBox(width: 8),
+                    IconButton(
+                      visualDensity: VisualDensity.compact,
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      icon: const Icon(
+                        Icons.copy_outlined,
+                        size: 18,
+                        color: AppColors.hint,
+                      ),
+                      onPressed: () async {
+                        await Clipboard.setData(
+                          ClipboardData(text: _fetchedPin!),
+                        );
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('PIN copied')),
+                          );
+                        }
+                      },
+                    ),
+                  ],
+                ],
               ],
             ),
           ],
@@ -685,7 +770,8 @@ class _MembersTab extends StatelessWidget {
             ),
             icon: const Icon(Icons.chat_bubble_outline, size: 18),
             label: const Text('Message group'),
-            onPressed: () {},
+            onPressed: () =>
+                context.push('/sessions/${session.sessionId}/chat'),
           ),
           const SizedBox(height: 12),
           ElevatedButton(
@@ -748,79 +834,7 @@ class _HostRow extends StatelessWidget {
   }
 }
 
-// ── Tab 1: Notes placeholder ───────────────────────────────────────────────────
-
-class _NotesTab extends StatelessWidget {
-  const _NotesTab();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-      child: Column(
-        children: [
-          TextField(
-            decoration: InputDecoration(
-              hintText: 'Search notes...',
-              prefixIcon: const Icon(
-                Icons.search_outlined,
-                color: AppColors.hint,
-              ),
-              filled: true,
-              fillColor: AppColors.surface,
-              contentPadding: const EdgeInsets.symmetric(vertical: 12),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.border),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.border),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppColors.accent, width: 2),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          const Expanded(
-            child: Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.description_outlined,
-                    size: 64,
-                    color: AppColors.secondary,
-                  ),
-                  SizedBox(height: 12),
-                  Text(
-                    'No notes uploaded yet',
-                    style: TextStyle(color: AppColors.hint, fontSize: 14),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          OutlinedButton.icon(
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.accent,
-              minimumSize: const Size(double.infinity, 48),
-              side: const BorderSide(color: AppColors.accent),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            icon: const Icon(Icons.upload_file_outlined, size: 18),
-            label: const Text('Upload Note'),
-            onPressed: () {},
-          ),
-        ],
-      ),
-    );
-  }
-}
+// ── Tab 1: Files is now FilesTab (ADR 0008) ────────────────────────────────────
 
 // ── Tab 2: Requests ────────────────────────────────────────────────────────────
 
@@ -967,6 +981,79 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
     }
   }
 
+  Future<void> _confirmAndDecline() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+        icon: Container(
+          width: 64,
+          height: 64,
+          decoration: BoxDecoration(
+            color: AppColors.error.withValues(alpha: 0.12),
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(
+            Icons.group_remove_rounded,
+            color: AppColors.error,
+            size: 32,
+          ),
+        ),
+        title: const Text(
+          'Decline Request?',
+          style: TextStyle(
+            color: AppColors.text,
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+          ),
+          textAlign: TextAlign.center,
+        ),
+        content: Text(
+          'Are you sure you want to decline the request from ${widget.request.displayName}?',
+          style: const TextStyle(color: AppColors.hint, fontSize: 14),
+          textAlign: TextAlign.center,
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        actions: [
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.border),
+                    foregroundColor: AppColors.text,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onPressed: () => Navigator.of(ctx).pop(false),
+                  child: const Text('Cancel'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.error,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  onPressed: () => Navigator.of(ctx).pop(true),
+                  icon: const Icon(Icons.close_rounded, size: 16),
+                  label: const Text('Decline'),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) await _decline();
+  }
+
   Future<void> _decline() async {
     setState(() => _decliningLoading = true);
     try {
@@ -1073,7 +1160,7 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
                   borderRadius: BorderRadius.circular(8),
                 ),
               ),
-              onPressed: isWorking ? null : _decline,
+              onPressed: isWorking ? null : _confirmAndDecline,
               child: _decliningLoading
                   ? const SizedBox(
                       width: 14,
@@ -1123,49 +1210,20 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
 class _EndSessionSheet extends ConsumerStatefulWidget {
   const _EndSessionSheet({
     required this.session,
-    required this.members,
     required this.currentUserId,
+    this.onEndSessionConfirmed,
   });
 
   final SessionEntity session;
-  final List<UserEntity> members;
   final String currentUserId;
+  final VoidCallback? onEndSessionConfirmed;
 
   @override
   ConsumerState<_EndSessionSheet> createState() => _EndSessionSheetState();
 }
 
 class _EndSessionSheetState extends ConsumerState<_EndSessionSheet> {
-  final Map<String, bool> _thumbsUp = {};
-  String _searchQuery = '';
   bool _submitting = false;
-
-  List<UserEntity> get _sorted {
-    final host = widget.members
-        .where((m) => m.uid == widget.session.hostUid)
-        .toList();
-    final self = widget.members
-        .where(
-          (m) =>
-              m.uid == widget.currentUserId && m.uid != widget.session.hostUid,
-        )
-        .toList();
-    final others = widget.members
-        .where(
-          (m) =>
-              m.uid != widget.session.hostUid && m.uid != widget.currentUserId,
-        )
-        .toList();
-    return [...host, ...self, ...others];
-  }
-
-  List<UserEntity> get _filtered {
-    final q = _searchQuery.toLowerCase();
-    if (q.isEmpty) return _sorted;
-    return _sorted
-        .where((m) => m.displayName.toLowerCase().contains(q))
-        .toList();
-  }
 
   Future<void> _submit() async {
     setState(() => _submitting = true);
@@ -1178,20 +1236,15 @@ class _EndSessionSheetState extends ConsumerState<_EndSessionSheet> {
         extra: {'sessionId': widget.session.sessionId},
       );
       appLogger.debug(AnalyticsEvents.sessionEnded);
-      final thumbsUpCount = _thumbsUp.values.where((v) => v).length;
-      appLogger.info(
-        'Host rating submitted',
-        extra: {'thumbsUpCount': thumbsUpCount},
-      );
-      appLogger.debug(AnalyticsEvents.sessionRatingSubmitted);
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Session ended & ratings submitted!'),
+            content: Text('Session ended successfully.'),
             backgroundColor: AppColors.success,
           ),
         );
+        widget.onEndSessionConfirmed?.call();
       }
     } catch (e, st) {
       appLogger.error(
@@ -1214,8 +1267,6 @@ class _EndSessionSheetState extends ConsumerState<_EndSessionSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final filtered = _filtered;
-
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.surface,
@@ -1247,13 +1298,13 @@ class _EndSessionSheetState extends ConsumerState<_EndSessionSheet> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: AppColors.accent,
+                      color: AppColors.error.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: const Text(
-                      'SESSION ENDED',
+                      'END SESSION',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: AppColors.error,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -1271,7 +1322,7 @@ class _EndSessionSheetState extends ConsumerState<_EndSessionSheet> {
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 16),
               Text(
                 widget.session.title,
                 style: const TextStyle(
@@ -1279,137 +1330,19 @@ class _EndSessionSheetState extends ConsumerState<_EndSessionSheet> {
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                widget.session.scheduledEndAt != null
-                    ? '${DateFormatter.relativeDate(widget.session.scheduledAt)} · '
-                          '${DateFormatter.timeRange(widget.session.scheduledAt, widget.session.scheduledEndAt!)}'
-                    : DateFormatter.relativeDate(widget.session.scheduledAt),
-                style: const TextStyle(color: AppColors.hint, fontSize: 13),
-              ),
-              const SizedBox(height: 12),
-              const Divider(height: 1, color: AppColors.border),
-              const SizedBox(height: 12),
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Anyone stand out?',
-                  style: TextStyle(
-                    color: AppColors.text,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'There were ${widget.members.length} people in this room. '
-                  "Give a quick thumbs up to anyone you'd like to study with again.",
-                  style: const TextStyle(color: AppColors.hint, fontSize: 13),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                onChanged: (v) => setState(() => _searchQuery = v),
-                decoration: InputDecoration(
-                  hintText: 'Search participants by name',
-                  prefixIcon: const Icon(
-                    Icons.search_outlined,
-                    color: AppColors.hint,
-                  ),
-                  filled: true,
-                  fillColor: AppColors.background,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: AppColors.border),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: AppColors.border),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(
-                      color: AppColors.accent,
-                      width: 2,
-                    ),
-                  ),
-                ),
+                textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.of(context).size.height * 0.3,
-                ),
-                child: filtered.isEmpty
-                    ? const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 12),
-                        child: Text(
-                          'No participants found.',
-                          style: TextStyle(color: AppColors.hint, fontSize: 13),
-                        ),
-                      )
-                    : ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: filtered.length,
-                        itemBuilder: (_, i) {
-                          final m = filtered[i];
-                          final isHost = m.uid == widget.session.hostUid;
-                          final isSelf = m.uid == widget.currentUserId;
-                          if (isHost) {
-                            return _BadgeTile(
-                              member: m,
-                              badge: 'Host',
-                              badgeColor: AppColors.accent,
-                            );
-                          }
-                          if (isSelf) {
-                            return _BadgeTile(
-                              member: m,
-                              badge: 'ME',
-                              badgeColor: AppColors.hint,
-                            );
-                          }
-                          final liked = _thumbsUp[m.uid] ?? false;
-                          return ListTile(
-                            contentPadding: EdgeInsets.zero,
-                            leading: _Avatar(
-                              displayName: m.displayName,
-                              photoUrl: m.photoUrl,
-                              radius: 20,
-                            ),
-                            title: Text(
-                              m.displayName,
-                              style: const TextStyle(
-                                color: AppColors.text,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                            trailing: IconButton(
-                              icon: Icon(
-                                liked
-                                    ? Icons.thumb_up
-                                    : Icons.thumb_up_outlined,
-                                color: liked
-                                    ? AppColors.accent
-                                    : AppColors.hint,
-                              ),
-                              onPressed: () =>
-                                  setState(() => _thumbsUp[m.uid] = !liked),
-                            ),
-                          );
-                        },
-                      ),
+              const Text(
+                'Are you sure you want to end this session? '
+                'This action cannot be undone.',
+                style: TextStyle(color: AppColors.hint, fontSize: 13),
+                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 24),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.accent,
+                  backgroundColor: AppColors.error,
                   foregroundColor: Colors.white,
                   minimumSize: const Size(double.infinity, 48),
                   shape: RoundedRectangleBorder(
@@ -1426,58 +1359,20 @@ class _EndSessionSheetState extends ConsumerState<_EndSessionSheet> {
                           color: Colors.white,
                         ),
                       )
-                    : const Text('Submit Rating'),
+                    : const Text('End Session'),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 48),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                onPressed: _submitting ? null : () => Navigator.pop(context),
+                child: const Text('Cancel'),
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ── Badge tile (Host / ME — no thumbs-up toggle) ───────────────────────────────
-
-class _BadgeTile extends StatelessWidget {
-  const _BadgeTile({
-    required this.member,
-    required this.badge,
-    required this.badgeColor,
-  });
-
-  final UserEntity member;
-  final String badge;
-  final Color badgeColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: _Avatar(
-        displayName: member.displayName,
-        photoUrl: member.photoUrl,
-        radius: 20,
-      ),
-      title: Text(
-        member.displayName,
-        style: const TextStyle(
-          color: AppColors.text,
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-        ),
-      ),
-      trailing: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-        decoration: BoxDecoration(
-          color: badgeColor,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          badge,
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
           ),
         ),
       ),
