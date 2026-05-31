@@ -2,7 +2,7 @@
 
 | Field | Value |
 |---|---|
-| Status | Proposed |
+| Status | Accepted |
 | Date | 2026-05-30 |
 | Architect session | claude-sonnet-4-6 / NichapaJongKmutt / 2026-05-30 |
 | Affects | Search feature (domain, data, presentation), home/presentation/screens/home_screen.dart, core/analytics_events.dart, core/firestore_paths.dart, core/feature_flags.dart, app_router.dart, RouteConstants |
@@ -11,9 +11,9 @@
 
 ## Team approval
 
-Approved by:
-Date:
-Notes:
+Approved by: NichapaJongKmutt
+Date: 2026-05-30
+Notes: Accepted via Claude Code session. Q1: amend SearchFilter to add Set<String>? subjects (domain change approved). Q2: Friends chip UI-only, no backend. Q4: delete filter_panel.dart and search_suggestions.dart.
 
 ---
 

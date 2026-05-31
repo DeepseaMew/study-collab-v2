@@ -142,6 +142,29 @@ abstract final class AnalyticsEvents {
   /// Payload: error_type (String, no PII).
   static const String ratingSubmitFailed = 'rating_submit_failed';
 
+  // ── Search ────────────────────────────────────────────────────────────────
+
+  /// User submitted a search query (keyword, hashtag, or filter chip).
+  /// Payload: has_keyword (bool), has_hashtag (bool), has_level_filter (bool),
+  ///          has_year_filter (bool), result_count (int). No PII.
+  static const String searchPerformed = 'search_performed';
+
+  /// User applied a filter chip (subject, quick-filter, academic level, etc.).
+  /// Payload: filter_type (String — 'academic_level' | 'student_year' |
+  ///          'hashtag' | 'today' | 'this_week' | 'my_level' | 'subject').
+  /// No PII.
+  static const String searchFilterApplied = 'search_filter_applied';
+
+  /// User cleared all active search filters. No payload.
+  static const String searchFilterCleared = 'search_filter_cleared';
+
+  /// User tapped a session result card on the search screen. No payload.
+  /// Session ID must not be logged.
+  static const String searchResultTapped = 'search_result_tapped';
+
+  /// User tapped the Retry button on the search error state. No payload.
+  static const String searchRetryTapped = 'search_retry_tapped';
+
   // ── Calendar ───────────────────────────────────────────────────────────────
 
   /// User toggled the calendar view format (month ↔ week).

@@ -77,8 +77,7 @@ service cloud.firestore {
       // High fix: friendUid/initiatorUid/createdAt immutability enforced on update.
 
       match /friends/{friendUid} {
-        allow read: if isKmuttUser()
-          && (request.auth.uid == uid || request.auth.uid == friendUid);
+        allow read: if isKmuttUser();
 
         allow create: if isKmuttUser()
           && (request.auth.uid == uid || request.auth.uid == friendUid)
@@ -114,9 +113,6 @@ service cloud.firestore {
         && (resource.data.visibility == 'public'
             || request.auth.uid in resource.data.memberUids
             || resource.data.hostUid == request.auth.uid
-            || (resource.data.visibility == 'private'
-                && resource.data.pin is string
-                && resource.data.status == 'scheduled')
             || resource.data.status == 'ended');
 
       allow create: if isKmuttUser()
