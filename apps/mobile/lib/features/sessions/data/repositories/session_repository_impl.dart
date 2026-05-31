@@ -1,15 +1,31 @@
+import 'package:flutter/foundation.dart';
 import 'package:mobile/core/errors/app_exception.dart';
 import 'package:mobile/core/logger.dart';
 import 'package:mobile/features/auth/domain/entities/user_entity.dart';
+import 'package:mobile/features/notifications/data/datasources/notification_remote_datasource.dart';
+import 'package:mobile/features/notifications/domain/entities/notification_entity.dart';
 import 'package:mobile/features/sessions/data/datasources/session_datasource.dart';
 import 'package:mobile/features/sessions/domain/entities/session_entity.dart';
 import 'package:mobile/features/sessions/domain/repositories/session_repository.dart';
 
 /// Firestore implementation of [SessionRepository].
+///
+/// Trigger 6: after [endSession], a fire-and-forget `rating_available`
+/// notification is sent to all session members (including the host) per
+/// ADR 0013 and R3 resolution.
 class SessionRepositoryImpl implements SessionRepository {
-  SessionRepositoryImpl(this._datasource);
+  SessionRepositoryImpl(this._datasource)
+    : _notifDatasource = NotificationRemoteDatasource.withDefaultFirestore();
+
+  @visibleForTesting
+  SessionRepositoryImpl.withNotificationDatasource(
+    SessionDatasource datasource,
+    NotificationRemoteDatasource notificationDatasource,
+  ) : _datasource = datasource,
+      _notifDatasource = notificationDatasource;
 
   final SessionDatasource _datasource;
+  final NotificationRemoteDatasource _notifDatasource;
 
   @override
   Stream<SessionEntity?> watchSession(String sessionId) {
@@ -145,6 +161,18 @@ class SessionRepositoryImpl implements SessionRepository {
       throw const AuthorisationException('Only the host may end this session.');
     }
     await _datasource.endSession(sessionId);
+
+    // Trigger 6: fire-and-forget rating_available to all members (ADR 0013 R3).
+    // All memberUids are included — matches ADR 0013 "all session members" literally.
+    _fireRatingAvailableNotifications(
+      callerUid: callerUid,
+      hostDisplayName: session.hostDisplayName.isNotEmpty
+          ? session.hostDisplayName
+          : 'The host',
+      sessionId: sessionId,
+      sessionTitle: session.title,
+      memberUids: session.memberUids,
+    );
   }
 
   @override
@@ -187,6 +215,38 @@ class SessionRepositoryImpl implements SessionRepository {
   }
 
   // ── Private helpers ────────────────────────────────────────────────────────
+
+  /// Fire-and-forget: sends a `rating_available` notification to every member
+  /// in [memberUids] (including the host) after a session ends (ADR 0013 R3).
+  void _fireRatingAvailableNotifications({
+    required String callerUid,
+    required String hostDisplayName,
+    required String sessionId,
+    required String sessionTitle,
+    required List<String> memberUids,
+  }) {
+    Future(() async {
+      for (final memberUid in memberUids) {
+        try {
+          await _notifDatasource.createNotification(
+            recipientUid: memberUid,
+            actorUid: callerUid,
+            actorDisplayName: hostDisplayName,
+            type: NotificationType.ratingAvailable,
+            sessionId: sessionId,
+            sessionTitle: sessionTitle,
+          );
+        } catch (e, st) {
+          appLogger.error(
+            'SessionRepositoryImpl: rating_available notification failed for member',
+            exception: e,
+            stackTrace: st,
+          );
+          // Continue to next member even if one notification write fails.
+        }
+      }
+    });
+  }
 
   UserEntity _userFromMap(String uid, Map<String, dynamic> data) {
     return UserEntity(

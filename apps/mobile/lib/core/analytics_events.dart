@@ -213,4 +213,18 @@ abstract final class AnalyticsEvents {
 
   /// A GCal sync operation failed.
   static const String calendarSyncFailed = 'calendar_sync_failed';
+
+  // ── Notifications ─────────────────────────────────────────────────────────
+
+  /// User opened the notification panel. No payload; no PII.
+  static const String notificationPanelOpened = 'notification_panel_opened';
+
+  /// All unread notifications were batch-marked as read on panel open.
+  /// Payload: type (String), notif_id (String). No PII.
+  static const String notificationMarkedRead = 'notification_marked_read';
+
+  /// User toggled a notification preference.
+  /// Payload: preference_key (String), new_value (bool). No PII.
+  static const String notificationPreferenceChanged =
+      'notification_preference_changed';
 }

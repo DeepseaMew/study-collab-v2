@@ -60,4 +60,13 @@ abstract final class FirestorePaths {
   /// `users/{uid}/groupChats/{sessionId}` — individual summary document.
   static String userGroupChatDoc(String uid, String sessionId) =>
       'users/$uid/groupChats/$sessionId';
+
+  // ── Notifications ──────────────────────────────────────────────────────────
+  /// `users/{uid}/notifications` — per-user notification subcollection (ADR 0013).
+  static String userNotificationsCollection(String uid) =>
+      'users/$uid/notifications';
+
+  /// `users/{uid}/notifications/{notifId}` — individual notification document.
+  static String userNotificationDoc(String uid, String notifId) =>
+      'users/$uid/notifications/$notifId';
 }
