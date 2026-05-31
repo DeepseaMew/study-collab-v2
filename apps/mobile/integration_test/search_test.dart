@@ -20,7 +20,6 @@
 
 import 'dart:async';
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:mobile/main.dart' as app;
@@ -44,7 +43,7 @@ void main() {
         // 6. Expect find.byType(SearchSuggestionsOverlay) to be visible
         // 7. Expect suggestion rows to be present
       },
-      skip: 'TODO: implement — emulator required',
+      skip: true, // TODO: implement — emulator required
     );
 
     testWidgets(
@@ -63,7 +62,7 @@ void main() {
         // 7. Expect SessionCard widgets for sessions tagged 'mathematics'
         // 8. Expect no sessions from other subjects in the list
       },
-      skip: 'TODO: implement — emulator required',
+      skip: true, // TODO: implement — emulator required
     );
 
     testWidgets(
@@ -81,7 +80,7 @@ void main() {
         // 6. Expect 'Sessions by @<handle>' label to be visible
         // 7. Expect all result cards to have the same hostDisplayName
       },
-      skip: 'TODO: implement — emulator required',
+      skip: true, // TODO: implement — emulator required
     );
 
     testWidgets(
@@ -99,7 +98,7 @@ void main() {
         //    'computer science'
         // 6. Verify 'Clear all' appears in the subject row header
       },
-      skip: 'TODO: implement — emulator required',
+      skip: true, // TODO: implement — emulator required
     );
 
     testWidgets(
@@ -122,7 +121,7 @@ void main() {
         // 10. Await pumpAndSettle(Duration(seconds: 1))
         // 11. Expect page indicator '1 / N'
       },
-      skip: 'TODO: implement — emulator required',
+      skip: true, // TODO: implement — emulator required
     );
 
     testWidgets(
@@ -142,7 +141,7 @@ void main() {
         // 8. Expect all sessions to reappear (no keyword filter active)
         // 9. Expect 'Clear all' to not be visible in subject chips
       },
-      skip: 'TODO: implement — emulator required',
+      skip: true, // TODO: implement — emulator required
     );
   });
 }

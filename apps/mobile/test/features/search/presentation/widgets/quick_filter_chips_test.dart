@@ -71,21 +71,15 @@ void main() {
       // The Semantics label test is skipped here because the horizontal
       // ListView.builder clips its semantics tree — see accessibility finding
       // in the QA report. We verify the provider state directly instead.
-      late ProviderContainer container;
       await tester.pumpWidget(
         ProviderScope(
-          child: Builder(
-            builder: (context) {
-              container = ProviderScope.containerOf(context);
-              return MaterialApp(
-                home: Scaffold(
-                  body: SizedBox(
-                    width: 800,
-                    child: QuickFilterChipsWidget(onFilterChanged: () {}),
-                  ),
-                ),
-              );
-            },
+          child: MaterialApp(
+            home: Scaffold(
+              body: SizedBox(
+                width: 800,
+                child: QuickFilterChipsWidget(onFilterChanged: () {}),
+              ),
+            ),
           ),
         ),
       );
