@@ -30,6 +30,9 @@ class _MockQuery extends Mock implements Query<Map<String, dynamic>> {}
 class _MockQuerySnapshot extends Mock
     implements QuerySnapshot<Map<String, dynamic>> {}
 
+// ignore: subtype_of_sealed_class
+class _MockSnapshotMetadata extends Mock implements SnapshotMetadata {}
+
 void main() {
   late _MockFirestore mockFirestore;
   late _MockCollectionReference mockCollection;
@@ -86,6 +89,10 @@ void main() {
       () => mockQueryAfterLte.orderBy('scheduledAt'),
     ).thenReturn(mockQueryAfterOrderBy);
 
+    final mockMetadata = _MockSnapshotMetadata();
+    when(() => mockMetadata.isFromCache).thenReturn(false);
+    when(() => mockMetadata.hasPendingWrites).thenReturn(false);
+    when(() => mockSnapshot.metadata).thenReturn(mockMetadata);
     when(() => mockSnapshot.docs).thenReturn([]);
     when(
       () => mockQueryAfterOrderBy.snapshots(),

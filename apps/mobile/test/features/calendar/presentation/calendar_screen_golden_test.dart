@@ -12,6 +12,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mobile/core/connectivity/connectivity_provider.dart';
 import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
 import 'package:mobile/features/calendar/presentation/providers/calendar_sessions_provider.dart';
 import 'package:mobile/features/calendar/presentation/screens/calendar_screen.dart';
@@ -50,6 +51,7 @@ Widget _buildGolden(double textScale) {
         (_) => throw UnimplementedError(),
       ),
       sessionRepositoryProvider.overrideWith((_) => throw UnimplementedError()),
+      isOnlineProvider.overrideWithValue(true),
     ],
     child: MaterialApp(
       locale: const Locale('th'),

@@ -60,6 +60,11 @@ class CalendarDatasource {
               );
             }
           }
+          appLogger.debug(
+            snap.metadata.isFromCache
+                ? 'calendar: serving from Firestore cache count=${models.length}'
+                : 'calendar: live data received count=${models.length}',
+          );
           return models;
         });
   }
