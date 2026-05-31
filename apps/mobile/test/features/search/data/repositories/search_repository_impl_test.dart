@@ -305,10 +305,7 @@ void main() {
 
     test('empty subjects set (null) passes without filtering', () {
       final session = _session(hashtags: ['mathematics']);
-      expect(
-        _matchesFilter(session, const SearchFilter(), now),
-        isTrue,
-      );
+      expect(_matchesFilter(session, const SearchFilter(), now), isTrue);
     });
 
     test('empty subjects Set passes without filtering', () {
