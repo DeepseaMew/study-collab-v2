@@ -184,7 +184,7 @@ void main() {
       expect(captured?.description, contains('scheduled'));
     });
 
-    test('sets source title to Study Collab', () async {
+    test('does not set event source (source.url omitted per ADR 0007)', () async {
       Event? captured;
       when(() => mockEvents.patch(any(), 'primary', any())).thenAnswer((
         inv,
@@ -195,7 +195,7 @@ void main() {
 
       await datasource.patchEvent(_session());
 
-      expect(captured?.source?.title, 'Study Collab');
+      expect(captured?.source, isNull);
     });
   });
 

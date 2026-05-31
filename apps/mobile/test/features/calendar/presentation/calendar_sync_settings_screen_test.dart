@@ -1,8 +1,8 @@
 // Widget tests for CalendarSyncSettingsScreen.
 //
-// Production state: FeatureFlags.gcalSyncEnabled == false.
-// When the flag is false the screen renders a "Coming soon" placeholder.
-// The enabled path is NOT tested because the flag is false in production.
+// Production state: FeatureFlags.gcalSyncEnabled == true.
+// The screen renders the full sync UI. The initial notifier state is
+// AsyncData(null) (disconnected), so the Connect button is shown by default.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -14,9 +14,8 @@ import 'package:mobile/shared/theme/app_typography.dart';
 // ── Widget builder ────────────────────────────────────────────────────────────
 
 /// Renders [CalendarSyncSettingsScreen] inside a minimal [MaterialApp] and
-/// [ProviderScope]. No provider overrides are needed because when
-/// [FeatureFlags.gcalSyncEnabled] is false the screen never reads
-/// [calendarSyncNotifierProvider].
+/// [ProviderScope]. No provider overrides are needed because the notifier's
+/// silent reconnect catches any Firebase-not-initialised error gracefully.
 Widget _buildScreen() {
   return ProviderScope(
     child: MaterialApp(
@@ -38,7 +37,7 @@ Widget _buildScreen() {
 
 void main() {
   group(
-    'CalendarSyncSettingsScreen — gcalSyncEnabled: false (feature flag off)',
+    'CalendarSyncSettingsScreen — gcalSyncEnabled: true (feature flag on)',
     () {
       testWidgets('renders without error (smoke test)', (tester) async {
         await tester.pumpWidget(_buildScreen());
@@ -54,18 +53,21 @@ void main() {
         expect(find.text('Google Calendar Sync'), findsOneWidget);
       });
 
-      testWidgets('shows "Coming soon" body text', (tester) async {
-        await tester.pumpWidget(_buildScreen());
-        await tester.pumpAndSettle(const Duration(seconds: 3));
-        expect(find.text('Coming soon'), findsOneWidget);
-      });
-
-      testWidgets('does NOT show Connect Google Calendar button', (
+      testWidgets('does NOT show "Coming soon" placeholder text', (
         tester,
       ) async {
         await tester.pumpWidget(_buildScreen());
         await tester.pumpAndSettle(const Duration(seconds: 3));
-        expect(find.text('Connect Google Calendar'), findsNothing);
+        expect(find.text('Coming soon'), findsNothing);
+      });
+
+      testWidgets('shows Connect Google Calendar button when disconnected', (
+        tester,
+      ) async {
+        await tester.pumpWidget(_buildScreen());
+        await tester.pumpAndSettle(const Duration(seconds: 3));
+        // Initial state is AsyncData(null) → disconnected → Connect button shown.
+        expect(find.text('Connect Google Calendar'), findsOneWidget);
       });
 
       testWidgets('does NOT show Disconnect button', (tester) async {
@@ -86,12 +88,12 @@ void main() {
         expect(find.byType(Scaffold), findsWidgets);
       });
 
-      testWidgets('"Coming soon" text is centred in the body', (tester) async {
+      testWidgets('shows ListView body (sync settings list) when enabled', (
+        tester,
+      ) async {
         await tester.pumpWidget(_buildScreen());
         await tester.pumpAndSettle(const Duration(seconds: 3));
-        // The body is a Center widget wrapping the Text.
-        expect(find.byType(Center), findsWidgets);
-        expect(find.text('Coming soon'), findsOneWidget);
+        expect(find.byType(ListView), findsOneWidget);
       });
     },
   );

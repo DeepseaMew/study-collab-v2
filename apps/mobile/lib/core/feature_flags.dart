@@ -6,5 +6,5 @@ abstract final class FeatureFlags {
   /// Whether Google Calendar two-way sync is available to users.
   /// Set to [true] only after the GCal OAuth consent screen has been reviewed
   /// and approved for the production Firebase project.
-  static const bool gcalSyncEnabled = false;
+  static const bool gcalSyncEnabled = true;
 }

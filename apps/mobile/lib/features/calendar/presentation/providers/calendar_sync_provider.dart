@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -6,6 +8,8 @@ import 'package:mobile/core/feature_flags.dart';
 import 'package:mobile/core/logger.dart';
 import 'package:mobile/features/calendar/data/datasources/gcal_datasource.dart';
 import 'package:mobile/features/calendar/data/repositories/calendar_sync_repository_impl.dart';
+import 'package:mobile/features/calendar/presentation/providers/calendar_sessions_provider.dart';
+import 'package:mobile/features/calendar/presentation/providers/calendar_window_provider.dart';
 import 'package:mobile/features/calendar/domain/entities/sync_result.dart';
 import 'package:mobile/features/calendar/domain/repositories/calendar_sync_repository.dart';
 import 'package:mobile/features/calendar/domain/usecases/connect_gcal_usecase.dart';
@@ -25,7 +29,8 @@ CalendarSyncRepository calendarSyncRepository(CalendarSyncRepositoryRef ref) {
   if (uid == null) {
     throw StateError('calendarSyncRepository: no authenticated user');
   }
-  const webClientId = String.fromEnvironment('GOOGLE_SIGNIN_WEB_CLIENT_ID');
+  const webClientId =
+      '381478877763-norjr9uus1upro94tsv4gmskos6jgjon.apps.googleusercontent.com';
   return CalendarSyncRepositoryImpl(
     googleSignIn: GoogleSignIn(
       clientId: kIsWeb ? webClientId : null,
@@ -42,10 +47,57 @@ CalendarSyncRepository calendarSyncRepository(CalendarSyncRepositoryRef ref) {
 @riverpod
 class CalendarSyncNotifier extends _$CalendarSyncNotifier {
   @override
-  AsyncValue<SyncResult?> build() => const AsyncData(null);
+  AsyncValue<SyncResult?> build() {
+    if (FeatureFlags.gcalSyncEnabled) {
+      Future.microtask(_tryReconnectSilently);
+    }
+    return const AsyncData(null);
+  }
 
-  /// Connects the current user's Google Calendar account.
-  Future<void> connect() async {
+  /// Attempts a silent sign-in on startup. If the user previously connected,
+  /// [GoogleSignIn.signInSilently] restores the session without a popup and
+  /// [syncNow] pushes any pending sessions. If no previous session exists the
+  /// method returns silently with no error and no state change.
+  Future<void> _tryReconnectSilently() async {
+    bool isConnected;
+    try {
+      isConnected =
+          await ref.read(calendarSyncRepositoryProvider).isConnected();
+    } catch (e) {
+      // Firebase or provider not yet initialised (e.g. in test environment).
+      appLogger.info('gcal_sync: silent reconnect skipped — ${e.runtimeType}');
+      return;
+    }
+    if (!isConnected) {
+      appLogger.info('gcal_sync: no previous session — staying disconnected');
+      return;
+    }
+    appLogger.info('gcal_sync: previous session restored — auto-syncing');
+    final uid = FirebaseAuth.instance.currentUser?.uid;
+    if (uid == null) {
+      appLogger.info('gcal_sync: no firebase user — skipping auto-sync');
+      return;
+    }
+    final window = ref.read(calendarWindowProvider);
+    List<SessionEntity> sessions;
+    try {
+      sessions = await ref
+          .read(calendarSessionsProvider(uid, window.start, window.end).future)
+          .timeout(const Duration(seconds: 5));
+    } on TimeoutException {
+      appLogger.info('gcal_sync: sessions stream timed out — skipping auto-sync');
+      return;
+    } catch (e) {
+      appLogger.info('gcal_sync: sessions stream error — skipping auto-sync');
+      return;
+    }
+    appLogger.info('gcal_sync: auto-sync sessions count=${sessions.length}');
+    await syncNow(sessions);
+  }
+
+  /// Connects the current user's Google Calendar account, then immediately
+  /// syncs [sessions] so they appear in Google Calendar straight away.
+  Future<void> connect([List<SessionEntity> sessions = const []]) async {
     if (!FeatureFlags.gcalSyncEnabled) return;
     state = const AsyncLoading();
     final uid = FirebaseAuth.instance.currentUser?.uid;
@@ -68,6 +120,14 @@ class CalendarSyncNotifier extends _$CalendarSyncNotifier {
       appLogger.info('gcal_sync: connected');
       return null;
     });
+    // Auto-sync immediately after a successful connect so the user's sessions
+    // appear in Google Calendar without requiring a separate manual sync.
+    if (state is AsyncData) {
+      appLogger.info(
+        'gcal_sync: auto-sync sessions count=${sessions.length}',
+      );
+      await syncNow(sessions);
+    }
   }
 
   /// Disconnects the Google Calendar sync.

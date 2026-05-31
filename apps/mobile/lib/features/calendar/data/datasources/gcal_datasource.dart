@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:flutter/foundation.dart';
 import 'package:googleapis/calendar/v3.dart';
 import 'package:mobile/core/errors/calendar_sync_error.dart';
 import 'package:mobile/core/logger.dart';
@@ -40,23 +41,47 @@ class GcalDatasource {
       location: session.location,
       start: EventDateTime(dateTime: session.scheduledAt),
       end: EventDateTime(dateTime: endTime),
-      source: EventSource(title: 'Study Collab'),
     );
   }
 
-  /// Patches a single calendar event for [session]. Creates it if absent.
+  /// Patches a single calendar event for [session].
+  ///
+  /// Falls back to [events.insert] when the event does not exist yet (404).
+  /// The event ID is always 'sc' + sha1hex(sessionId) per ADR 0007.
   Future<void> patchEvent(SessionEntity session) async {
     final id = _eventId(session.sessionId);
     try {
       await _calendarApi.events.patch(_toEvent(session), 'primary', id);
     } on DetailedApiRequestError catch (e, st) {
-      appLogger.error(
-        'gcal_sync: events.patch failed errorCode=${e.status}',
-        exception: e,
-        stackTrace: st,
-      );
-      await _crashlytics.recordError(e, st);
-      throw ApiFailureError('events.patch failed: ${e.status}');
+      if (e.status == 404) {
+        // Event does not exist yet in the user's calendar — insert it.
+        appLogger.info(
+          'gcal_sync: event not found, inserting sessionId=${session.sessionId}',
+        );
+        try {
+          // Set id on the event body so Google Calendar uses our deterministic ID.
+          await _calendarApi.events.insert(
+            _toEvent(session)..id = id,
+            'primary',
+          );
+        } on DetailedApiRequestError catch (e2, st2) {
+          appLogger.error(
+            'gcal_sync: events.insert failed errorCode=${e2.status}',
+            exception: e2,
+            stackTrace: st2,
+          );
+          if (!kIsWeb) await _crashlytics.recordError(e2, st2);
+          throw ApiFailureError('events.insert failed: ${e2.status}');
+        }
+      } else {
+        appLogger.error(
+          'gcal_sync: events.patch failed errorCode=${e.status}',
+          exception: e,
+          stackTrace: st,
+        );
+        if (!kIsWeb) await _crashlytics.recordError(e, st);
+        throw ApiFailureError('events.patch failed: ${e.status}');
+      }
     }
   }
 
