@@ -31,11 +31,7 @@ Widget _buildBanner() {
       textTheme: AppTypography.textTheme,
       useMaterial3: true,
     ),
-    home: const Scaffold(
-      body: Column(
-        children: [OfflineBanner()],
-      ),
-    ),
+    home: const Scaffold(body: Column(children: [OfflineBanner()])),
   );
 }
 
@@ -57,25 +53,23 @@ void main() {
     });
 
     testWidgets(
-        'Semantics node carries label "Offline — showing last loaded schedule"',
-        (tester) async {
-      await tester.pumpWidget(_buildBanner());
-      await tester.pumpAndSettle(const Duration(seconds: 1));
+      'Semantics node carries label "Offline — showing last loaded schedule"',
+      (tester) async {
+        await tester.pumpWidget(_buildBanner());
+        await tester.pumpAndSettle(const Duration(seconds: 1));
 
-      final semanticsHandle = tester.ensureSemantics();
+        final semanticsHandle = tester.ensureSemantics();
 
-      // The outer Semantics wrapper sets the label. Flutter merges descendant
-      // text into the node label, so the full label may contain additional
-      // text from child widgets. We verify the declared label is present as a
-      // prefix / substring of the merged label.
-      final node = tester.getSemantics(find.byType(OfflineBanner));
-      expect(
-        node.label,
-        contains('Offline — showing last loaded schedule'),
-      );
+        // The outer Semantics wrapper sets the label. Flutter merges descendant
+        // text into the node label, so the full label may contain additional
+        // text from child widgets. We verify the declared label is present as a
+        // prefix / substring of the merged label.
+        final node = tester.getSemantics(find.byType(OfflineBanner));
+        expect(node.label, contains('Offline — showing last loaded schedule'));
 
-      semanticsHandle.dispose();
-    });
+        semanticsHandle.dispose();
+      },
+    );
 
     testWidgets('wifi_off_rounded icon is in the widget tree', (tester) async {
       await tester.pumpWidget(_buildBanner());
@@ -83,8 +77,9 @@ void main() {
       expect(find.byIcon(Icons.wifi_off_rounded), findsOneWidget);
     });
 
-    testWidgets('wifi_off_rounded icon is wrapped in ExcludeSemantics',
-        (tester) async {
+    testWidgets('wifi_off_rounded icon is wrapped in ExcludeSemantics', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildBanner());
       await tester.pumpAndSettle(const Duration(seconds: 1));
 
@@ -98,8 +93,9 @@ void main() {
       );
     });
 
-    testWidgets('icon has no independent semantics label of its own',
-        (tester) async {
+    testWidgets('icon has no independent semantics label of its own', (
+      tester,
+    ) async {
       await tester.pumpWidget(_buildBanner());
       await tester.pumpAndSettle(const Duration(seconds: 1));
 

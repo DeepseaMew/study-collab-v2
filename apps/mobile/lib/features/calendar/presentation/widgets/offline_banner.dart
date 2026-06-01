@@ -25,9 +25,9 @@ class OfflineBanner extends StatelessWidget {
             Expanded(
               child: Text(
                 "You're offline — showing your last loaded schedule",
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppColors.text,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: AppColors.text),
               ),
             ),
           ],

@@ -6,8 +6,7 @@ part 'connectivity_provider.g.dart';
 @Riverpod(keepAlive: true)
 Stream<List<ConnectivityResult>> connectivityStream(
   ConnectivityStreamRef ref,
-) =>
-    Connectivity().onConnectivityChanged;
+) => Connectivity().onConnectivityChanged;
 
 /// Returns `true` when at least one network interface is reachable.
 /// Defaults to `true` before the first connectivity event arrives.
