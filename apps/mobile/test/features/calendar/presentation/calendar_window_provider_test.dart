@@ -80,18 +80,18 @@ void main() {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
-      final targetMonth = DateTime(2026, 5);
+      final targetMonth = DateTime(2024, 5);
       container
           .read(calendarWindowProvider.notifier)
           .advanceToMonth(targetMonth);
 
       final window = container.read(calendarWindowProvider);
 
-      // end should be last instant of June 2026 (month+1 for May is June).
+      // end should be last instant of June 2024 (month+1 for May is June).
       // _windowFor: endDay = DateTime(year, month+2) then subtract 1s
-      // For month=5: endDay = DateTime(2026,7) → subtract 1s = 2026-06-30 23:59:59
+      // For month=5: endDay = DateTime(2024,7) → subtract 1s = 2024-06-30 23:59:59
       expect(window.end.month, 6);
-      expect(window.end.year, 2026);
+      expect(window.end.year, 2024);
       expect(window.end.day, 30);
     });
 
