@@ -10,16 +10,11 @@ import 'package:mobile/core/router/app_router.dart';
 import 'package:mobile/features/note_sharing/domain/entities/note_entity.dart';
 import 'package:mobile/features/note_sharing/domain/entities/note_upload_params.dart';
 import 'package:mobile/features/note_sharing/presentation/providers/note_actions_provider.dart';
-import 'package:mobile/features/note_sharing/presentation/providers/note_sharing_flag_provider.dart';
 import 'package:mobile/features/note_sharing/presentation/providers/notes_provider.dart';
 import 'package:mobile/features/note_sharing/presentation/widgets/note_tile.dart';
 import 'package:mobile/shared/theme/app_colors.dart';
 
 /// The "Files" tab content for session detail screens (ADR 0008 sub-decision 5).
-///
-/// Gated by [noteSharingEnabledProvider]:
-/// - [false] → "Coming soon" placeholder (tab remains visible per ADR 0008).
-/// - [true]  → live note list with upload FAB.
 ///
 /// Shows the first 5 notes from the stream. A "See All N files" button
 /// appears when more than 5 notes exist.
@@ -37,24 +32,6 @@ class FilesTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final flagEnabled = ref.watch(noteSharingEnabledProvider);
-
-    if (!flagEnabled) {
-      return Semantics(
-        label: 'Files tab — coming soon',
-        child: const Center(
-          child: Text(
-            'Coming soon',
-            style: TextStyle(
-              color: AppColors.hint,
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-      );
-    }
-
     final notesAsync = ref.watch(notesProvider(sessionId));
     final actionsState = ref.watch(noteActionsNotifierProvider(sessionId));
 

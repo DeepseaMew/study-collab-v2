@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:mobile/core/logger.dart';
 import 'package:mobile/features/note_sharing/domain/entities/note_upload_params.dart';
 import 'package:mobile/features/note_sharing/presentation/providers/note_actions_provider.dart';
-import 'package:mobile/features/note_sharing/presentation/providers/note_sharing_flag_provider.dart';
 import 'package:mobile/features/note_sharing/presentation/providers/paginated_notes_provider.dart';
 import 'package:mobile/features/note_sharing/presentation/widgets/note_tile.dart';
 import 'package:mobile/shared/theme/app_colors.dart';
@@ -28,20 +27,6 @@ class AllFilesScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Feature flag guard: pop and show snack if flag is off.
-    final flagEnabled = ref.watch(noteSharingEnabledProvider);
-    if (!flagEnabled) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (context.mounted) {
-          context.pop();
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Files are not available yet.')),
-          );
-        }
-      });
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-
     final paginatedAsync = ref.watch(paginatedNotesNotifierProvider(sessionId));
     final actionsState = ref.watch(noteActionsNotifierProvider(sessionId));
 

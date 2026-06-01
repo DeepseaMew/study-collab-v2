@@ -1,14 +1,13 @@
 // Widget tests for FilesTab (ADR 0008).
 //
 // Covers:
-//   - Feature flag disabled → renders "Coming soon" text
 //   - loading state → CircularProgressIndicator
 //   - error branch: tests the error Text widget construction directly
 //   - empty data state → "No files yet" text
 //   - non-empty data state → renders NoteTile widgets
 //   - "See All" button visible when notes.length > 5
 //   - "See All" button hidden when notes.length <= 5
-//   - upload FAB is always visible when flag is enabled
+//   - upload FAB is always visible
 //   - delete button hidden for non-owner non-host
 //   - delete button visible for file owner
 //   - delete button visible for session host
@@ -23,7 +22,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/features/note_sharing/domain/entities/note_entity.dart';
 import 'package:mobile/features/note_sharing/presentation/providers/note_actions_provider.dart';
-import 'package:mobile/features/note_sharing/presentation/providers/note_sharing_flag_provider.dart';
 import 'package:mobile/features/note_sharing/presentation/providers/notes_provider.dart';
 import 'package:mobile/features/note_sharing/presentation/widgets/files_tab.dart';
 import 'package:network_image_mock/network_image_mock.dart';
@@ -65,7 +63,6 @@ List<NoteEntity> _notes(int count) =>
     List.generate(count, (i) => _note(noteId: 'note-$i'));
 
 Widget _buildTab({
-  required bool flagEnabled,
   AsyncValue<List<NoteEntity>> notesValue = const AsyncValue.loading(),
   String currentUserId = 'uid-current',
   String hostUid = 'uid-host',
@@ -73,7 +70,6 @@ Widget _buildTab({
 }) {
   return ProviderScope(
     overrides: [
-      noteSharingEnabledProvider.overrideWithValue(flagEnabled),
       notesProvider(sessionId).overrideWith((_) {
         return switch (notesValue) {
           AsyncData(:final value) => Stream.value(value),
@@ -101,47 +97,12 @@ Widget _buildTab({
 }
 
 void main() {
-  group('FilesTab — feature flag disabled', () {
-    testWidgets('renders "Coming soon" text when flag is false', (
-      tester,
-    ) async {
-      await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(_buildTab(flagEnabled: false));
-        await tester.pump(const Duration(milliseconds: 100));
-        expect(find.text('Coming soon'), findsOneWidget);
-      });
-    });
-
-    testWidgets('does not render upload FAB when flag is false', (
-      tester,
-    ) async {
-      await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(_buildTab(flagEnabled: false));
-        await tester.pump(const Duration(milliseconds: 100));
-        expect(find.byType(FloatingActionButton), findsNothing);
-      });
-    });
-
-    testWidgets(
-      'Semantics wrapper present on "Coming soon" when flag is false',
-      (tester) async {
-        await mockNetworkImagesFor(() async {
-          await tester.pumpWidget(_buildTab(flagEnabled: false));
-          await tester.pump(const Duration(milliseconds: 100));
-          // The Semantics widget wraps the "Coming soon" Text.
-          expect(find.byType(Semantics), findsWidgets);
-          expect(find.text('Coming soon'), findsOneWidget);
-        });
-      },
-    );
-  });
-
   group('FilesTab — loading state', () {
     testWidgets('renders CircularProgressIndicator while loading', (
       tester,
     ) async {
       await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(_buildTab(flagEnabled: true));
+        await tester.pumpWidget(_buildTab());
         // The stream is empty (loading) — just one pump to see the state.
         await tester.pump(const Duration(milliseconds: 50));
         expect(find.byType(CircularProgressIndicator), findsOneWidget);
@@ -156,7 +117,6 @@ void main() {
       await mockNetworkImagesFor(() async {
         await tester.pumpWidget(
           _buildTab(
-            flagEnabled: true,
             notesValue: AsyncValue.error(
               Exception('Firestore error'),
               StackTrace.empty,
@@ -178,7 +138,7 @@ void main() {
     testWidgets('renders "No files yet" when list is empty', (tester) async {
       await mockNetworkImagesFor(() async {
         await tester.pumpWidget(
-          _buildTab(flagEnabled: true, notesValue: const AsyncValue.data([])),
+          _buildTab(notesValue: const AsyncValue.data([])),
         );
         await tester.pumpAndSettle(const Duration(seconds: 1));
         expect(find.text('No files yet'), findsOneWidget);
@@ -190,7 +150,7 @@ void main() {
       (tester) async {
         await mockNetworkImagesFor(() async {
           await tester.pumpWidget(
-            _buildTab(flagEnabled: true, notesValue: const AsyncValue.data([])),
+            _buildTab(notesValue: const AsyncValue.data([])),
           );
           await tester.pumpAndSettle(const Duration(seconds: 1));
           // Semantics wraps the empty-state column; verify the empty-state
@@ -206,7 +166,7 @@ void main() {
     testWidgets('renders note fileNames when list has items', (tester) async {
       await mockNetworkImagesFor(() async {
         await tester.pumpWidget(
-          _buildTab(flagEnabled: true, notesValue: AsyncValue.data(_notes(3))),
+          _buildTab(notesValue: AsyncValue.data(_notes(3))),
         );
         await tester.pumpAndSettle(const Duration(seconds: 1));
         expect(find.text('note-0.pdf'), findsOneWidget);
@@ -220,7 +180,7 @@ void main() {
     ) async {
       await mockNetworkImagesFor(() async {
         await tester.pumpWidget(
-          _buildTab(flagEnabled: true, notesValue: AsyncValue.data(_notes(8))),
+          _buildTab(notesValue: AsyncValue.data(_notes(8))),
         );
         await tester.pumpAndSettle(const Duration(seconds: 1));
         // Only the first 5 notes should be visible.
@@ -237,7 +197,7 @@ void main() {
     ) async {
       await mockNetworkImagesFor(() async {
         await tester.pumpWidget(
-          _buildTab(flagEnabled: true, notesValue: AsyncValue.data(_notes(12))),
+          _buildTab(notesValue: AsyncValue.data(_notes(12))),
         );
         await tester.pumpAndSettle(const Duration(seconds: 1));
         expect(find.textContaining('See All'), findsOneWidget);
@@ -250,7 +210,7 @@ void main() {
     ) async {
       await mockNetworkImagesFor(() async {
         await tester.pumpWidget(
-          _buildTab(flagEnabled: true, notesValue: AsyncValue.data(_notes(5))),
+          _buildTab(notesValue: AsyncValue.data(_notes(5))),
         );
         await tester.pumpAndSettle(const Duration(seconds: 1));
         expect(find.textContaining('See All'), findsNothing);
@@ -262,7 +222,7 @@ void main() {
     ) async {
       await mockNetworkImagesFor(() async {
         await tester.pumpWidget(
-          _buildTab(flagEnabled: true, notesValue: AsyncValue.data(_notes(3))),
+          _buildTab(notesValue: AsyncValue.data(_notes(3))),
         );
         await tester.pumpAndSettle(const Duration(seconds: 1));
         expect(find.textContaining('See All'), findsNothing);
@@ -274,7 +234,7 @@ void main() {
     testWidgets('upload FAB is visible when flag is enabled', (tester) async {
       await mockNetworkImagesFor(() async {
         await tester.pumpWidget(
-          _buildTab(flagEnabled: true, notesValue: const AsyncValue.data([])),
+          _buildTab(notesValue: const AsyncValue.data([])),
         );
         await tester.pumpAndSettle(const Duration(seconds: 1));
         expect(find.byType(FloatingActionButton), findsOneWidget);
@@ -284,7 +244,7 @@ void main() {
     testWidgets('upload FAB has Semantics label "Upload file"', (tester) async {
       await mockNetworkImagesFor(() async {
         await tester.pumpWidget(
-          _buildTab(flagEnabled: true, notesValue: const AsyncValue.data([])),
+          _buildTab(notesValue: const AsyncValue.data([])),
         );
         await tester.pumpAndSettle(const Duration(seconds: 1));
         expect(find.bySemanticsLabel('Upload file'), findsOneWidget);
@@ -299,7 +259,6 @@ void main() {
         final notes = [_note(noteId: 'note-0')];
         await tester.pumpWidget(
           _buildTab(
-            flagEnabled: true,
             notesValue: AsyncValue.data(notes),
             currentUserId: 'uid-bystander',
           ),
@@ -314,7 +273,6 @@ void main() {
         final notes = [_note(noteId: 'note-0', uploaderUid: 'uid-owner')];
         await tester.pumpWidget(
           _buildTab(
-            flagEnabled: true,
             notesValue: AsyncValue.data(notes),
             currentUserId: 'uid-owner',
           ),
@@ -329,7 +287,6 @@ void main() {
         final notes = [_note(noteId: 'note-0')];
         await tester.pumpWidget(
           _buildTab(
-            flagEnabled: true,
             notesValue: AsyncValue.data(notes),
             currentUserId: 'uid-host',
           ),

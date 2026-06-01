@@ -176,9 +176,17 @@ class _NotificationPanelRouteWrapper extends ConsumerWidget {
   }
 }
 
+// ── Stable navigator keys ─────────────────────────────────────────────────────
+// Declared at top level so they survive hot restart and are never recreated.
+
+final _homeKey = GlobalKey<NavigatorState>(debugLabel: 'home');
+final _calendarKey = GlobalKey<NavigatorState>(debugLabel: 'calendar');
+final _messagesKey = GlobalKey<NavigatorState>(debugLabel: 'messages');
+final _mySessionsKey = GlobalKey<NavigatorState>(debugLabel: 'my-sessions');
+
 // ── Router provider ───────────────────────────────────────────────────────────
 
-@riverpod
+@Riverpod(keepAlive: true)
 GoRouter router(RouterRef ref) {
   final notifier = _RouterNotifier(ref);
 
@@ -302,10 +310,56 @@ GoRouter router(RouterRef ref) {
         builder: (_, __) => const SearchScreen(),
       ),
 
+      // ── My Sessions detail routes (top-level so they can be pushed from
+      // any navigator context, e.g. profile screen, without duplicating the
+      // shell page in the root Navigator's pages list — GoRouter 14.x bug).
+      GoRoute(
+        path: RouteConstants.mySessionMember,
+        builder: (_, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          final isCompleted = (extra?['isCompleted'] as bool?) ?? false;
+          final initialTabIndex = (extra?['initialTabIndex'] as int?) ?? 0;
+          return MemberSessionDetailScreen(
+            sessionId: state.pathParameters['id']!,
+            isCompleted: isCompleted,
+            initialTabIndex: initialTabIndex,
+          );
+        },
+      ),
+      GoRoute(
+        path: RouteConstants.mySessionHost,
+        builder: (_, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          final initialTabIndex = (extra?['initialTabIndex'] as int?) ?? 0;
+          return HostSessionDetailScreen(
+            sessionId: state.pathParameters['id']!,
+            initialTabIndex: initialTabIndex,
+          );
+        },
+      ),
+      GoRoute(
+        path: RouteConstants.sessionFiles,
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          if (extra == null) {
+            return const Scaffold(
+              body: Center(child: CircularProgressIndicator()),
+            );
+          }
+          return AllFilesScreen(
+            sessionId: extra['sessionId'] as String,
+            currentUserId: extra['currentUserId'] as String,
+            hostUid: extra['hostUid'] as String,
+          );
+        },
+      ),
+
       StatefulShellRoute.indexedStack(
+        restorationScopeId: 'shell',
         builder: (_, __, shell) => MainShell(navigationShell: shell),
         branches: [
           StatefulShellBranch(
+            navigatorKey: _homeKey,
             routes: [
               GoRoute(
                 path: RouteConstants.home,
@@ -314,6 +368,7 @@ GoRouter router(RouterRef ref) {
             ],
           ),
           StatefulShellBranch(
+            navigatorKey: _calendarKey,
             routes: [
               GoRoute(
                 path: RouteConstants.calendar,
@@ -343,6 +398,7 @@ GoRouter router(RouterRef ref) {
             ],
           ),
           StatefulShellBranch(
+            navigatorKey: _messagesKey,
             routes: [
               GoRoute(
                 path: RouteConstants.messages,
@@ -351,55 +407,11 @@ GoRouter router(RouterRef ref) {
             ],
           ),
           StatefulShellBranch(
+            navigatorKey: _mySessionsKey,
             routes: [
               GoRoute(
                 path: RouteConstants.mySessions,
                 builder: (_, __) => const MySessionsScreen(),
-                routes: [
-                  GoRoute(
-                    path: 'session/:id/member',
-                    builder: (_, state) {
-                      final extra = state.extra as Map<String, dynamic>?;
-                      final isCompleted =
-                          (extra?['isCompleted'] as bool?) ?? false;
-                      final initialTabIndex =
-                          (extra?['initialTabIndex'] as int?) ?? 0;
-                      return MemberSessionDetailScreen(
-                        sessionId: state.pathParameters['id']!,
-                        isCompleted: isCompleted,
-                        initialTabIndex: initialTabIndex,
-                      );
-                    },
-                  ),
-                  GoRoute(
-                    path: 'session/:id/host',
-                    builder: (_, state) {
-                      final extra = state.extra as Map<String, dynamic>?;
-                      final initialTabIndex =
-                          (extra?['initialTabIndex'] as int?) ?? 0;
-                      return HostSessionDetailScreen(
-                        sessionId: state.pathParameters['id']!,
-                        initialTabIndex: initialTabIndex,
-                      );
-                    },
-                  ),
-                  GoRoute(
-                    path: 'session/:id/files',
-                    builder: (context, state) {
-                      final extra = state.extra as Map<String, dynamic>?;
-                      if (extra == null) {
-                        return const Scaffold(
-                          body: Center(child: CircularProgressIndicator()),
-                        );
-                      }
-                      return AllFilesScreen(
-                        sessionId: extra['sessionId'] as String,
-                        currentUserId: extra['currentUserId'] as String,
-                        hostUid: extra['hostUid'] as String,
-                      );
-                    },
-                  ),
-                ],
               ),
             ],
           ),

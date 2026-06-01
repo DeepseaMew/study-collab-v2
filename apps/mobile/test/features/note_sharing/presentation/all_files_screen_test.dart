@@ -8,8 +8,6 @@
 //   - upload FAB visible and labelled "Upload file"
 //   - "Load more" button visible when hasMore = true
 //   - "Load more" button hidden when hasMore = false
-//
-// AllFilesScreen pops when feature flag is false, so flag is always true here.
 
 import 'dart:async';
 
@@ -18,7 +16,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mobile/features/note_sharing/domain/entities/note_entity.dart';
 import 'package:mobile/features/note_sharing/presentation/providers/note_actions_provider.dart';
-import 'package:mobile/features/note_sharing/presentation/providers/note_sharing_flag_provider.dart';
 import 'package:mobile/features/note_sharing/presentation/providers/paginated_notes_provider.dart';
 import 'package:mobile/features/note_sharing/presentation/screens/all_files_screen.dart';
 import 'package:network_image_mock/network_image_mock.dart';
@@ -77,7 +74,6 @@ Widget _buildScreen({
 
   return ProviderScope(
     overrides: [
-      noteSharingEnabledProvider.overrideWithValue(true),
       noteActionsNotifierProvider(
         sessionId,
       ).overrideWith(() => _FakeNoteActionsNotifier()),
