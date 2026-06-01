@@ -14,21 +14,22 @@
 
 ### Pre-release checklist
 - [ ] CI green on latest commit: fail — gh CLI not installed; CI status on origin/develop (commit a078363) cannot be verified programmatically; must be confirmed manually in GitHub Actions
-- [ ] QA report present and PASS: fail — no QA report exists for commits a078363 (calender offline) or b627903 (fix andriod run); the only calendar QA report (docs/audit/calendar/2026-05-22-qa-feat-calendar.md) covers the original calendar feature, not the offline caching layer introduced in a078363
-- [ ] Security report present and APPROVED: fail — no security report exists for the calendar feature at any point; docs/audit/calendar/ contains only a QA report; no security report covers commits a078363 or b627903
-- [ ] No unresolved Critical or High findings: blocked — security review has never been conducted for the calendar feature or the offline-first caching layer; cannot confirm absence of Critical or High findings
+- [ ] CI green on latest commit: fail — gh CLI not installed; CI status on origin/develop must be confirmed manually in GitHub Actions
+- [x] QA report present and PASS: pass — docs/audit/calendar/2026-06-01-qa-offline-calendar.md; 108 tests pass including 6 new OfflineBanner widget tests (commit 3362b5d)
+- [x] Security report present and APPROVED: pass — docs/audit/calendar/2026-06-01-security-offline-calendar.md; verdict APPROVED, severity_max info, no Critical or High findings (commit 2b6f900)
+- [x] No unresolved Critical or High findings: pass — security report confirms severity_max is info; all findings are benign or informational
 - [x] Crashlytics evidence file exists in docs/audit/evidence/: pass — docs/audit/evidence/crashlytics-test-crash.png present
 - [x] No print() calls in codebase: pass — 0 files found matching print( in apps/mobile/lib/**/*.dart
 - [x] No PII in logs confirmed: pass — grep of appLogger calls found only structural messages (no email addresses, display names, or message content interpolated)
-- [ ] rating_enabled rollback documented in CLAUDE.md: fail — CLAUDE.md contains a rating_enabled section but documents a code-change + redeploy procedure (~5 min), not the required Firebase Remote Config no-deploy rollback (~1 min); the required procedure (Firebase Console → Remote Config → set rating_enabled = false → Publish Changes) is absent
+- [x] rating_enabled rollback documented in CLAUDE.md: pass — corrected to Firebase Console → Remote Config → set rating_enabled = false → Publish Changes (~1 min, no redeploy) in commit 597ad2e
 - [x] Compiles on Android: pass — flutter build apk --debug succeeded; Built build\app\outputs\flutter-apk\app-debug.apk
 - [x] Compiles on Web: pass — flutter build web --debug succeeded; Built build\web (WASM dry-run warnings present, non-blocking)
 
 ### Gate results
-- QA: FAIL — no QA report for offline-first calendar commits (a078363, b627903); prior calendar QA (102 tests, PASS) does not cover the offline caching layer
-- Security: BLOCKED — no security report for calendar feature; severity_max unknown
+- QA: PASS — docs/audit/calendar/2026-06-01-qa-offline-calendar.md; 108 tests pass; OfflineBanner widget tests added
+- Security: APPROVED — docs/audit/calendar/2026-06-01-security-offline-calendar.md; severity_max info; no Critical or High findings
 - Crashlytics evidence: PRESENT — docs/audit/evidence/crashlytics-test-crash.png
-- Feature flag rollback: MISSING — rating_enabled rollback in CLAUDE.md describes code-change + redeploy, not Firebase Remote Config no-deploy procedure
+- Feature flag rollback: DOCUMENTED — CLAUDE.md updated to Firebase Remote Config no-deploy procedure (commit 597ad2e)
 
 ### Changelog
 #### v1.0.0 — 2026-06-01
@@ -56,4 +57,11 @@
 - Version bumped to 1.0.0+1
 
 ### Verdict
-- BLOCKED — three gates fail: (1) no QA report for offline-first calendar commits a078363 and b627903; (2) no security report for the calendar feature at any revision; (3) rating_enabled rollback in CLAUDE.md does not document the required Firebase Remote Config no-deploy procedure. Do not cut tag v1.0.0+1 until all three blockers are resolved.
+- READY TO MERGE — all gates pass. QA: 108 tests PASS. Security: APPROVED (severity_max info). Crashlytics evidence present. Feature flag rollback documented. One manual check remains: confirm CI is green on origin/develop in GitHub Actions before merging PR #23. After merge, cut tag v1.0.0 on main.
+
+#### Blocker resolution log
+| Blocker | Resolved by | Commit |
+|---|---|---|
+| QA report missing | qa-engineer wrote docs/audit/calendar/2026-06-01-qa-offline-calendar.md + OfflineBanner widget tests | 0098baa, 3362b5d |
+| Security report missing | security-reviewer wrote docs/audit/calendar/2026-06-01-security-offline-calendar.md | 2b6f900 |
+| CLAUDE.md rollback incorrect | Fixed rating_enabled rollback to use Firebase Remote Config | 597ad2e |
