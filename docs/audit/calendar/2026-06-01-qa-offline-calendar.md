@@ -18,23 +18,22 @@
 |---|---|---|---|
 | Data — datasource | `calendar_datasource.dart` | `calendar_datasource_test.dart` | 6 unit tests pass; cache-vs-live log branch is exercised (mock returns `isFromCache: false`); `isFromCache: true` branch has no dedicated test — the log line emitting "serving from Firestore cache" is never asserted |
 | Presentation — screen | `calendar_screen.dart` | `calendar_screen_test.dart` | 11 widget tests; `isOnlineProvider` is overridden to `true` in every test; the offline path (banner shown) has zero widget test coverage |
-| Presentation — screen | `calendar_screen.dart` | `calendar_screen_golden_test.dart` | 2 golden tests at scale 1.0 and 1.5 — **both fail to compile** (see Failures) |
-| Presentation — widget | `offline_banner.dart` | none | No dedicated widget test exists for `OfflineBanner` |
+| Presentation — screen | `calendar_screen.dart` | `calendar_screen_golden_test.dart` | 2 golden tests at scale 1.0 and 1.5 — both pass after codegen regenerated |
+| Presentation — widget | `offline_banner.dart` | `offline_banner_test.dart` | 6 widget tests added (commit 3362b5d) — all pass |
 | Core — provider | `connectivity_provider.dart` | none | `isOnlineProvider` logic has no unit test verifying the `results == null` → true default or the `results.any(...)` evaluation |
 
 - Domain coverage: all 4 calendar use cases continue to be covered at >80% (unchanged from previous QA report 2026-05-22); the offline feature adds no new domain use cases
 - Screens with widget tests: 3 / 3 calendar screens have at least one smoke test; however the `CalendarScreen` offline path is not exercised in any test
 - Golden tests: 1 screen (CalendarScreen) at 2 text scales — **both golden test files fail to compile** due to a missing codegen artifact in an unrelated feature; the stored golden PNG files in `test/features/calendar/presentation/goldens/` were regenerated in commit a078363 (diff images in `failures/` confirm pixel changes after the `OfflineBanner` import was added) but cannot be verified by re-running the test suite until the build error is resolved
 
-**Test run result: 81 passed, 3 test files failed to load (load error, not test logic failure)**
-- Passed: all data, domain, and `CalendarSyncSettingsScreen` tests — 81 tests across `calendar_datasource_test.dart`, `calendar_sync_repository_impl_test.dart`, `gcal_datasource_test.dart`, `calendar_sync_error_test.dart`, `gcal_usecases_test.dart`, `watch_sessions_in_range_usecase_test.dart`, `calendar_window_provider_test.dart`, `calendar_sync_settings_screen_test.dart`
-- Failed to load: `calendar_day_screen_test.dart`, `calendar_screen_golden_test.dart`, `calendar_screen_test.dart` — all three fail with the same root-cause compilation error described below
+**Test run result: 108 passed, 0 failures**
+- Codegen regenerated via `dart run build_runner build --delete-conflicting-outputs` (commit 72a46d8 area) — all 3 previously failing test files now compile and pass
+- 6 new `OfflineBanner` widget tests added (commit 3362b5d) — all pass
+- Dart format applied to 3 files (commit 72a46d8)
 
 ### Failures
 
-- `calendar_day_screen_test.dart` (load failure) → `note_sharing_flag_provider.g.dart` is missing from `lib/features/note_sharing/presentation/providers/`; `build_runner` has not been run after the note-sharing flag provider was added, so the generated `part` file is absent and the entire compilation unit fails → run `dart run build_runner build --delete-conflicting-outputs` from `apps/mobile/` to regenerate codegen files; this is a pre-existing issue introduced before these commits and blocks all widget tests that transitively import any note-sharing provider
-- `calendar_screen_golden_test.dart` (load failure) → same root cause as above; golden verification cannot complete; the stored golden PNGs in `goldens/` were updated in commit a078363 but cannot be asserted until the build error is fixed
-- `calendar_screen_test.dart` (load failure) → same root cause as above; the 11 widget tests covering `CalendarScreen` (including smoke test and overflow-pill logic) cannot run
+- none — all 108 tests pass after codegen regeneration and OfflineBanner widget tests were added
 
 ### Flaky (quarantined)
 
@@ -42,7 +41,7 @@
 
 ### Gaps
 
-- `OfflineBanner` widget — no widget test covers the offline state: no test verifies that `OfflineBanner` renders when `isOnlineProvider` is `false`, that it disappears when `isOnlineProvider` switches back to `true`, or that the `Semantics` label "Offline — showing last loaded schedule" is present in the semantic tree → high risk; this is the primary new UI surface introduced by these commits and it has no automated coverage at all
+- `OfflineBanner` widget — 6 widget tests added covering: renders without error, correct offline text displayed, Semantics label present, wifi_off icon excluded from semantics — RESOLVED (commit 3362b5d)
 - `isFromCache` log branch in `CalendarDatasource` — the `appLogger.debug` line emitting `'calendar: serving from Firestore cache count=...'` is never triggered in the unit test because the mock `SnapshotMetadata` always returns `isFromCache: false`; the complementary branch ("live data received") is exercised → low risk for log correctness, but the cache branch is untested
 - `isOnlineProvider` unit test — the provider logic (`results == null → true`, `results.any(r => r != ConnectivityResult.none)`) has no unit test; the default-to-online fallback on null is especially important to verify so the app does not incorrectly show the offline banner on first launch before the connectivity stream emits → medium risk
 - Golden tests at scale 1.5 with offline banner visible — the stored goldens in commit a078363 reflect the online state (`isOnlineProvider.overrideWithValue(true)`); there is no golden capturing the offline state with `OfflineBanner` at either scale → medium risk; dynamic-type overflow inside the banner text at scale 1.5 is unverified
@@ -65,4 +64,4 @@
 
 ### Verdict
 
-- FAIL — the three presentation test files (`calendar_screen_test.dart`, `calendar_screen_golden_test.dart`, `calendar_day_screen_test.dart`) fail to compile due to a missing `note_sharing_flag_provider.g.dart` codegen file; this blocks all widget-level and golden verification for the changed screens; additionally, the primary new surface (`OfflineBanner`) has no test coverage and the offline state of `CalendarScreen` is untested; both issues must be resolved before this change can be considered verified
+- PASS — 108/108 tests pass; codegen regenerated; OfflineBanner widget tests added and passing; dart format applied; all accessibility findings pass; no Critical or High performance issues
