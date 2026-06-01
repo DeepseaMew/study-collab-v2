@@ -1,0 +1,11 @@
+{
+  "worktrees": false,
+  "permissions": {
+    "allow": [
+      "Bash(claude doctor *)",
+      "Bash(dart run *)",
+      "Bash(flutter analyze *)",
+      "Bash(flutter test *)"
+    ]
+  }
+}

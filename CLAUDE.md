@@ -190,3 +190,17 @@ write operations. KMUTT domain validated server-side in Firestore rules.
 - A deliberate debug-only test crash must exist to verify Crashlytics receives data.
 - TLS enforced by Firebase SDK; never disable certificate validation.
 - `flutter_secure_storage` for any token or sensitive value that must persist locally.
+
+## Feature flag rollback
+
+### rating_enabled
+- Flag location: Firebase Remote Config key `rating_enabled`
+- Provider: `lib/features/rating/presentation/providers/rating_flag_provider.dart`
+- To disable: Firebase Console → Remote Config → set `rating_enabled = false` → Publish Changes
+- Effect: hides all rating UI; rating writes are blocked client-side
+- Rollback time: ~1 minute (no code change or redeploy required)
+- No data migration needed — ratings already written are unaffected
+
+## Planned in the future
+- Profile (view own and others) — depends on Friends, Sessions, Rating
+- Profile Edit (display name, faculty, bio, avatar) — depends on Profile, ADR 0001 amendment

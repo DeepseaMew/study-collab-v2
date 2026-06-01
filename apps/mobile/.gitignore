@@ -14,9 +14,11 @@
 # Coverage
 **/coverage/
 
+# Golden test failure artifacts (auto-generated on test failure, not source)
+**/failures/
+
 # Dart
 **/.packages
-**/pubspec.lock
 
 # IDE
 .idea/
@@ -35,4 +37,6 @@ Thumbs.db
 **/GoogleService-Info.plist
 **/service-account.json
 **/*-service-account.json
-
+**/lib/firebase_options.dart
+apps/mobile/android/app/google-services.json 
+apps/mobile/android/app/google-services.json 

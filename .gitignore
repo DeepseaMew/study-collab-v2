@@ -1,0 +1,5 @@
+chromedriver/ 
+chromedriver.zip 
+firebase-debug.log 
+firestore-debug.log 
+.claude/settings.local.json 
