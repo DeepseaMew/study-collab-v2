@@ -200,7 +200,3 @@ write operations. KMUTT domain validated server-side in Firestore rules.
 - Effect: hides all rating UI; rating writes are blocked client-side
 - Rollback time: ~1 minute (no code change or redeploy required)
 - No data migration needed — ratings already written are unaffected
-
-## Planned in the future
-- Profile (view own and others) — depends on Friends, Sessions, Rating
-- Profile Edit (display name, faculty, bio, avatar) — depends on Profile, ADR 0001 amendment

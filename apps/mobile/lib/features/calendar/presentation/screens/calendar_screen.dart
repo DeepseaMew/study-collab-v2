@@ -6,9 +6,11 @@ import 'package:mobile/core/analytics_events.dart';
 import 'package:mobile/core/feature_flags.dart';
 import 'package:mobile/core/logger.dart';
 import 'package:mobile/core/router/app_router.dart';
+import 'package:mobile/core/connectivity/connectivity_provider.dart';
 import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
 import 'package:mobile/features/calendar/presentation/providers/calendar_sessions_provider.dart';
 import 'package:mobile/features/calendar/presentation/providers/calendar_window_provider.dart';
+import 'package:mobile/features/calendar/presentation/widgets/offline_banner.dart';
 import 'package:mobile/features/sessions/domain/entities/session_entity.dart';
 import 'package:mobile/shared/theme/app_colors.dart';
 import 'package:mobile/shared/widgets/session_card.dart';
@@ -47,6 +49,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
     final uid = authUser.uid;
+    final isOnline = ref.watch(isOnlineProvider);
     final window = ref.watch(calendarWindowProvider);
     final sessionsAsync = ref.watch(
       calendarSessionsProvider(uid, window.start, window.end),
@@ -127,6 +130,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       ),
       body: Column(
         children: [
+          if (!isOnline) const OfflineBanner(),
           Container(
             color: AppColors.surface,
             child: TableCalendar<SessionEntity>(

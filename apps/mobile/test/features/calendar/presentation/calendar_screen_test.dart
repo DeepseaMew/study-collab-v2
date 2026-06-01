@@ -9,6 +9,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mobile/core/connectivity/connectivity_provider.dart';
 import 'package:mobile/features/auth/presentation/providers/firebase_auth_state_provider.dart';
 import 'package:mobile/features/calendar/domain/repositories/calendar_repository.dart';
 import 'package:mobile/features/calendar/presentation/providers/calendar_sessions_provider.dart';
@@ -99,6 +100,7 @@ Widget _buildCalendarScreen({
       sessionRepositoryProvider.overrideWith(
         (_) => throw UnimplementedError('not needed in widget test'),
       ),
+      isOnlineProvider.overrideWithValue(true),
     ],
     child: MaterialApp(
       locale: const Locale('th'),

@@ -80,18 +80,20 @@ void main() {
       final container = ProviderContainer();
       addTearDown(container.dispose);
 
-      final targetMonth = DateTime(2024, 5);
+      // Use a far-future month so advanceToMonth always expands the window
+      // regardless of when the test runs (avoids date-sensitive breakage).
+      final targetMonth = DateTime(2030, 5);
       container
           .read(calendarWindowProvider.notifier)
           .advanceToMonth(targetMonth);
 
       final window = container.read(calendarWindowProvider);
 
-      // end should be last instant of June 2024 (month+1 for May is June).
+      // end should be last instant of June 2030 (month+1 for May is June).
       // _windowFor: endDay = DateTime(year, month+2) then subtract 1s
-      // For month=5: endDay = DateTime(2024,7) → subtract 1s = 2024-06-30 23:59:59
+      // For month=5: endDay = DateTime(2030,7) → subtract 1s = 2030-06-30 23:59:59
       expect(window.end.month, 6);
-      expect(window.end.year, 2024);
+      expect(window.end.year, 2030);
       expect(window.end.day, 30);
     });
 
