@@ -194,8 +194,9 @@ write operations. KMUTT domain validated server-side in Firestore rules.
 ## Feature flag rollback
 
 ### rating_enabled
-- Flag location: `lib/core/feature_flags.dart`
-- To disable: set `rating_enabled = false` in `feature_flags.dart` and redeploy
+- Flag location: Firebase Remote Config key `rating_enabled`
+- Provider: `lib/features/rating/presentation/providers/rating_flag_provider.dart`
+- To disable: Firebase Console → Remote Config → set `rating_enabled = false` → Publish Changes
 - Effect: hides all rating UI; rating writes are blocked client-side
-- Rollback time: ~5 minutes (code change + hot deploy)
+- Rollback time: ~1 minute (no code change or redeploy required)
 - No data migration needed — ratings already written are unaffected
