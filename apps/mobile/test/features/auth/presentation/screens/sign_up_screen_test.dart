@@ -79,4 +79,20 @@ void main() {
 
     expect(find.text('Full name'), findsOneWidget);
   });
+
+  group('accessibility', () {
+    // Known gaps (tracked for next sprint):
+    //   androidTapTargetGuideline — password-visibility suffix icons render
+    //     below 48dp; needs explicit minimum touch target.
+    //   labeledTapTargetGuideline — same suffix icons have no semantic label.
+    testWidgets('meets WCAG AA text contrast guideline', (tester) async {
+      final handle = tester.ensureSemantics();
+      await tester.pumpWidget(
+        _buildScreen(const AsyncValue.data(AuthState.unauthenticated())),
+      );
+      await tester.pumpAndSettle();
+      await expectLater(tester, meetsGuideline(textContrastGuideline));
+      handle.dispose();
+    });
+  });
 }
