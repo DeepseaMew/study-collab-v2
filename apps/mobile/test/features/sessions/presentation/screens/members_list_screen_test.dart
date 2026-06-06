@@ -82,7 +82,7 @@ Widget _buildScreen({
         ),
       ),
     ],
-    child: MaterialApp(home: MembersListScreen(sessionId: _sessionId)),
+    child: const MaterialApp(home: MembersListScreen(sessionId: _sessionId)),
   );
 }
 
@@ -113,7 +113,6 @@ void main() {
     await mockNetworkImagesFor(() async {
       await tester.pumpWidget(
         _buildScreen(
-          membersState: const AsyncValue.data([]),
           sessionState: AsyncValue.data(_stubSession()),
         ),
       );

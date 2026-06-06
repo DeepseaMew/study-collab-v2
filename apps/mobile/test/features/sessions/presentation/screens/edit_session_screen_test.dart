@@ -67,7 +67,7 @@ Widget _buildScreen({
       ),
       sessionRepositoryProvider.overrideWithValue(mockRepo),
     ],
-    child: MaterialApp(home: EditSessionScreen(sessionId: _sessionId)),
+    child: const MaterialApp(home: EditSessionScreen(sessionId: _sessionId)),
   );
 }
 
@@ -104,7 +104,7 @@ void main() {
     await mockNetworkImagesFor(() async {
       await tester.pumpWidget(
         _buildScreen(
-          sessionState: AsyncValue.data(_stubSession(hostUid: 'host-uid')),
+          sessionState: AsyncValue.data(_stubSession()),
           currentUid: 'other-user',
         ),
       );
@@ -120,7 +120,7 @@ void main() {
     await mockNetworkImagesFor(() async {
       await tester.pumpWidget(
         _buildScreen(
-          sessionState: AsyncValue.data(_stubSession(hostUid: 'host-uid')),
+          sessionState: AsyncValue.data(_stubSession()),
           currentUid: 'host-uid',
         ),
       );

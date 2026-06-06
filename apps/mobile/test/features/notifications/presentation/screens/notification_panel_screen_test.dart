@@ -62,7 +62,7 @@ Widget _buildScreen({
         () => _FakePrefsNotifier(prefs),
       ),
     ],
-    child: MaterialApp(home: NotificationPanelScreen(uid: _uid)),
+    child: const MaterialApp(home: NotificationPanelScreen(uid: _uid)),
   );
 }
 

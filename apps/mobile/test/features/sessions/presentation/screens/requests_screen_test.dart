@@ -62,7 +62,7 @@ Widget _buildScreen({
       ),
       joinRequestRepositoryProvider.overrideWithValue(mockRepo),
     ],
-    child: MaterialApp(home: RequestsScreen(sessionId: _sessionId)),
+    child: const MaterialApp(home: RequestsScreen(sessionId: _sessionId)),
   );
 }
 
