@@ -55,10 +55,12 @@ Future<void> _bootstrap() async {
 
   appLogger.info('App bootstrap complete — launching Study Collab');
 
-  runApp(UncontrolledProviderScope(
-    container: container,
-    child: const _StudyCollabApp(),
-  ));
+  runApp(
+    UncontrolledProviderScope(
+      container: container,
+      child: const _StudyCollabApp(),
+    ),
+  );
 }
 // ── App widget ─────────────────────────────────────────────────────────────────
 
