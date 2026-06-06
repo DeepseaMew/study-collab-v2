@@ -15,7 +15,6 @@ import 'package:mobile/shared/theme/app_typography.dart';
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 
 Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
   await runZonedGuarded<Future<void>>(_bootstrap, (
     Object error,
     StackTrace stack,
@@ -34,6 +33,7 @@ Future<void> main() async {
 }
 
 Future<void> _bootstrap() async {
+  WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   FirebaseFirestore.instance.settings = const Settings(
