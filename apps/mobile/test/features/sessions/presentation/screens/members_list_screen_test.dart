@@ -112,9 +112,7 @@ void main() {
   ) async {
     await mockNetworkImagesFor(() async {
       await tester.pumpWidget(
-        _buildScreen(
-          sessionState: AsyncValue.data(_stubSession()),
-        ),
+        _buildScreen(sessionState: AsyncValue.data(_stubSession())),
       );
       await tester.pumpAndSettle(const Duration(seconds: 3));
       expect(find.text('No members yet.'), findsOneWidget);
