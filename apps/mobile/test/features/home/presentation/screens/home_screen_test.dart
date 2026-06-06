@@ -62,7 +62,7 @@ Widget _buildScreen({
   AsyncValue<List<SessionEntity>> sessions = const AsyncValue.data([]),
 }) {
   final populated = sessions is AsyncData<List<SessionEntity>>
-      ? (sessions as AsyncData<List<SessionEntity>>).value
+      ? sessions.value
       : <SessionEntity>[];
 
   return ProviderScope(
@@ -78,16 +78,15 @@ Widget _buildScreen({
           data: (v) => Stream.value(v),
         ),
       ),
-      unreadNotificationCountProvider(_uid).overrideWith(
-        (_) => Stream.value(0),
-      ),
+      unreadNotificationCountProvider(
+        _uid,
+      ).overrideWith((_) => Stream.value(0)),
       for (final s in populated) ...[
-        myPendingRequestProvider(s.sessionId, _uid).overrideWith(
-          (_) => Stream.value(false),
-        ),
-        userProvider(s.hostUid).overrideWith(
-          (_) => Stream.value(_stubUser),
-        ),
+        myPendingRequestProvider(
+          s.sessionId,
+          _uid,
+        ).overrideWith((_) => Stream.value(false)),
+        userProvider(s.hostUid).overrideWith((_) => Stream.value(_stubUser)),
       ],
     ],
     child: const MaterialApp(home: HomeScreen()),
@@ -103,18 +102,17 @@ void main() {
     });
   });
 
-  testWidgets(
-    'HomeScreen — loading state renders CircularProgressIndicator',
-    (tester) async {
-      await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(
-          _buildScreen(sessions: const AsyncValue.loading()),
-        );
-        await tester.pump(const Duration(milliseconds: 50));
-        expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      });
-    },
-  );
+  testWidgets('HomeScreen — loading state renders CircularProgressIndicator', (
+    tester,
+  ) async {
+    await mockNetworkImagesFor(() async {
+      await tester.pumpWidget(
+        _buildScreen(sessions: const AsyncValue.loading()),
+      );
+      await tester.pump(const Duration(milliseconds: 50));
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    });
+  });
 
   testWidgets(
     'HomeScreen — empty sessions shows "All caught up!" empty state',
@@ -127,33 +125,31 @@ void main() {
     },
   );
 
-  testWidgets(
-    'HomeScreen — populated sessions render a SessionCard',
-    (tester) async {
-      await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(
-          _buildScreen(sessions: AsyncValue.data([_stubSession()])),
-        );
-        await tester.pumpAndSettle(const Duration(seconds: 3));
-        expect(find.byType(SessionCard), findsOneWidget);
-        expect(find.text('Calculus Study Group'), findsOneWidget);
-      });
-    },
-  );
+  testWidgets('HomeScreen — populated sessions render a SessionCard', (
+    tester,
+  ) async {
+    await mockNetworkImagesFor(() async {
+      await tester.pumpWidget(
+        _buildScreen(sessions: AsyncValue.data([_stubSession()])),
+      );
+      await tester.pumpAndSettle(const Duration(seconds: 3));
+      expect(find.byType(SessionCard), findsOneWidget);
+      expect(find.text('Calculus Study Group'), findsOneWidget);
+    });
+  });
 
-  testWidgets(
-    'HomeScreen — search bar placeholder text is present',
-    (tester) async {
-      await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(_buildScreen());
-        await tester.pumpAndSettle(const Duration(seconds: 3));
-        expect(
-          find.text('Search sessions, #hashtags, @hosts...'),
-          findsOneWidget,
-        );
-      });
-    },
-  );
+  testWidgets('HomeScreen — search bar placeholder text is present', (
+    tester,
+  ) async {
+    await mockNetworkImagesFor(() async {
+      await tester.pumpWidget(_buildScreen());
+      await tester.pumpAndSettle(const Duration(seconds: 3));
+      expect(
+        find.text('Search sessions, #hashtags, @hosts...'),
+        findsOneWidget,
+      );
+    });
+  });
 
   testWidgets('HomeScreen — "Join with PIN" button is present', (tester) async {
     await mockNetworkImagesFor(() async {
@@ -163,14 +159,11 @@ void main() {
     });
   });
 
-  testWidgets(
-    'HomeScreen — greeting contains user first name',
-    (tester) async {
-      await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(_buildScreen());
-        await tester.pumpAndSettle(const Duration(seconds: 3));
-        expect(find.textContaining('Test'), findsWidgets);
-      });
-    },
-  );
+  testWidgets('HomeScreen — greeting contains user first name', (tester) async {
+    await mockNetworkImagesFor(() async {
+      await tester.pumpWidget(_buildScreen());
+      await tester.pumpAndSettle(const Duration(seconds: 3));
+      expect(find.textContaining('Test'), findsWidgets);
+    });
+  });
 }

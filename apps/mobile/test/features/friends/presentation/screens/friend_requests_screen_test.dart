@@ -53,9 +53,7 @@ Widget _buildScreen({
       ),
       friendActionNotifierProvider.overrideWith(() => _FakeActionNotifier()),
     ],
-    child: const MaterialApp(
-      home: FriendRequestsScreen(currentUid: _uid),
-    ),
+    child: const MaterialApp(home: FriendRequestsScreen(currentUid: _uid)),
   );
 }
 
@@ -73,35 +71,38 @@ void main() {
     'FriendRequestsScreen — loading state shows CircularProgressIndicator',
     (tester) async {
       await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(_buildScreen(
-          incoming: const AsyncValue.loading(),
-          outgoing: const AsyncValue.loading(),
-        ));
+        await tester.pumpWidget(
+          _buildScreen(
+            incoming: const AsyncValue.loading(),
+            outgoing: const AsyncValue.loading(),
+          ),
+        );
         await tester.pump(const Duration(milliseconds: 50));
         expect(find.byType(CircularProgressIndicator), findsWidgets);
       });
     },
   );
 
-  testWidgets(
-    'FriendRequestsScreen — empty state shows correct messages',
-    (tester) async {
-      await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(_buildScreen());
-        await tester.pumpAndSettle(const Duration(seconds: 3));
-        expect(find.text('No incoming requests.'), findsOneWidget);
-        expect(find.text('No sent requests.'), findsOneWidget);
-      });
-    },
-  );
+  testWidgets('FriendRequestsScreen — empty state shows correct messages', (
+    tester,
+  ) async {
+    await mockNetworkImagesFor(() async {
+      await tester.pumpWidget(_buildScreen());
+      await tester.pumpAndSettle(const Duration(seconds: 3));
+      expect(find.text('No incoming requests.'), findsOneWidget);
+      expect(find.text('No sent requests.'), findsOneWidget);
+    });
+  });
 
   testWidgets(
     'FriendRequestsScreen — populated incoming section renders FriendRequestTile',
     (tester) async {
       await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(_buildScreen(
-          incoming: AsyncValue.data([_stubRequest(name: 'Alice Smith')]),
-        ));
+        await tester.pumpWidget(
+          _buildScreen(
+            incoming: AsyncValue.data([_stubRequest(name: 'Alice Smith')]),
+          ),
+        );
         await tester.pumpAndSettle(const Duration(seconds: 3));
         expect(find.byType(FriendRequestTile), findsOneWidget);
         expect(find.text('Alice Smith'), findsOneWidget);
@@ -113,11 +114,13 @@ void main() {
     'FriendRequestsScreen — populated outgoing section renders FriendRequestTile',
     (tester) async {
       await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(_buildScreen(
-          outgoing: AsyncValue.data([
-            _stubRequest(friendUid: 'out-uid', name: 'Charlie Brown'),
-          ]),
-        ));
+        await tester.pumpWidget(
+          _buildScreen(
+            outgoing: AsyncValue.data([
+              _stubRequest(friendUid: 'out-uid', name: 'Charlie Brown'),
+            ]),
+          ),
+        );
         await tester.pumpAndSettle(const Duration(seconds: 3));
         expect(find.byType(FriendRequestTile), findsOneWidget);
         expect(find.text('Charlie Brown'), findsOneWidget);
@@ -125,18 +128,19 @@ void main() {
     },
   );
 
-  testWidgets(
-    'FriendRequestsScreen — incoming error shows error message',
-    (tester) async {
-      await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(_buildScreen(
+  testWidgets('FriendRequestsScreen — incoming error shows error message', (
+    tester,
+  ) async {
+    await mockNetworkImagesFor(() async {
+      await tester.pumpWidget(
+        _buildScreen(
           incoming: AsyncValue.error(Exception('network'), StackTrace.empty),
-        ));
-        await tester.pumpAndSettle(const Duration(seconds: 3));
-        expect(find.text('Could not load requests.'), findsOneWidget);
-      });
-    },
-  );
+        ),
+      );
+      await tester.pumpAndSettle(const Duration(seconds: 3));
+      expect(find.text('Could not load requests.'), findsOneWidget);
+    });
+  });
 
   testWidgets(
     'FriendRequestsScreen — section headers Incoming and Sent are present',

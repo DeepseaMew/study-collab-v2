@@ -72,7 +72,9 @@ Widget _buildScreen({
 }
 
 void main() {
-  testWidgets('EditSessionScreen — loading state renders spinner', (tester) async {
+  testWidgets('EditSessionScreen — loading state renders spinner', (
+    tester,
+  ) async {
     await mockNetworkImagesFor(() async {
       await tester.pumpWidget(_buildScreen());
       await tester.pump(const Duration(milliseconds: 50));
@@ -84,39 +86,44 @@ void main() {
     'EditSessionScreen — null data renders "Session not found." error scaffold',
     (tester) async {
       await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(_buildScreen(
-          sessionState: const AsyncValue.data(null),
-          currentUid: 'host-uid',
-        ));
+        await tester.pumpWidget(
+          _buildScreen(
+            sessionState: const AsyncValue.data(null),
+            currentUid: 'host-uid',
+          ),
+        );
         await tester.pumpAndSettle(const Duration(seconds: 3));
         expect(find.text('Session not found.'), findsOneWidget);
       });
     },
   );
 
-  testWidgets(
-    'EditSessionScreen — non-host sees "not authorised" message',
-    (tester) async {
-      await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(_buildScreen(
+  testWidgets('EditSessionScreen — non-host sees "not authorised" message', (
+    tester,
+  ) async {
+    await mockNetworkImagesFor(() async {
+      await tester.pumpWidget(
+        _buildScreen(
           sessionState: AsyncValue.data(_stubSession(hostUid: 'host-uid')),
           currentUid: 'other-user',
-        ));
-        await tester.pumpAndSettle(const Duration(seconds: 3));
-        expect(
-          find.text('You are not authorised to edit this session.'),
-          findsOneWidget,
-        );
-      });
-    },
-  );
+        ),
+      );
+      await tester.pumpAndSettle(const Duration(seconds: 3));
+      expect(
+        find.text('You are not authorised to edit this session.'),
+        findsOneWidget,
+      );
+    });
+  });
 
   testWidgets('EditSessionScreen — host sees SessionForm', (tester) async {
     await mockNetworkImagesFor(() async {
-      await tester.pumpWidget(_buildScreen(
-        sessionState: AsyncValue.data(_stubSession(hostUid: 'host-uid')),
-        currentUid: 'host-uid',
-      ));
+      await tester.pumpWidget(
+        _buildScreen(
+          sessionState: AsyncValue.data(_stubSession(hostUid: 'host-uid')),
+          currentUid: 'host-uid',
+        ),
+      );
       await tester.pumpAndSettle(const Duration(seconds: 3));
       expect(find.byType(SessionForm), findsOneWidget);
     });

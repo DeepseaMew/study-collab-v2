@@ -44,16 +44,16 @@ SessionEntity _stubSession() {
 }
 
 UserEntity _stubUser(String uid, {String name = 'Alice'}) => UserEntity(
-      uid: uid,
-      displayName: name,
-      fullName: name,
-      email: '$uid@mail.kmutt.ac.th',
-      hasHostedBefore: false,
-      studentYear: 2,
-      academicLevel: 'undergraduate',
-      faculty: 'Engineering',
-      profileScore: 0.0,
-    );
+  uid: uid,
+  displayName: name,
+  fullName: name,
+  email: '$uid@mail.kmutt.ac.th',
+  hasHostedBefore: false,
+  studentYear: 2,
+  academicLevel: 'undergraduate',
+  faculty: 'Engineering',
+  profileScore: 0.0,
+);
 
 Widget _buildScreen({
   AsyncValue<List<UserEntity>> membersState = const AsyncValue.data([]),
@@ -95,43 +95,45 @@ void main() {
     });
   });
 
-  testWidgets(
-    'MembersListScreen — loading state renders spinner',
-    (tester) async {
-      await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(
-          _buildScreen(membersState: const AsyncValue.loading()),
-        );
-        await tester.pump(const Duration(milliseconds: 50));
-        expect(find.byType(CircularProgressIndicator), findsOneWidget);
-      });
-    },
-  );
+  testWidgets('MembersListScreen — loading state renders spinner', (
+    tester,
+  ) async {
+    await mockNetworkImagesFor(() async {
+      await tester.pumpWidget(
+        _buildScreen(membersState: const AsyncValue.loading()),
+      );
+      await tester.pump(const Duration(milliseconds: 50));
+      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+    });
+  });
 
-  testWidgets(
-    'MembersListScreen — empty members list shows empty state',
-    (tester) async {
-      await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(_buildScreen(
+  testWidgets('MembersListScreen — empty members list shows empty state', (
+    tester,
+  ) async {
+    await mockNetworkImagesFor(() async {
+      await tester.pumpWidget(
+        _buildScreen(
           membersState: const AsyncValue.data([]),
           sessionState: AsyncValue.data(_stubSession()),
-        ));
-        await tester.pumpAndSettle(const Duration(seconds: 3));
-        expect(find.text('No members yet.'), findsOneWidget);
-      });
-    },
-  );
+        ),
+      );
+      await tester.pumpAndSettle(const Duration(seconds: 3));
+      expect(find.text('No members yet.'), findsOneWidget);
+    });
+  });
 
   testWidgets(
     'MembersListScreen — error state shows "Could not load members."',
     (tester) async {
       await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(_buildScreen(
-          membersState: AsyncValue.error(
-            Exception('Firestore error'),
-            StackTrace.empty,
+        await tester.pumpWidget(
+          _buildScreen(
+            membersState: AsyncValue.error(
+              Exception('Firestore error'),
+              StackTrace.empty,
+            ),
           ),
-        ));
+        );
         await tester.pumpAndSettle(const Duration(seconds: 3));
         expect(find.text('Could not load members.'), findsOneWidget);
       });
@@ -142,14 +144,16 @@ void main() {
     'MembersListScreen — populated list renders member display names',
     (tester) async {
       await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(_buildScreen(
-          membersState: AsyncValue.data([
-            _stubUser(_hostUid, name: 'Alice Host'),
-            _stubUser('member-2', name: 'Bob Member'),
-          ]),
-          sessionState: AsyncValue.data(_stubSession()),
-          currentUid: 'member-2',
-        ));
+        await tester.pumpWidget(
+          _buildScreen(
+            membersState: AsyncValue.data([
+              _stubUser(_hostUid, name: 'Alice Host'),
+              _stubUser('member-2', name: 'Bob Member'),
+            ]),
+            sessionState: AsyncValue.data(_stubSession()),
+            currentUid: 'member-2',
+          ),
+        );
         await tester.pumpAndSettle(const Duration(seconds: 3));
         expect(find.text('Alice Host'), findsOneWidget);
         expect(find.text('Bob Member'), findsOneWidget);
@@ -157,20 +161,21 @@ void main() {
     },
   );
 
-  testWidgets(
-    'MembersListScreen — host member gets "Host" badge',
-    (tester) async {
-      await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(_buildScreen(
+  testWidgets('MembersListScreen — host member gets "Host" badge', (
+    tester,
+  ) async {
+    await mockNetworkImagesFor(() async {
+      await tester.pumpWidget(
+        _buildScreen(
           membersState: AsyncValue.data([
             _stubUser(_hostUid, name: 'Alice Host'),
           ]),
           sessionState: AsyncValue.data(_stubSession()),
           currentUid: 'member-2',
-        ));
-        await tester.pumpAndSettle(const Duration(seconds: 3));
-        expect(find.text('Host'), findsOneWidget);
-      });
-    },
-  );
+        ),
+      );
+      await tester.pumpAndSettle(const Duration(seconds: 3));
+      expect(find.text('Host'), findsOneWidget);
+    });
+  });
 }

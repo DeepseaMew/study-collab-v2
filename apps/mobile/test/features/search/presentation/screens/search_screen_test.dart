@@ -27,16 +27,16 @@ class _FakeFirebaseUser extends Fake implements User {
 const _uid = 'searcher-uid';
 
 UserEntity _stubUserEntity(String uid) => UserEntity(
-      uid: uid,
-      displayName: 'Host',
-      fullName: 'Host Name',
-      email: '$uid@mail.kmutt.ac.th',
-      hasHostedBefore: true,
-      studentYear: 3,
-      academicLevel: 'undergraduate',
-      faculty: 'Engineering',
-      profileScore: 0.8,
-    );
+  uid: uid,
+  displayName: 'Host',
+  fullName: 'Host Name',
+  email: '$uid@mail.kmutt.ac.th',
+  hasHostedBefore: true,
+  studentYear: 3,
+  academicLevel: 'undergraduate',
+  faculty: 'Engineering',
+  profileScore: 0.8,
+);
 
 SessionEntity _stubSession(String id) {
   final now = DateTime(2026, 6, 1, 10);
@@ -94,21 +94,24 @@ Widget _buildScreen({List<SessionEntity> sessions = const []}) {
       firebaseAuthStateProvider.overrideWith(
         (_) => Stream.value(_FakeFirebaseUser(_uid)),
       ),
-      searchNotifierProvider
-          .overrideWith(() => _FakeSearchNotifier(sessions)),
-      quickFilterNotifierProvider
-          .overrideWith(() => _FakeQuickFilterNotifier()),
-      subjectFilterNotifierProvider
-          .overrideWith(() => _FakeSubjectFilterNotifier()),
-      searchFilterNotifierProvider
-          .overrideWith(() => _FakeSearchFilterNotifier()),
+      searchNotifierProvider.overrideWith(() => _FakeSearchNotifier(sessions)),
+      quickFilterNotifierProvider.overrideWith(
+        () => _FakeQuickFilterNotifier(),
+      ),
+      subjectFilterNotifierProvider.overrideWith(
+        () => _FakeSubjectFilterNotifier(),
+      ),
+      searchFilterNotifierProvider.overrideWith(
+        () => _FakeSearchFilterNotifier(),
+      ),
       for (final s in sessions) ...[
-        myPendingRequestProvider(s.sessionId, _uid).overrideWith(
-          (_) => Stream.value(false),
-        ),
-        userProvider(s.hostUid).overrideWith(
-          (_) => Stream.value(_stubUserEntity(s.hostUid)),
-        ),
+        myPendingRequestProvider(
+          s.sessionId,
+          _uid,
+        ).overrideWith((_) => Stream.value(false)),
+        userProvider(
+          s.hostUid,
+        ).overrideWith((_) => Stream.value(_stubUserEntity(s.hostUid))),
       ],
     ],
     child: const MaterialApp(home: SearchScreen()),
@@ -116,8 +119,9 @@ Widget _buildScreen({List<SessionEntity> sessions = const []}) {
 }
 
 void main() {
-  testWidgets('SearchScreen — renders with "Search sessions" title',
-      (tester) async {
+  testWidgets('SearchScreen — renders with "Search sessions" title', (
+    tester,
+  ) async {
     await mockNetworkImagesFor(() async {
       await tester.pumpWidget(_buildScreen());
       await tester.pumpAndSettle(const Duration(seconds: 3));
@@ -126,8 +130,9 @@ void main() {
     });
   });
 
-  testWidgets('SearchScreen — empty results show "No sessions found"',
-      (tester) async {
+  testWidgets('SearchScreen — empty results show "No sessions found"', (
+    tester,
+  ) async {
     await mockNetworkImagesFor(() async {
       await tester.pumpWidget(_buildScreen());
       await tester.pumpAndSettle(const Duration(seconds: 3));
@@ -135,16 +140,14 @@ void main() {
     });
   });
 
-  testWidgets('SearchScreen — populated results render SessionCard',
-      (tester) async {
+  testWidgets('SearchScreen — populated results render SessionCard', (
+    tester,
+  ) async {
     await mockNetworkImagesFor(() async {
-      await tester.pumpWidget(
-        _buildScreen(sessions: [_stubSession('s1')]),
-      );
+      await tester.pumpWidget(_buildScreen(sessions: [_stubSession('s1')]));
       await tester.pumpAndSettle(const Duration(seconds: 3));
       expect(find.byType(SessionCard), findsOneWidget);
       expect(find.text('Physics Study Session'), findsOneWidget);
     });
   });
-
 }

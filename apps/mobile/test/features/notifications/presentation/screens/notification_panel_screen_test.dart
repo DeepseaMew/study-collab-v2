@@ -92,40 +92,40 @@ void main() {
     },
   );
 
-  testWidgets(
-    'NotificationPanelScreen — empty list shows empty state',
-    (tester) async {
-      await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(_buildScreen());
-        await tester.pumpAndSettle(const Duration(seconds: 3));
-        expect(find.text('No notifications yet'), findsOneWidget);
-      });
-    },
-  );
+  testWidgets('NotificationPanelScreen — empty list shows empty state', (
+    tester,
+  ) async {
+    await mockNetworkImagesFor(() async {
+      await tester.pumpWidget(_buildScreen());
+      await tester.pumpAndSettle(const Duration(seconds: 3));
+      expect(find.text('No notifications yet'), findsOneWidget);
+    });
+  });
 
-  testWidgets(
-    'NotificationPanelScreen — error state shows error message',
-    (tester) async {
-      await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(_buildScreen(
+  testWidgets('NotificationPanelScreen — error state shows error message', (
+    tester,
+  ) async {
+    await mockNetworkImagesFor(() async {
+      await tester.pumpWidget(
+        _buildScreen(
           notifs: AsyncValue.error(
             Exception('Firestore error'),
             StackTrace.empty,
           ),
-        ));
-        await tester.pumpAndSettle(const Duration(seconds: 3));
-        expect(find.text('Failed to load notifications'), findsOneWidget);
-      });
-    },
-  );
+        ),
+      );
+      await tester.pumpAndSettle(const Duration(seconds: 3));
+      expect(find.text('Failed to load notifications'), findsOneWidget);
+    });
+  });
 
   testWidgets(
     'NotificationPanelScreen — populated list renders NotificationListTile',
     (tester) async {
       await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(_buildScreen(
-          notifs: AsyncValue.data([_stubNotif()]),
-        ));
+        await tester.pumpWidget(
+          _buildScreen(notifs: AsyncValue.data([_stubNotif()])),
+        );
         await tester.pumpAndSettle(const Duration(seconds: 3));
         expect(find.byType(NotificationListTile), findsOneWidget);
       });
@@ -136,15 +136,17 @@ void main() {
     'NotificationPanelScreen — allNotifications=false shows empty state',
     (tester) async {
       await mockNetworkImagesFor(() async {
-        await tester.pumpWidget(_buildScreen(
-          notifs: AsyncValue.data([_stubNotif()]),
-          prefs: const {
-            'allNotifications': false,
-            'joinRequestAlerts': false,
-            'friendRequests': false,
-            'ratingAvailable': false,
-          },
-        ));
+        await tester.pumpWidget(
+          _buildScreen(
+            notifs: AsyncValue.data([_stubNotif()]),
+            prefs: const {
+              'allNotifications': false,
+              'joinRequestAlerts': false,
+              'friendRequests': false,
+              'ratingAvailable': false,
+            },
+          ),
+        );
         await tester.pumpAndSettle(const Duration(seconds: 3));
         expect(find.text('No notifications yet'), findsOneWidget);
         expect(find.byType(NotificationListTile), findsNothing);
