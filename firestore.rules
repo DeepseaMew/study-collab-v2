@@ -164,11 +164,10 @@ service cloud.firestore {
     // now correctly nested inside match /sessions/{sessionId}.
 
     match /sessions/{sessionId} {
-      allow read: if isKmuttUser()
-        && (resource.data.visibility == 'public'
-            || request.auth.uid in resource.data.memberUids
-            || resource.data.hostUid == request.auth.uid
-            || resource.data.status == 'ended');
+      // Any verified KMUTT user may read any session document.
+      // "Private" controls who may JOIN (PIN validated server-side on the
+      // requests write rule), not who may discover the session.
+      allow read: if isKmuttUser();
 
       allow create: if isKmuttUser()
         && request.resource.data.hostUid == request.auth.uid
