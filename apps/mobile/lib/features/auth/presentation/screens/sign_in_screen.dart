@@ -190,25 +190,6 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                           return null;
                         },
                       ),
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Password reset coming soon'),
-                              ),
-                            );
-                          },
-                          child: Text(
-                            'Forgot password?',
-                            style: AppTypography.textTheme.labelLarge?.copyWith(
-                              color: AppColors.accent,
-                              fontSize: 13,
-                            ),
-                          ),
-                        ),
-                      ),
                       const SizedBox(height: 8),
                       SizedBox(
                         height: 50,

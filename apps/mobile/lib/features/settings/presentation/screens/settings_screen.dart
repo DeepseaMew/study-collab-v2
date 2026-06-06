@@ -15,7 +15,7 @@ import 'package:mobile/shared/widgets/avatar_widget.dart';
 /// 1. Profile — avatar, display name, email (read-only, no Edit Profile action)
 /// 2. Notifications — 4 toggles (All Notifications, Join Request Alerts,
 ///    Friend Requests, Rating Available)
-/// 3. Account — Change Password, Sign Out (with confirmation dialog)
+/// 3. Account — Sign Out (with confirmation dialog)
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
@@ -191,30 +191,6 @@ class _SettingsBody extends ConsumerWidget {
           ),
           child: Column(
             children: [
-              Semantics(
-                label: 'Change Password',
-                button: true,
-                child: ListTile(
-                  leading: const Icon(
-                    Icons.lock_outline,
-                    color: AppColors.text,
-                  ),
-                  title: const Text('Change Password'),
-                  trailing: const Icon(
-                    Icons.chevron_right,
-                    color: AppColors.hint,
-                  ),
-                  onTap: () {
-                    // TODO(settings): wire Change Password when ADR 0014 lands.
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Change Password — coming soon'),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const Divider(height: 1, indent: 16, endIndent: 16),
               Semantics(
                 label: 'Sign Out',
                 button: true,

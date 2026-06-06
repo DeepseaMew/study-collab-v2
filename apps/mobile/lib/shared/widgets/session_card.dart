@@ -27,6 +27,7 @@ class SessionCard extends StatelessWidget {
     this.showJoinButton = false,
     this.onJoinTap,
     this.isPending = false,
+    this.showMenu = true,
   });
 
   final SessionEntity session;
@@ -42,6 +43,12 @@ class SessionCard extends StatelessWidget {
 
   /// When `true`, the join button shows a "Pending..." disabled state.
   final bool isPending;
+
+  /// When `false`, the three-dot context menu is hidden entirely.
+  /// Pass `false` on the Home screen for sessions the user has not joined,
+  /// where actions such as "Leave Session" are meaningless.
+  /// Defaults to `true` so all existing call sites are unaffected.
+  final bool showMenu;
 
   @override
   Widget build(BuildContext context) {
@@ -98,6 +105,7 @@ class SessionCard extends StatelessWidget {
                       session: session,
                       isHost: isHost,
                       currentUserId: currentUserId,
+                      showMenu: showMenu,
                     ),
                   ],
                 ),
@@ -380,14 +388,22 @@ class _ThreeDotMenu extends ConsumerWidget {
     required this.session,
     required this.isHost,
     required this.currentUserId,
+    this.showMenu = true,
   });
 
   final SessionEntity session;
   final bool isHost;
   final String currentUserId;
 
+  /// When `false`, the widget renders nothing. Callers that show cards for
+  /// sessions the user has not joined (e.g. Home screen) should pass `false`
+  /// so that irrelevant actions such as "Leave Session" are never presented.
+  final bool showMenu;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (!showMenu) return const SizedBox.shrink();
+
     return PopupMenuButton<_CardMenuAction>(
       tooltip: isHost ? 'Session options' : 'Member options',
       icon: const Icon(Icons.more_vert, size: 18, color: AppColors.hint),

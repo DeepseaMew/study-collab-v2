@@ -306,6 +306,7 @@ class _HomeBodyState extends ConsumerState<_HomeBody> {
                         session: session,
                         currentUserId: widget.uid ?? '',
                         isPending: isPending,
+                        showMenu: false,
                         onTap: () => context.push(
                           RouteConstants.sessionDetail.replaceFirst(
                             ':id',
