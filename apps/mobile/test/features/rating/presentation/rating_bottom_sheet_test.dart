@@ -456,5 +456,11 @@ void main() {
 
       expect(find.bySemanticsLabel('Close rating'), findsOneWidget);
     });
+
+    // Known gaps (tracked for next sprint):
+    //   androidTapTargetGuideline — thumb-up icon button renders at 40×40dp;
+    //     needs minimum 48dp touch target.
+    //   labeledTapTargetGuideline — same icon button has no semantic label
+    //     beyond the per-member "Rate [name]" node already tested above.
   });
 }
